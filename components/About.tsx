@@ -2,6 +2,7 @@
 import { motion, useInView } from 'framer-motion'
 import { useRef, useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
+import Image from 'next/image'
 
 const stages = [
   {
@@ -99,6 +100,26 @@ export default function About() {
           <blockquote className="font-serif italic text-xl md:text-2xl text-stone-600 leading-relaxed max-w-3xl mx-auto">
             "In a person whose digestive system has been cleansed and purified, the metabolism is stimulated, disease is reduced, and normal health is maintained. Sense organs, mind, intellect, and complexion are improved; strength, good nourishment, and potency are the result."
           </blockquote>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.45 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-16"
+        >
+          <div className="md:col-span-1 relative rounded-2xl overflow-hidden" style={{ height: '320px' }}>
+            <Image src="/dr-sanjay-about.jpg" alt="Dr. Sanjay — Ayurshala" fill sizes="(max-width:768px) 100vw, 33vw" className="object-cover object-top" />
+            <div className="absolute bottom-0 left-0 right-0 p-4" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+              <p className="font-serif text-white text-sm">Our Physician</p>
+            </div>
+          </div>
+          <div className="relative rounded-2xl overflow-hidden" style={{ height: '320px' }}>
+            <Image src="/clinic-1.jpg" alt="Ayurshala clinic" fill sizes="(max-width:768px) 100vw, 33vw" className="object-cover" />
+          </div>
+          <div className="relative rounded-2xl overflow-hidden" style={{ height: '320px' }}>
+            <Image src="/clinic-2.jpg" alt="Ayurshala treatment room" fill sizes="(max-width:768px) 100vw, 33vw" className="object-cover" />
+          </div>
         </motion.div>
 
         <motion.div

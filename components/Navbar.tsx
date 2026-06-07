@@ -39,7 +39,7 @@ export default function Navbar() {
         <div className="px-8 flex items-center justify-between h-20">
         <Link href="/" className="flex items-center h-full py-2">
           <Image
-            src="/ayurshala_text_transparent.png"
+            src="/ayurshala_text.png"
             alt="Ayurshala"
             width={260}
             height={80}

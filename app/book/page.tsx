@@ -23,23 +23,67 @@ type Status = 'idle' | 'loading' | 'success' | 'error'
 
 export default function BookPage() {
   const [form, setForm] = useState({
-    name: '', phone: '', email: '', treatment: '', date: '', time: '', concern: '', paymentMethod: 'online',
+    name: '', phone: '', email: '', treatment: '', date: '', time: '', concern: '', paymentMethod: 'online', amount: '',
   })
   const [status, setStatus] = useState<Status>('idle')
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    setMounted(true)
+    const params = new URLSearchParams(window.location.search)
+    const payStatus = params.get('status')
+    if (payStatus === 'paid') {
+      const pending = sessionStorage.getItem('pendingBooking')
+      if (pending) {
+        const data = JSON.parse(pending)
+        sessionStorage.removeItem('pendingBooking')
+        fetch('/api/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, action: 'confirm-booking', paymentMethod: 'online' }),
+        }).finally(() => setStatus('success'))
+      } else {
+        setStatus('success')
+      }
+    } else if (payStatus === 'failed' || payStatus === 'error') {
+      setStatus('error')
+    }
+  }, [])
   const dark = mounted && theme === 'dark'
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
+  const today = new Date().toISOString().split('T')[0]
+  const nowHour = new Date().getHours() * 60 + new Date().getMinutes()
+  const slotMinutes = (slot: string) => {
+    const [time, period] = slot.split(' ')
+    let [h, m] = time.split(':').map(Number)
+    if (period === 'PM' && h !== 12) h += 12
+    if (period === 'AM' && h === 12) h = 0
+    return h * 60 + m
+  }
+  const availableSlots = form.date === today
+    ? timeSlots.filter(s => slotMinutes(s) > nowHour + 30)
+    : timeSlots
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validate past time slot
+    if (form.date === today && form.time && slotMinutes(form.time) <= nowHour + 30) {
+      alert('The selected time slot has already passed. Please choose a future time or a different date.')
+      return
+    }
+    // Validate today with no available slots
+    if (form.date === today && availableSlots.length === 0) {
+      alert('No slots available for today. Please choose another date.')
+      return
+    }
+
     setStatus('loading')
 
     try {
       if (form.paymentMethod === 'cod') {
-        // COD: Just send confirmation email
         const confirmRes = await fetch('/api/book', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -50,55 +94,24 @@ export default function BookPage() {
         return
       }
 
-      // Online payment via Razorpay
+      // Online payment via Cashfree
       const orderRes = await fetch('/api/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, action: 'create-order' }),
       })
       if (!orderRes.ok) throw new Error('Failed to create order')
-      const { orderId } = await orderRes.json()
+      const { orderId, paymentSessionId } = await orderRes.json()
 
-      // Open Razorpay payment modal
+      // Store form so we can confirm after Cashfree redirect
+      sessionStorage.setItem('pendingBooking', JSON.stringify({ ...form, cashfreeOrderId: orderId }))
+
       const script = document.createElement('script')
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+      script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js'
       script.async = true
       script.onload = () => {
-        const options = {
-          key: 'rzp_test_SwiYwAyNCZWP6N',
-          order_id: orderId,
-          amount: 50000,
-          currency: 'INR',
-          name: 'Ayurshala Panchakarma',
-          description: form.treatment,
-          prefill: {
-            name: form.name,
-            email: form.email,
-            contact: form.phone,
-          },
-          handler: async (response: any) => {
-            try {
-              const confirmRes = await fetch('/api/book', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  ...form,
-                  action: 'confirm-booking',
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpayOrderId: response.razorpay_order_id,
-                }),
-              })
-              if (!confirmRes.ok) throw new Error()
-              setStatus('success')
-            } catch {
-              setStatus('error')
-            }
-          },
-          theme: { color: '#E8621A' },
-        }
-        const rzp = new (window as any).Razorpay(options)
-        rzp.on('payment.failed', () => setStatus('error'))
-        rzp.open()
+        const cashfree = (window as any).Cashfree({ mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'sandbox' ? 'sandbox' : 'production' })
+        cashfree.checkout({ paymentSessionId, redirectTarget: '_self' })
       }
       document.body.appendChild(script)
     } catch {
@@ -160,7 +173,7 @@ export default function BookPage() {
               transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
               className="mb-6 flex justify-center"
             >
-              <Image src="/ayurshala_text_transparent.png" alt="Ayurshala" width={240} height={68} className="object-contain h-20 w-auto" />
+              <Image src="/ayurshala_text.png" alt="Ayurshala" width={240} height={68} className="object-contain h-20 w-auto" />
             </motion.div>
             <h2 className="font-serif text-3xl mb-3" style={{ color: '#1a1008' }}>Booking Received</h2>
             <p className="font-sans text-stone-500 text-sm leading-relaxed mb-8">
@@ -209,7 +222,7 @@ export default function BookPage() {
             style={{ background: 'radial-gradient(ellipse at 100% 100%, rgba(245,166,35,0.07) 0%, transparent 60%)' }} />
 
           <div className="text-center mb-10">
-            <Image src="/ayurshala_text_transparent.png" alt="Ayurshala" width={300} height={84} className="object-contain h-24 w-auto mx-auto mb-4" />
+            <Image src="/ayurshala_text.png" alt="Ayurshala" width={300} height={84} className="object-contain h-24 w-auto mx-auto mb-4" />
             <h1 className="font-serif text-4xl mb-2" style={{ color: '#E8621A' }}>Book an Appointment</h1>
             <p className="font-sans text-stone-400 text-sm">
               We'll confirm via WhatsApp &amp; email within a few hours.
@@ -233,8 +246,8 @@ export default function BookPage() {
 
             {/* Email */}
             <div>
-              <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">Email</label>
-              <input value={form.email} onChange={e => set('email', e.target.value)}
+              <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">Email *</label>
+              <input required value={form.email} onChange={e => set('email', e.target.value)}
                 placeholder="your@email.com" type="email" className={inputCls} />
             </div>
 
@@ -255,7 +268,12 @@ export default function BookPage() {
                 <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">Preferred Date</label>
                 <input value={form.date} onChange={e => {
                   const day = new Date(e.target.value).getUTCDay()
-                  if (day !== 5) set('date', e.target.value)
+                  if (day !== 5) {
+                    set('date', e.target.value)
+                    // clear time if it's now in the past
+                    if (form.time && e.target.value === today && slotMinutes(form.time) <= nowHour + 30)
+                      set('time', '')
+                  }
                 }}
                   type="date" className={inputCls}
                   min={new Date().toISOString().split('T')[0]}
@@ -269,8 +287,11 @@ export default function BookPage() {
                 <select value={form.time} onChange={e => set('time', e.target.value)}
                   className={inputCls + ' cursor-pointer'}>
                   <option value="">Any time</option>
-                  {timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
+                  {availableSlots.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
+                {form.date === today && availableSlots.length === 0 && (
+                  <p className="font-sans text-xs text-red-400 mt-1">No slots available for today. Please choose another date.</p>
+                )}
               </div>
             </div>
 
@@ -296,6 +317,22 @@ export default function BookPage() {
               </label>
             </div>
 
+            {/* Amount — only for online, non-consultation */}
+            {form.paymentMethod === 'online' && form.treatment && form.treatment !== 'Not sure / Consultation' && (
+              <div>
+                <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">
+                  Amount to Pay (₹) <span className="normal-case text-stone-300">— minimum ₹500</span>
+                </label>
+                <input
+                  value={form.amount}
+                  onChange={e => set('amount', e.target.value)}
+                  type="number" min="500" placeholder="500"
+                  className={inputCls}
+                  onBlur={e => { if (Number(e.target.value) < 500) set('amount', '500') }}
+                />
+              </div>
+            )}
+
             {/* Concern */}
             <div>
               <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">Describe Your Concern</label>
@@ -314,7 +351,7 @@ export default function BookPage() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={status === 'loading'}
+              disabled={status === 'loading' || (form.date === today && availableSlots.length === 0)}
               className="btn-glass w-full flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {status === 'loading' ? (

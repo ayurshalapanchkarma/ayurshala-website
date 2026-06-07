@@ -1,63 +1,148 @@
 'use client'
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { useRef, useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 
-// Replace these with real clinic photos in /public/gallery/
 const photos = [
-  { src: null, label: 'Reception & Waiting Area' },
-  { src: null, label: 'Treatment Room' },
-  { src: null, label: 'Shirodhara Setup' },
-  { src: null, label: 'Panchakarma Suite' },
-  { src: null, label: 'Consultation Room' },
-  { src: null, label: 'Herbal Preparation' },
+  { src: '/gallery/reception.jpg', alt: 'Reception' },
+  { src: '/gallery/waiting_area.jpg', alt: 'Waiting Area' },
+  { src: '/gallery/consultation_room.jpg', alt: 'Consultation Room' },
+  { src: '/gallery/consultation_room_01.jpg', alt: 'Consultation Room' },
+  { src: '/gallery/male_panchakarma_room.jpg', alt: 'Male Panchakarma Room' },
+  { src: '/gallery/male_panchakarma_room_01.jpg', alt: 'Male Panchakarma Room' },
+  { src: '/gallery/female_panchakarma_room.jpg', alt: 'Female Panchakarma Room' },
+  { src: '/gallery/yoga_area.jpg', alt: 'Yoga Area' },
+  { src: '/gallery/yoga_area_01.jpg', alt: 'Yoga Area' },
+  { src: '/gallery/yoga_area_02.jpg', alt: 'Yoga Area' },
+  { src: '/gallery/washroom.jpg', alt: 'Washroom' },
+  { src: '/gallery/Doctors_Degrees.jpg', alt: "Doctor's Degrees" },
+  { src: '/gallery/Doctors_Degrees_01.jpg', alt: "Doctor's Degrees" },
 ]
+
+const videos = [
+  { src: '/gallery/v2.mp4', alt: 'Inside View' },
+  { src: '/gallery/v3.mp4', alt: 'Clinic Tour' },
+]
+
+function Slideshow() {
+  const [current, setCurrent] = useState(0)
+  const [lightbox, setLightbox] = useState<string | null>(null)
+  const [paused, setPaused] = useState(false)
+
+  const next = useCallback(() => setCurrent(c => (c + 1) % photos.length), [])
+
+  useEffect(() => {
+    if (paused || lightbox) return
+    const t = setInterval(next, 5000)
+    return () => clearInterval(t)
+  }, [paused, lightbox, next])
+
+  const photo = photos[current]
+
+  return (
+    <>
+      <div
+        className="relative rounded-3xl overflow-hidden cursor-pointer"
+        style={{ height: '480px' }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onClick={() => setLightbox(photo.src)}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div key={current} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="absolute inset-0">
+            <Image src={photo.src} alt={photo.alt} fill sizes="100vw" className="object-cover" priority={current === 0} />
+            <div className="absolute bottom-0 left-0 right-0 px-6 py-4" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)' }}>
+              <p className="text-white text-sm font-medium">{photo.alt}</p>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        <button className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 transition-colors z-10 text-xl"
+          onClick={e => { e.stopPropagation(); setCurrent(c => (c - 1 + photos.length) % photos.length) }}>‹</button>
+        <button className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 transition-colors z-10 text-xl"
+          onClick={e => { e.stopPropagation(); next() }}>›</button>
+      </div>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-2 mt-4">
+        {photos.map((_, i) => (
+          <button key={i} onClick={() => setCurrent(i)}
+            className={`rounded-full transition-all duration-300 ${i === current ? 'w-6 h-2 bg-brand' : 'w-2 h-2 bg-stone-300'}`} />
+        ))}
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.92)' }} onClick={() => setLightbox(null)}>
+          <div className="relative w-full max-w-4xl" style={{ height: '85vh' }} onClick={e => e.stopPropagation()}>
+            <Image src={lightbox} alt="Gallery" fill className="object-contain rounded-2xl" />
+          </div>
+          <button className="absolute top-4 right-4 text-white text-3xl" onClick={() => setLightbox(null)}>×</button>
+        </div>
+      )}
+    </>
+  )
+}
 
 export default function Gallery() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
+  const [videoLightbox, setVideoLightbox] = useState<string | null>(null)
 
   return (
-    <section id="gallery" className="py-24 px-6 relative overflow-hidden">
-      <div className="max-w-6xl mx-auto" ref={ref}>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-14"
-        >
-          <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/60 mb-3">Our Space</p>
-          <h2 className="section-title mb-4">Inside Ayurshala</h2>
-          <p className="font-sans text-stone-500 max-w-xl mx-auto text-sm leading-relaxed">
-            A calm, hygienic, and welcoming environment designed for healing and restoration.
-          </p>
-        </motion.div>
+    <>
+      <section id="gallery" className="py-24 px-6 relative overflow-hidden" ref={ref}>
+        <div className="max-w-6xl mx-auto">
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {photos.map((photo, i) => (
-            <motion.div
-              key={photo.label}
-              initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: i * 0.08 }}
-              className="glass rounded-2xl overflow-hidden aspect-[4/3] relative group"
-            >
-              {photo.src ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo.src} alt={photo.label} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-stone-50">
-                  <span className="text-3xl opacity-30">🌿</span>
-                  <span className="font-sans text-xs text-stone-300 text-center px-4">{photo.label}</span>
+          {/* Header */}
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8 }} className="text-center mb-16">
+            <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/60 mb-3">Inside Ayurshala</p>
+            <h2 className="section-title mb-4">Our Clinic &amp; Therapies</h2>
+            <p className="font-sans text-stone-500 max-w-xl mx-auto text-sm leading-relaxed">
+              A glimpse into our healing space — where ancient wisdom meets compassionate care.
+            </p>
+          </motion.div>
+
+          {/* Photo slideshow */}
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay: 0.1 }}>
+            <p className="font-sans text-xs tracking-[0.3em] uppercase text-stone-400 mb-4">Clinic Photos</p>
+            <Slideshow />
+          </motion.div>
+
+          {/* Videos */}
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay: 0.2 }} className="mt-16">
+            <p className="font-sans text-xs tracking-[0.3em] uppercase text-stone-400 mb-4">Videos</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {videos.map(v => (
+                <div key={v.src} className="relative rounded-2xl overflow-hidden cursor-pointer group" style={{ height: '260px' }}
+                  onClick={() => setVideoLightbox(v.src)}>
+                  <video src={v.src} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
+                    <div className="w-14 h-14 rounded-full bg-black/60 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">{v.alt}</div>
                 </div>
-              )}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 rounded-2xl" />
-              <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <p className="font-sans text-xs text-white text-center drop-shadow">{photo.label}</p>
-              </div>
-            </motion.div>
-          ))}
+              ))}
+            </div>
+          </motion.div>
+
+
+
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Video lightbox */}
+      {videoLightbox && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.92)' }} onClick={() => setVideoLightbox(null)}>
+          <div className="relative w-full max-w-3xl" style={{ height: '80vh' }} onClick={e => e.stopPropagation()}>
+            <video src={videoLightbox} className="w-full h-full object-contain rounded-2xl" controls autoPlay />
+          </div>
+          <button className="absolute top-4 right-4 text-white text-3xl" onClick={() => setVideoLightbox(null)}>×</button>
+        </div>
+      )}
+
+    </>
   )
 }

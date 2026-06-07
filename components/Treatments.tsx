@@ -304,7 +304,7 @@ export default function Treatments() {
           transition={{ duration: 0.8 }}
           className="text-center mb-10"
         >
-          <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/60 mb-3">19 Authentic Therapies</p>
+          <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/60 mb-3"></p>
           <h2 className="section-title mb-4">Treatments We Offer</h2>
           <p className="font-sans text-stone-500 max-w-xl mx-auto text-sm leading-relaxed">
             Every therapy is performed as prescribed by classical Ayurvedic texts — in authentic sequence, by trained practitioners under senior consultant supervision.

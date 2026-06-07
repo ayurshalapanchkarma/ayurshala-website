@@ -8,21 +8,21 @@ const doctors = [
   {
     name: 'Dr. Farha Naqvi',
     title: 'Senior Ayurvedic Diet & Lifestyle Consultant',
-    qualifications: 'BUMS (Sidd.), MHA, MDPK | Certified Yoga Trainer | Diploma in Ayurvedic Diet & Nutrition',
-    experience: '10+ Years',
+    qualifications: 'BUMS, MHA, MDPK | Certified Yoga Trainer | Diploma in Ayurvedic Diet & Nutrition',
+    experience: '20+ Years',
     speciality: 'Ayurvedic Diet & Nutrition, Lifestyle Counseling, Yoga-Based Wellness, Preventive Healthcare',
     bio: 'Dr. Farha Naqvi specializes in Ayurvedic nutrition, therapeutic diet planning, and holistic lifestyle management. Her approach combines traditional Ayurvedic principles with personalized wellness strategies to help patients improve digestion, metabolism, immunity, and overall well-being. She also provides guidance on yoga, preventive healthcare, and sustainable lifestyle practices for long-term health.',
     icon: '👩⚕️',
   },
   {
     name: 'Dr. Sanjay Yadav',
-    title: 'Senior Ayurvedic Physician & Neuro Acupuncture Specialist',
-    qualifications: 'BAMS, PGDHHM, MIA (Ortho-Neuro) | Consultant Acupuncture Therapist (IARA)',
+    title: 'Sr. Ayurveda Physician & Panchakarma Specialist',
+    qualifications: 'BAMS, PGDHHM, MIA (Neuro Acupuncture) | Certification in Diabetes Management (IIAR)',
     experience: '15+ Years',
     speciality: 'Panchakarma Therapy, Vidh Karma, Neuro Acupuncture, Neuro Disorders, Cardiac Care',
     bio: 'Dr. Sanjay Yadav is an experienced Ayurvedic physician specializing in Panchakarma therapies, Vidh Karma, and the management of chronic neurological and cardiac conditions. His treatment approach integrates classical Ayurveda, Panchakarma, and acupuncture techniques to support recovery, pain management, and overall health restoration.',
     icon: '👨⚕️',
-    image: '/dr-sanjay.jpg',
+    image: '/1_dr-sanjay.jpg',
   },
 ]
 
@@ -76,15 +76,15 @@ export default function Doctors() {
               <div className="absolute inset-0 rounded-3xl pointer-events-none"
                 style={{ background: 'radial-gradient(ellipse at 100% 100%, rgba(13,148,136,0.07) 0%, transparent 60%)' }} />
 
-              {/* Avatar with image */}
+              {/* Avatar / photo */}
               <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-6 overflow-hidden"
-                style={{ 
+                style={{
                   background: dark
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,248,240,0.05) 50%, rgba(255,235,210,0.04) 100%)'
                     : 'linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,248,240,0.55) 50%, rgba(255,235,210,0.45) 100%)'
                 }}>
                 {doc.image ? (
-                  <Image src={doc.image} alt={doc.name} width={80} height={80} className="w-full h-full object-cover" />
+                  <Image src={doc.image} alt={doc.name} width={80} height={80} className="w-full h-full object-cover object-top" />
                 ) : (
                   doc.icon
                 )}
