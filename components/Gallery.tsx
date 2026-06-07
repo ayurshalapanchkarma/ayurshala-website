@@ -20,8 +20,8 @@ const photos = [
 ]
 
 const videos = [
-  { src: '/gallery/v2.mp4', alt: 'Inside View' },
-  { src: '/gallery/v3.mp4', alt: 'Clinic Tour' },
+  { src: 'qrnpi4Sr60I', alt: 'Inside View' },
+  { src: 'v-E6v4drW8I', alt: 'Clinic Tour' },
 ]
 
 function Slideshow() {
@@ -116,7 +116,8 @@ export default function Gallery() {
               {videos.map(v => (
                 <div key={v.src} className="relative rounded-2xl overflow-hidden cursor-pointer group" style={{ height: '260px' }}
                   onClick={() => setVideoLightbox(v.src)}>
-                  <video src={v.src} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`https://img.youtube.com/vi/${v.src}/hqdefault.jpg`} alt={v.alt} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
                     <div className="w-14 h-14 rounded-full bg-black/60 flex items-center justify-center group-hover:scale-110 transition-transform">
                       <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
@@ -136,8 +137,13 @@ export default function Gallery() {
       {/* Video lightbox */}
       {videoLightbox && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.92)' }} onClick={() => setVideoLightbox(null)}>
-          <div className="relative w-full max-w-3xl" style={{ height: '80vh' }} onClick={e => e.stopPropagation()}>
-            <video src={videoLightbox} className="w-full h-full object-contain rounded-2xl" controls autoPlay />
+          <div className="relative w-full max-w-3xl" style={{ aspectRatio: '16/9' }} onClick={e => e.stopPropagation()}>
+            <iframe
+              src={`https://www.youtube.com/embed/${videoLightbox}?autoplay=1`}
+              className="w-full h-full rounded-2xl"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
           </div>
           <button className="absolute top-4 right-4 text-white text-3xl" onClick={() => setVideoLightbox(null)}>×</button>
         </div>
