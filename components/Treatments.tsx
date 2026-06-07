@@ -173,16 +173,6 @@ const treatments = [
 
   // ── MODERN & REGENERATIVE ──
   {
-    name: 'PRP Therapy',
-    sanskrit: 'Platelet-Rich Plasma',
-    category: 'Modern & Regenerative',
-    tagline: 'Your Body\'s Own Healer',
-    desc: 'PRP harnesses the body\'s innate regenerative intelligence. A small amount of your blood is drawn, centrifuged to concentrate the growth-factor-rich platelets, and re-injected precisely at the site of injury or concern. At Ayurshala, PRP is integrated with Ayurvedic principles — used for musculoskeletal healing, hair restoration, and facial rejuvenation — amplifying the body\'s natural repair mechanisms without synthetic intervention.',
-    benefits: ['Hair restoration', 'Joint & tendon healing', 'Facial rejuvenation', 'Collagen stimulation', 'Sports injury recovery', 'Osteoarthritis support'],
-    icon: '',
-    duration: '45–60 min',
-  },
-  {
     name: 'Regeneration Medicine',
     sanskrit: 'Punarnava Chikitsa',
     category: 'Modern & Regenerative',

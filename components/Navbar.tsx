@@ -29,11 +29,13 @@ export default function Navbar() {
         transition={{ duration: 0.8, ease: 'easeOut' }}
         className="max-w-6xl mx-auto rounded-3xl transition-all duration-300 pointer-events-auto"
         style={{
-          background: mounted && theme === 'dark' 
-            ? 'rgba(15,26,18,0.15)' 
-            : 'rgba(255,255,255,0.15)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(232,98,26,0.15)',
+          background: mounted && theme === 'dark'
+            ? 'rgba(15,26,18,0.08)'
+            : 'rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(12px) saturate(180%) contrast(1.05) brightness(1.08)',
+          WebkitBackdropFilter: 'blur(12px) saturate(180%) contrast(1.05) brightness(1.08)',
+          border: '1px solid rgba(232,98,26,0.18)',
+          boxShadow: '0 8px 32px rgba(232,98,26,0.06), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(255,255,255,0.1)',
         }}
       >
         <div className="px-8 flex items-center justify-between h-20">
@@ -53,7 +55,7 @@ export default function Navbar() {
             <li key={l.href}>
               <a
                 href={l.href}
-                className="font-sans text-sm tracking-wider text-stone-500 hover:text-brand transition-colors duration-300"
+                className="font-sans text-sm tracking-wider text-stone-900 hover:text-brand transition-colors duration-300"
               >
                 {l.label}
               </a>
@@ -101,7 +103,7 @@ export default function Navbar() {
                     <a
                       href={l.href}
                       onClick={() => setOpen(false)}
-                      className="font-sans text-sm tracking-wider text-stone-500 hover:text-brand transition-colors"
+                      className="font-sans text-sm tracking-wider text-stone-900 hover:text-brand transition-colors"
                     >
                       {l.label}
                     </a>
