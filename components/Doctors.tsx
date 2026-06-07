@@ -13,6 +13,7 @@ const doctors = [
     speciality: 'Ayurvedic Diet & Nutrition, Lifestyle Counseling, Yoga-Based Wellness, Preventive Healthcare',
     bio: 'Dr. Farha Naqvi specializes in Ayurvedic nutrition, therapeutic diet planning, and holistic lifestyle management. Her approach combines traditional Ayurvedic principles with personalized wellness strategies to help patients improve digestion, metabolism, immunity, and overall well-being. She also provides guidance on yoga, preventive healthcare, and sustainable lifestyle practices for long-term health.',
     icon: '👩⚕️',
+    image: '/farha.jpg',
   },
   {
     name: 'Dr. Sanjay Yadav',
@@ -22,7 +23,7 @@ const doctors = [
     speciality: 'Panchakarma Therapy, Vidh Karma, Neuro Acupuncture, Neuro Disorders, Cardiac Care',
     bio: 'Dr. Sanjay Yadav is an experienced Ayurvedic physician specializing in Panchakarma therapies, Vidh Karma, and the management of chronic neurological and cardiac conditions. His treatment approach integrates classical Ayurveda, Panchakarma, and acupuncture techniques to support recovery, pain management, and overall health restoration.',
     icon: '👨⚕️',
-    image: '/1_dr-sanjay.jpg',
+    image: '/dr-sanjay.jpg',
   },
 ]
 

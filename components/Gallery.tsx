@@ -117,13 +117,15 @@ export default function Gallery() {
                 <div key={v.src} className="relative rounded-2xl overflow-hidden cursor-pointer group" style={{ height: '260px' }}
                   onClick={() => setVideoLightbox(v.src)}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`https://img.youtube.com/vi/${v.src}/hqdefault.jpg`} alt={v.alt} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
-                    <div className="w-14 h-14 rounded-full bg-black/60 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                  <img src={`https://img.youtube.com/vi/${v.src}/sddefault.jpg`} alt={v.alt} className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                  {/* Play button — bottom left, clean */}
+                  <div className="absolute bottom-4 left-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md group-hover:bg-brand transition-colors duration-300">
+                      <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24" style={{ color: '#E8621A' }} ><path d="M8 5v14l11-7z" /></svg>
                     </div>
+                    <p className="text-white text-sm font-medium drop-shadow">{v.alt}</p>
                   </div>
-                  <div className="absolute bottom-3 left-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">{v.alt}</div>
                 </div>
               ))}
             </div>

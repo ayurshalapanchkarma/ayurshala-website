@@ -53,7 +53,7 @@ export default function About() {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/60 mb-3">Our Story</p>
+          <p className="font-sans text-xs tracking-[0.4em] uppercase text-stone-500 mb-3">Our Story</p>
           <h2 className="section-title mb-4">The Panchakarma Journey</h2>
           <p className="font-sans text-stone-500 max-w-2xl mx-auto text-sm leading-relaxed">
             Ayurveda — the "knowledge of life" — has guided humanity for over 3,000 years. At Ayurshala, we practice it as the ancient texts prescribe: methodically, authentically, and with complete care for each individual.
@@ -69,8 +69,8 @@ export default function About() {
               transition={{ duration: 0.7, delay: i * 0.15 }}
               className="glass-card relative overflow-hidden"
             >
-              <span className="absolute top-4 right-4 font-serif text-6xl font-light text-stone-200 select-none">{s.num}</span>
-              <p className="font-sans text-xs tracking-widest text-brand/60 uppercase mb-2">{s.subtitle}</p>
+              <span className="absolute top-4 right-4 font-serif text-6xl font-light text-stone-300 dark:text-stone-700 select-none">{s.num}</span>
+              <p className="font-sans text-xs tracking-widest text-stone-400 uppercase mb-2">{s.subtitle}</p>
               <h3 className="font-serif text-2xl mb-3" style={{ color: '#1a1008' }}>{s.title}</h3>
               <p className="font-sans text-stone-500 text-sm leading-relaxed">{s.desc}</p>
             </motion.div>
@@ -96,7 +96,7 @@ export default function About() {
             style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(232,98,26,0.10) 0%, transparent 60%)' }} />
           <div className="absolute inset-0 rounded-3xl pointer-events-none"
             style={{ background: 'radial-gradient(ellipse at 0% 100%, rgba(13,148,136,0.07) 0%, transparent 60%)' }} />
-          <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/50 mb-6">Charaka Samhita</p>
+          <p className="font-sans text-xs tracking-[0.4em] uppercase text-stone-500 mb-6">Charaka Samhita</p>
           <blockquote className="font-serif italic text-xl md:text-2xl text-stone-600 leading-relaxed max-w-3xl mx-auto">
             "In a person whose digestive system has been cleansed and purified, the metabolism is stimulated, disease is reduced, and normal health is maintained. Sense organs, mind, intellect, and complexion are improved; strength, good nourishment, and potency are the result."
           </blockquote>
@@ -128,7 +128,7 @@ export default function About() {
           transition={{ duration: 0.7, delay: 0.5 }}
           className="text-center"
         >
-          <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/50 mb-6">Our Mission — The 5H Values</p>
+          <p className="font-sans text-xs tracking-[0.4em] uppercase text-stone-500 mb-6">Our Mission — The 5H Values</p>
           <div className="flex flex-wrap justify-center gap-4">
             {values.map(v => (
               <div key={v.label} className="glass rounded-2xl px-6 py-4 flex flex-col items-center gap-2 min-w-[90px]">
