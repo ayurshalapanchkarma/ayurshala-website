@@ -65,7 +65,8 @@ export default function BookPage() {
   }
 
   const bookingType = isConsultation ? 'consultation' : 'therapy'
-  const amount = bookingType === 'consultation' ? 500 : 1000
+  const amount = 500
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online')
   const activePatient = patient || guestPatient
 
   useEffect(() => {
@@ -154,10 +155,20 @@ export default function BookPage() {
       const treatments = isConsultation ? ['Consultation'] : selectedTreatments
       const orderRes = await fetch('/api/book', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create-order', patient_uuid: currentPatient.id, patient_id: currentPatient.patient_id, treatments, preferred_date: date, preferred_time: time, concern, booking_type: bookingType }),
+        body: JSON.stringify({ action: 'create-order', patient_uuid: currentPatient.id, patient_id: currentPatient.patient_id, treatments, preferred_date: date, preferred_time: time, concern, booking_type: bookingType, payment_method: paymentMethod }),
       })
       const orderData = await orderRes.json()
       if (!orderRes.ok) { setStatus('error'); setErrorMsg(orderData.error || 'Failed to create booking.'); return }
+
+      if (paymentMethod === 'cod') {
+        // Confirm immediately for COD
+        await fetch('/api/book', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'confirm-booking', booking_id: orderData.bookingId, cashfree_order_id: orderData.bookingId, payment_method: 'cod' }),
+        })
+        window.location.href = `/book/confirmed?booking_id=${orderData.bookingId}`
+        return
+      }
 
       const { paymentSessionId } = orderData
       const script = document.createElement('script')
@@ -306,17 +317,25 @@ export default function BookPage() {
               </div>
             </div>
 
-            {/* Payment summary */}
+            {/* Payment summary + method */}
             {(isConsultation || selectedTreatments.length > 0) && (
               <div className={`rounded-xl p-4 border ${dark ? 'border-white/10 bg-white/5' : 'border-brand/15 bg-brand/5'}`}>
                 {bookingType === 'consultation' ? (
-                  <p className="font-sans text-sm text-stone-600">Consultation Fee: <strong style={{ color: '#E8621A' }}>₹500</strong></p>
+                  <p className="font-sans text-sm text-stone-600 mb-3">Consultation Fee: <strong style={{ color: '#E8621A' }}>₹500</strong></p>
                 ) : (
-                  <>
-                    <p className="font-sans text-sm text-stone-600">Therapy Booking Advance: <strong style={{ color: '#E8621A' }}>₹1000</strong></p>
-                    <p className="font-sans text-xs text-stone-400 mt-1">Remaining amount will be decided after doctor assessment.</p>
-                  </>
+                  <div className="mb-3">
+                    <p className="font-sans text-sm text-stone-600">Therapy Booking Advance: <strong style={{ color: '#E8621A' }}>₹500</strong></p>
+                    <p className="font-sans text-xs text-stone-400 mt-0.5">Remaining amount decided after doctor assessment.</p>
+                  </div>
                 )}
+                <div className="grid grid-cols-2 gap-2">
+                  {(['online', 'cod'] as const).map(m => (
+                    <label key={m} className={`flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border transition-all ${paymentMethod === m ? 'border-brand/40 bg-brand/10' : dark ? 'border-white/10' : 'border-stone-200'}`}>
+                      <input type="radio" name="payment" value={m} checked={paymentMethod === m} onChange={() => setPaymentMethod(m)} className="w-3.5 h-3.5" />
+                      <span className="font-sans text-xs">{m === 'online' ? '💳 Pay Online' : '💵 Cash on Arrival'}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -334,7 +353,7 @@ export default function BookPage() {
 
             <button type="submit" disabled={status === 'loading'}
               className="btn-glass w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50">
-              {status === 'loading' ? <><span className="animate-spin">⟳</span> Processing…</> : 'Book & Pay →'}
+              {status === 'loading' ? <><span className="animate-spin">⟳</span> Processing…</> : paymentMethod === 'cod' ? 'Confirm Booking →' : 'Book & Pay →'}
             </button>
 
             <p className="font-sans text-xs text-stone-400 text-center">

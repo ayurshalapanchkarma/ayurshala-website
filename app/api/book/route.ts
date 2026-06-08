@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!
 )
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
   const { action } = body
 
   if (action === 'create-order') {
-    const { patient_uuid, patient_id, treatments, preferred_date, preferred_time, concern, booking_type } = body
-    const amount = booking_type === 'consultation' ? 500 : 1000
+    const { patient_uuid, patient_id, treatments, preferred_date, preferred_time, concern, booking_type, payment_method } = body
+    const amount = 500
 
     // Duplicate check
     const { data: existing } = await supabase.from('bookings_v2')
@@ -37,12 +37,20 @@ export async function POST(req: NextRequest) {
       treatments.map((t: string) => ({ booking_uuid: booking.id, treatment_name: t }))
     )
 
-    // Create Cashfree order
-    const cashfree = new Cashfree(
-      CFEnvironment.PRODUCTION,
-      process.env.CASHFREE_APP_ID,
-      process.env.CASHFREE_SECRET_KEY,
-    )
+    // Create payment record
+    await supabase.from('payments').insert({
+      booking_uuid: booking.id, patient_uuid,
+      cashfree_order_id: booking.booking_id,
+      amount, status: payment_method === 'cod' ? 'COD' : 'PENDING',
+    })
+
+    // COD — return bookingId directly, no Cashfree
+    if (payment_method === 'cod') {
+      return NextResponse.json({ bookingId: booking.booking_id })
+    }
+
+    // Online — create Cashfree order
+    const cashfree = new Cashfree(CFEnvironment.PRODUCTION, process.env.CASHFREE_APP_ID, process.env.CASHFREE_SECRET_KEY)
     const { data: patientData } = await supabase.from('patients').select('*').eq('id', patient_uuid).single()
     const cashfreeOrder = await cashfree.PGCreateOrder({
       order_id: booking.booking_id,
@@ -54,31 +62,22 @@ export async function POST(req: NextRequest) {
         customer_email: patientData.email,
         customer_phone: (patientData.phone || '9999999999').replace(/\D/g, '').slice(-10),
       },
-      order_meta: {
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/book/verify?order_id={order_id}`,
-      },
+      order_meta: { return_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/book/verify?order_id={order_id}` },
       order_note: `${booking_type === 'consultation' ? 'Consultation' : treatments.join(', ')} | ${preferred_date} ${preferred_time}`,
-    })
-
-    // Create payment record
-    await supabase.from('payments').insert({
-      booking_uuid: booking.id, patient_uuid,
-      cashfree_order_id: booking.booking_id,
-      amount, status: 'PENDING',
     })
 
     return NextResponse.json({ bookingId: booking.booking_id, paymentSessionId: cashfreeOrder.data.payment_session_id })
   }
 
   if (action === 'confirm-booking') {
-    const { booking_id, cashfree_order_id, transaction_id } = body
+    const { booking_id, cashfree_order_id, transaction_id, payment_method } = body
 
     const { data: booking } = await supabase.from('bookings_v2').select('*, patients(*)').eq('booking_id', booking_id).single()
     if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
 
     // Update booking + payment
-    await supabase.from('bookings_v2').update({ status: 'CONFIRMED', payment_status: 'SUCCESS' }).eq('booking_id', booking_id)
-    await supabase.from('payments').update({ status: 'SUCCESS', transaction_id: transaction_id || '' }).eq('cashfree_order_id', cashfree_order_id)
+    await supabase.from('bookings_v2').update({ status: 'CONFIRMED', payment_status: payment_method === 'cod' ? 'COD' : 'SUCCESS' }).eq('booking_id', booking_id)
+    await supabase.from('payments').update({ status: payment_method === 'cod' ? 'COD' : 'SUCCESS', transaction_id: transaction_id || '' }).eq('cashfree_order_id', cashfree_order_id)
 
     // Get treatments
     const { data: treatmentRows } = await supabase.from('booking_treatments').select('treatment_name').eq('booking_uuid', booking.id)
