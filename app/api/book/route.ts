@@ -41,6 +41,9 @@ export async function POST(req: NextRequest) {
     if (!patient_uuid || !treatments?.length || !preferred_date || !preferred_time || !booking_type)
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
 
+    if (new Date(preferred_date).getUTCDay() === 5)
+      return NextResponse.json({ error: 'Clinic is closed on Fridays. Please choose another day.' }, { status: 400 })
+
     if (!['consultation', 'therapy'].includes(booking_type))
       return NextResponse.json({ error: 'Invalid booking type.' }, { status: 400 })
 
@@ -249,6 +252,7 @@ export async function POST(req: NextRequest) {
     const { booking_id, patient_uuid, new_date, new_time } = body
 
     if (!new_date || !new_time) return NextResponse.json({ error: 'New date and time required.' }, { status: 400 })
+    if (new Date(new_date).getUTCDay() === 5) return NextResponse.json({ error: 'Clinic is closed on Fridays. Please choose another day.' }, { status: 400 })
 
     const { data: booking } = await supabase.from('bookings_new').select('*')
       .eq('booking_id', booking_id).eq('patient_uuid', patient_uuid).single()

@@ -116,6 +116,7 @@ export default function BookPage() {
     e.preventDefault()
     if (!user && !guestPatient && !guestEmail) { alert('Please sign in or enter your email to continue.'); return }
     if (!date) { alert('Please select a date.'); return }
+    if (new Date(date).getUTCDay() === 5) { alert('We are closed on Fridays. Please choose another day.'); return }
     if (!time) { alert('Please select a time slot.'); return }
     if (!isConsultation && selectedTreatments.length === 0) { alert('Please select at least one treatment or consultation.'); return }
     const activePhone = patient ? phone : guestPhone

@@ -316,6 +316,9 @@ export default function MyBookingsPage() {
                   <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                     min={today} max={maxDateStr} onKeyDown={e => e.preventDefault()}
                     className="w-full rounded-xl px-4 py-2.5 text-sm border border-stone-200 bg-white/80 focus:outline-none focus:border-brand/50" />
+                  {newDate && new Date(newDate).getUTCDay() === 5 && (
+                    <p className="font-sans text-xs text-red-500 mt-1">Closed on Fridays. Please choose another day.</p>
+                  )}
                 </div>
                 <div>
                   <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1">New Time</label>
@@ -331,7 +334,7 @@ export default function MyBookingsPage() {
 
               <div className="flex gap-3">
                 <button onClick={() => setRescheduleBooking(null)} className="btn-glass flex-1 py-2.5 text-sm">Cancel</button>
-                <button onClick={handleReschedule} disabled={rescheduling || !newDate || !newTime}
+                <button onClick={handleReschedule} disabled={rescheduling || !newDate || !newTime || new Date(newDate).getUTCDay() === 5}
                   className="flex-1 py-2.5 text-sm rounded-xl font-sans text-white disabled:opacity-50"
                   style={{ background: '#E8621A' }}>
                   {rescheduling ? 'Saving…' : 'Confirm'}
