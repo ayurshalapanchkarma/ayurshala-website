@@ -249,8 +249,22 @@ export async function POST(req: NextRequest) {
       { preferred_date: booking.preferred_date, preferred_time: booking.preferred_time },
       { preferred_date: new_date, preferred_time: new_time })
 
-    const { data: rPatient } = await supabase.from('patients').select('full_name,patient_id').eq('id', patient_uuid).single()
-    sendTelegram(`🔄 *Booking Rescheduled — Ayurshala*\n\n👤 ${rPatient?.full_name} (${rPatient?.patient_id})\n📋 ${booking_id}\n📅 Old: ${booking.preferred_date} · ${booking.preferred_time}\n📅 New: ${new_date} · ${new_time}`)
+    const { data: rPatient } = await supabase.from('patients').select('full_name,patient_id,email,phone').eq('id', patient_uuid).single()
+    const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
+    const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://ayurshalapanchakarma.com'
+    const confirmUrl = `${appUrl}/api/admin/confirm-reschedule?booking_id=${booking_id}&secret=${process.env.ADMIN_CONFIRM_SECRET ?? 'ayurshala-confirm'}`
+    const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
+    const oldDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long' })
+    const newDateFmt = new Date(new_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+
+    sendTelegram(`🔄 *Reschedule Request — Ayurshala*\n\n👤 ${rPatient?.full_name} (${rPatient?.patient_id})\n📋 ${booking_id}\n💆 ${treatmentList}\n📅 Old: ${booking.preferred_date} · ${booking.preferred_time}\n📅 New: ${new_date} · ${new_time}\n\n✅ Confirm: ${confirmUrl}`)
+
+    await resend.emails.send({
+      from, to: 'ayurshalapanchkarma@gmail.com',
+      subject: `🔄 Reschedule Request — ${booking_id} — ${rPatient?.full_name}`,
+      html: buildRescheduleRequestEmail({ patient: rPatient, booking, treatmentList, oldDate, newDateFmt, new_time, confirmUrl }),
+    })
 
     return NextResponse.json({ success: true })
   }
@@ -263,6 +277,10 @@ function sendTelegram(text: string) {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text, parse_mode: 'Markdown' }),
   }).catch(console.error)
+}
+
+function buildRescheduleRequestEmail({ patient, booking, treatmentList, oldDate, newDateFmt, new_time, confirmUrl }: any) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#FFF3E0;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF3E0;padding:32px 16px"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:24px;overflow:hidden;background:#fff;border:1px solid rgba(232,98,26,0.18);box-shadow:0 8px 40px rgba(232,98,26,0.10)"><tr><td style="background:linear-gradient(135deg,#fff8f0,#ffe8d0);padding:32px 40px;text-align:center;border-bottom:1px solid rgba(232,98,26,0.15)"><h1 style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#1a1008">🔄 Reschedule Request</h1></td></tr><tr><td style="padding:32px 40px"><table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;border-radius:14px;border:1px solid rgba(232,98,26,0.12)"><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Patient</span><br><span style="font-size:15px;color:#1a1008;font-weight:600">${patient?.full_name}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Phone</span><br><span style="font-size:15px;color:#1a1008">${patient?.phone || '—'}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Booking ID</span><br><span style="font-size:15px;color:#E8621A">${booking.booking_id}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Treatment</span><br><span style="font-size:15px;color:#E8621A">${treatmentList}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Old Date &amp; Time</span><br><span style="font-size:15px;color:#78716c;text-decoration:line-through">${oldDate} · ${booking.preferred_time}</span></td></tr><tr><td style="padding:12px 20px"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">New Date &amp; Time</span><br><span style="font-size:15px;color:#16a34a;font-weight:600">${newDateFmt} · ${new_time}</span></td></tr></table><div style="text-align:center;margin-top:28px"><a href="${confirmUrl}" style="display:inline-block;background:#16a34a;color:#fff;font-family:Arial,sans-serif;font-size:15px;font-weight:600;padding:14px 36px;border-radius:12px;text-decoration:none">✓ Confirm Reschedule</a><p style="margin:16px 0 0;font-size:12px;color:#a8a29e">Clicking this will confirm the new schedule and notify the patient.</p></div></td></tr></table></td></tr></table></body></html>`
 }
 
 function buildClinicPendingEmail({ patient, booking, treatmentList, formattedDate, amountLabel, confirmUrl }: any) {
