@@ -12,7 +12,8 @@ const timeSlots = ['10:00 AM', '11:00 AM', '12:00 PM', '2:00 PM', '3:00 PM', '4:
 
 type Booking = {
   id: string; booking_id: string; preferred_date: string; preferred_time: string
-  booking_type: string; status: string; payment_status: string; created_at: string; concern: string
+  booking_type: string; status: string; payment_status: string; payment_method: string
+  created_at: string; concern: string
   booking_treatments_v2: { treatment_name: string }[]
   payments: { amount: number; status: string }[]
 }
@@ -120,6 +121,24 @@ export default function MyBookingsPage() {
       }
     }
     setLoading(false)
+  }
+
+  async function handlePayOnline(b: Booking) {
+    if (!patient) return
+    const res = await fetch('/api/book', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'pay-existing', booking_id: b.booking_id, patient_uuid: patient.id }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.error); return }
+    const script = document.createElement('script')
+    script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js'
+    script.async = true
+    script.onload = () => {
+      const cf = (window as any).Cashfree({ mode: 'production' })
+      cf.checkout({ paymentSessionId: data.paymentSessionId, redirectTarget: '_self' })
+    }
+    document.body.appendChild(script)
   }
 
   async function handleCancel(booking_id: string) {
@@ -231,6 +250,15 @@ export default function MyBookingsPage() {
                       className="btn-glass text-xs py-1.5 px-3">🔄 Reschedule</button>
                     <button onClick={() => setCancelId(b.booking_id)}
                       className="text-xs py-1.5 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors">✕ Cancel</button>
+                  </div>
+                )}
+                {b.status === 'PENDING_CONFIRMATION' && b.payment_method === 'CASH_ON_ARRIVAL' && (
+                  <div className="flex gap-2 flex-wrap mt-2">
+                    <button onClick={() => handlePayOnline(b)}
+                      className="text-xs py-1.5 px-3 rounded-xl border font-sans transition-colors"
+                      style={{ borderColor: '#E8621A', color: '#E8621A' }}>
+                      💳 Pay Online to Confirm
+                    </button>
                   </div>
                 )}
 

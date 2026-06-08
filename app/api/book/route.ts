@@ -178,6 +178,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   }
 
+  // ── PAY FOR EXISTING BOOKING ─────────────────────────────────────────────────
+  if (action === 'pay-existing') {
+    const { booking_id, patient_uuid } = body
+
+    const { data: booking } = await supabase.from('bookings_new').select('*')
+      .eq('booking_id', booking_id).eq('patient_uuid', patient_uuid).single()
+    if (!booking) return NextResponse.json({ error: 'Booking not found.' }, { status: 404 })
+
+    const { data: patient } = await supabase.from('patients').select('*').eq('id', patient_uuid).single()
+    if (!patient) return NextResponse.json({ error: 'Patient not found.' }, { status: 404 })
+
+    const amount = booking.booking_type === 'consultation' ? 500 : 1000
+    const cashfree = new Cashfree(CFEnvironment.PRODUCTION, process.env.CASHFREE_APP_ID, process.env.CASHFREE_SECRET_KEY)
+
+    const cashfreeOrder = await cashfree.PGCreateOrder({
+      order_id: `${booking_id}-PAY`,
+      order_amount: amount,
+      order_currency: 'INR',
+      customer_details: {
+        customer_id: patient.patient_id,
+        customer_name: patient.full_name || 'Patient',
+        customer_email: patient.email,
+        customer_phone: (patient.phone || '9999999999').replace(/\D/g, '').slice(-10),
+      },
+      order_meta: { return_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/book/verify?order_id={order_id}&original_booking_id=${booking_id}` },
+      order_note: `Payment for ${booking_id}`,
+    })
+
+    return NextResponse.json({ paymentSessionId: cashfreeOrder.data.payment_session_id })
+  }
+
   // ── CANCEL BOOKING ────────────────────────────────────────────────────────────
   if (action === 'cancel-booking') {
     const { booking_id, patient_uuid } = body
@@ -251,6 +282,7 @@ export async function POST(req: NextRequest) {
       old_date: booking.preferred_date, old_time: booking.preferred_time,
       new_date, new_time,
       is_rescheduled: true, rescheduled_at: new Date().toISOString(),
+      status: 'PENDING_CONFIRMATION',
       updated_at: new Date().toISOString(),
     }).eq('booking_id', booking_id)
 
