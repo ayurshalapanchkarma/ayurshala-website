@@ -49,24 +49,20 @@ export default function BookPage() {
   const slotMins = (s: string) => { const [t, p] = s.split(' '); let [h, m] = t.split(':').map(Number); if (p === 'PM' && h !== 12) h += 12; if (p === 'AM' && h === 12) h = 0; return h * 60 + m }
   const availableSlots = date === today ? timeSlots.filter(s => slotMins(s) > nowMins + 30) : timeSlots
 
-  // When therapy selected, remove consultation
   const handleTherapyToggle = (t: string, checked: boolean) => {
-    if (checked) {
-      setIsConsultation(false)
-      setSelectedTreatments(prev => [...prev, t])
-    } else {
-      setSelectedTreatments(prev => prev.filter(x => x !== t))
-    }
+    if (checked) setIsConsultation(false)  // therapy and consultation are mutually exclusive
+    setSelectedTreatments(prev => checked ? [...prev, t] : prev.filter(x => x !== t))
   }
 
   const handleConsultationToggle = (checked: boolean) => {
     setIsConsultation(checked)
-    if (checked) setSelectedTreatments([])
+    if (checked) setSelectedTreatments([])  // clear therapies when consultation selected
   }
 
-  const bookingType = isConsultation ? 'consultation' : 'therapy'
-  const amount = 500
-  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online')
+  // Strictly one type per booking per architecture spec
+  const bookingType: 'consultation' | 'therapy' = isConsultation ? 'consultation' : 'therapy'
+  const amount = isConsultation ? 500 : 1000
+  const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'CASH_ON_ARRIVAL'>('ONLINE')
   const activePatient = patient || guestPatient
 
   useEffect(() => {
@@ -123,9 +119,7 @@ export default function BookPage() {
     if (!user && !guestPatient && !guestEmail) { alert('Please sign in or enter your email to continue.'); return }
     if (!date) { alert('Please select a date.'); return }
     if (!time) { alert('Please select a time slot.'); return }
-    if (!isConsultation && selectedTreatments.length === 0) { alert('Please select at least one treatment or consultation.'); return }
-
-    const activePhone = patient ? phone : guestPhone
+    if (!isConsultation && selectedTreatments.length === 0) { alert('Please select at least one treatment or consultation.'); return }    const activePhone = patient ? phone : guestPhone
     if (!validatePhone(activePhone)) return
 
     setStatus('loading')
@@ -155,16 +149,25 @@ export default function BookPage() {
       const treatments = isConsultation ? ['Consultation'] : selectedTreatments
       const orderRes = await fetch('/api/book', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create-order', patient_uuid: currentPatient.id, patient_id: currentPatient.patient_id, treatments, preferred_date: date, preferred_time: time, concern, booking_type: bookingType, payment_method: paymentMethod }),
+        body: JSON.stringify({
+          action: 'create-order',
+          patient_uuid: currentPatient.id,
+          patient_id: currentPatient.patient_id,
+          treatments,
+          preferred_date: date,
+          preferred_time: time,
+          concern,
+          booking_type: bookingType,
+          payment_method: paymentMethod,
+        }),
       })
       const orderData = await orderRes.json()
       if (!orderRes.ok) { setStatus('error'); setErrorMsg(orderData.error || 'Failed to create booking.'); return }
 
-      if (paymentMethod === 'cod') {
-        // Confirm immediately for COD
+      if (paymentMethod === 'CASH_ON_ARRIVAL') {
         await fetch('/api/book', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'confirm-booking', booking_id: orderData.bookingId, cashfree_order_id: orderData.bookingId, payment_method: 'cod' }),
+          body: JSON.stringify({ action: 'confirm-booking', booking_id: orderData.bookingId, cashfree_order_id: orderData.bookingId, payment_method: 'CASH_ON_ARRIVAL' }),
         })
         window.location.href = `/book/confirmed?booking_id=${orderData.bookingId}`
         return
@@ -187,7 +190,7 @@ export default function BookPage() {
   const inputCls = `w-full glass rounded-xl px-4 py-3 font-sans text-sm bg-transparent placeholder-stone-400 focus:outline-none focus:border-brand/50 transition-colors border ${dark ? 'text-stone-200 border-white/10' : 'text-stone-700 border-stone-200'}`
 
   return (
-    <div className="min-h-screen px-6 py-16 relative overflow-hidden"
+    <div className="min-h-screen px-4 sm:px-6 py-12 sm:py-16 relative overflow-hidden"
       style={{ background: dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)' }}>
       <GlassBackground />
       <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full opacity-40 pointer-events-none animate-blob1"
@@ -197,7 +200,7 @@ export default function BookPage() {
 
       <div className="max-w-lg mx-auto relative">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16,1,0.3,1] }}
-          className="rounded-3xl p-8 relative overflow-hidden"
+          className="rounded-3xl p-5 sm:p-8 relative overflow-hidden"
           style={{
             background: dark
               ? 'linear-gradient(135deg,rgba(255,255,255,0.07) 0%,rgba(255,248,240,0.05) 50%,rgba(255,235,210,0.04) 100%)'
@@ -215,8 +218,8 @@ export default function BookPage() {
           <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 100% 110%,rgba(245,166,35,0.10) 0%,transparent 60%)' }} />
 
           <div className="text-center mb-8">
-            <Image src="/ayurshala_text.png" alt="Ayurshala" width={260} height={72} className="object-contain h-20 w-auto mx-auto mb-4" />
-            <h1 className="font-serif text-3xl mb-1" style={{ color: '#E8621A' }}>Book an Appointment</h1>
+            <Image src="/ayurshala_text.png" alt="Ayurshala" width={260} height={72} className="object-contain h-14 sm:h-20 w-auto mx-auto mb-3 sm:mb-4" />
+            <h1 className="font-serif text-2xl sm:text-3xl mb-1" style={{ color: '#E8621A' }}>Book an Appointment</h1>
             <p className="font-sans text-stone-400 text-sm">We'll confirm within a few hours.</p>
           </div>
 
@@ -292,7 +295,7 @@ export default function BookPage() {
               )}
 
               {/* Therapies */}
-              <div className={`rounded-xl border p-3 grid grid-cols-2 gap-1 ${dark ? 'border-white/10' : 'border-stone-200'}`}>
+              <div className={`rounded-xl border p-3 grid grid-cols-1 sm:grid-cols-2 gap-1 ${dark ? 'border-white/10' : 'border-stone-200'}`}>
                 {therapies.map(t => (
                   <label key={t} className="flex items-center gap-2 cursor-pointer py-1 px-1">
                     <input type="checkbox" className="w-3.5 h-3.5 accent-brand flex-shrink-0"
@@ -330,30 +333,32 @@ export default function BookPage() {
             {/* Payment summary + method */}
             {(isConsultation || selectedTreatments.length > 0) && (
               <div className={`rounded-xl p-4 border ${dark ? 'border-white/10 bg-white/5' : 'border-brand/15 bg-brand/5'}`}>
-                {bookingType === 'consultation' ? (
-                  <p className="font-sans text-sm text-stone-600 mb-3">Consultation Fee: <strong style={{ color: '#E8621A' }}>₹500</strong></p>
-                ) : (
-                  <div className="mb-3">
-                    <p className="font-sans text-sm text-stone-600">Therapy Booking Advance: <strong style={{ color: '#E8621A' }}>₹500</strong></p>
-                    <p className="font-sans text-xs text-stone-400 mt-0.5">Remaining amount decided after doctor assessment.</p>
-                  </div>
-                )}
+                <p className="font-sans text-sm text-stone-600 mb-3">
+                  {isConsultation
+                    ? <>Consultation Fee: <strong style={{ color: '#E8621A' }}>₹500</strong></>
+                    : <>Therapy Advance: <strong style={{ color: '#E8621A' }}>₹1000</strong> <span className="text-xs text-stone-400">(remaining after doctor assessment)</span></>
+                  }
+                </p>
                 <div className="grid grid-cols-2 gap-2">
-                  {(['online', 'cod'] as const).map(m => (
+                  {(['ONLINE', 'CASH_ON_ARRIVAL'] as const).map(m => (
                     <label key={m} className={`flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border transition-all ${paymentMethod === m ? 'border-brand/40 bg-brand/10' : dark ? 'border-white/10' : 'border-stone-200'}`}>
                       <input type="radio" name="payment" value={m} checked={paymentMethod === m} onChange={() => setPaymentMethod(m)} className="w-3.5 h-3.5" />
-                      <span className="font-sans text-xs">{m === 'online' ? '💳 Pay Online' : '💵 Cash on Arrival'}</span>
+                      <span className="font-sans text-xs">{m === 'ONLINE' ? '💳 Pay Online' : '💵 Pay on Arrival'}</span>
                     </label>
                   ))}
                 </div>
+                {paymentMethod === 'CASH_ON_ARRIVAL' && (
+                  <p className="font-sans text-xs text-amber-600 mt-2">Our team will call you to confirm your appointment.</p>
+                )}
               </div>
             )}
 
             {/* Concern */}
             <div>
               <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">Describe Your Concern</label>
-              <textarea value={concern} onChange={e => setConcern(e.target.value)} rows={3}
+              <textarea value={concern} onChange={e => setConcern(e.target.value.slice(0, 1000))} rows={3}
                 placeholder="Brief description of your health concern…" className={inputCls + ' resize-none'} />
+              <p className={`font-sans text-xs mt-1 text-right ${concern.length > 900 ? 'text-amber-500' : 'text-stone-400'}`}>{concern.length}/1000</p>
             </div>
 
             {/* Error */}
@@ -363,7 +368,7 @@ export default function BookPage() {
 
             <button type="submit" disabled={status === 'loading'}
               className="btn-glass w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50">
-              {status === 'loading' ? <><span className="animate-spin">⟳</span> Processing…</> : paymentMethod === 'cod' ? 'Confirm Booking →' : 'Book & Pay →'}
+              {status === 'loading' ? <><span className="animate-spin">⟳</span> Processing…</> : paymentMethod === 'CASH_ON_ARRIVAL' ? 'Confirm Booking →' : `Book & Pay ₹${amount} →`}
             </button>
 
             <p className="font-sans text-xs text-stone-400 text-center">
