@@ -4,7 +4,7 @@ import { motion, useInView } from 'framer-motion'
 import { useTheme } from 'next-themes'
 
 const stats = [
-  { value: '3000+', label: 'Patients Treated' },
+  { value: '500+', label: 'Patients Treated' },
   { value: '15+',   label: 'Years Experience' },
   { value: '19',    label: 'Authentic Therapies' },
   { value: '100%',  label: 'Natural & Authentic' },

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   keywords: 'Panchakarma Noida, Ayurveda Noida, Shirodhara, Abhyanga, Kati Basti, Ayurshala, Ayurvedic treatment Noida, Sector 130 Noida',
   openGraph: {
     title: 'Ayurshala — Ayurveda & Panchakarma Center, Noida',
-    description: 'Authentic Panchakarma therapies in Noida. 3000+ patients treated. Book your appointment today.',
+    description: 'Authentic Panchakarma therapies in Noida. 500+ patients treated. Book your appointment today.',
     url: 'https://www.ayurshalapanchakarma.com',
     siteName: 'Ayurshala',
     locale: 'en_IN',
