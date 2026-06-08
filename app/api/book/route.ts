@@ -198,8 +198,17 @@ export async function POST(req: NextRequest) {
     await supabase.from('bookings_new').update({ status: 'CANCELLED', updated_at: new Date().toISOString() }).eq('booking_id', booking_id)
     await auditLog(booking.id, patient_uuid, 'BOOKING_CANCELLED', { status: booking.status }, { status: 'CANCELLED' })
 
-    const { data: patient } = await supabase.from('patients').select('full_name,patient_id').eq('id', patient_uuid).single()
-    sendTelegram(`❌ *Booking Cancelled — Ayurshala*\n\n👤 ${patient?.full_name} (${patient?.patient_id})\n📋 ${booking_id}\n📅 ${booking.preferred_date} · ${booking.preferred_time}`)
+    const { data: patient } = await supabase.from('patients').select('full_name,patient_id,email,phone').eq('id', patient_uuid).single()
+    const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
+    const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
+    const wasOnline = booking.payment_method === 'ONLINE'
+    const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
+
+    sendTelegram(`❌ *Booking Cancelled — Ayurshala*\n\n👤 ${patient?.full_name} (${patient?.patient_id})\n📋 ${booking_id}\n💆 ${treatmentList}\n📅 ${booking.preferred_date} · ${booking.preferred_time}\n💳 ${wasOnline ? '⚠️ ONLINE PAID — Refund required' : 'Cash on Arrival — No dues'}`)
+
+    const clinicHtml = buildCancellationClinicEmail({ patient, booking, treatmentList, formattedDate, wasOnline })
+    await resend.emails.send({ from, to: 'ayurshalapanchkarma@gmail.com', subject: `❌ Booking Cancelled — ${booking_id} — ${patient?.full_name}${wasOnline ? ' ⚠️ REFUND' : ''}`, html: clinicHtml })
 
     return NextResponse.json({ success: true })
   }
@@ -277,6 +286,13 @@ function sendTelegram(text: string) {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text, parse_mode: 'Markdown' }),
   }).catch(console.error)
+}
+
+function buildCancellationClinicEmail({ patient, booking, treatmentList, formattedDate, wasOnline }: any) {
+  const refundNote = wasOnline
+    ? `<div style="margin-top:20px;padding:16px 20px;background:#fef2f2;border-radius:12px;border:1px solid #fecaca"><p style="margin:0;font-size:14px;color:#dc2626;font-weight:600">⚠️ Refund Required</p><p style="margin:6px 0 0;font-size:13px;color:#78716c">This booking was paid online. Please process a refund of ₹${booking.booking_type === 'consultation' ? 500 : 1000} to the patient.<br>Contact: ${patient?.phone || '—'} · ${patient?.email || '—'}</p></div>`
+    : `<p style="text-align:center;font-size:13px;color:#78716c;margin-top:20px">Cash on Arrival booking — no payment was collected. No refund needed.</p>`
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#FFF3E0;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF3E0;padding:32px 16px"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:24px;overflow:hidden;background:#fff;border:1px solid rgba(232,98,26,0.18);box-shadow:0 8px 40px rgba(232,98,26,0.10)"><tr><td style="background:linear-gradient(135deg,#fff8f0,#ffe8d0);padding:32px 40px;text-align:center;border-bottom:1px solid rgba(232,98,26,0.15)"><h1 style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#1a1008">❌ Booking Cancelled</h1></td></tr><tr><td style="padding:32px 40px"><table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;border-radius:14px;border:1px solid rgba(232,98,26,0.12)"><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Patient</span><br><span style="font-size:15px;color:#1a1008;font-weight:600">${patient?.full_name}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Phone</span><br><span style="font-size:15px;color:#1a1008">${patient?.phone || '—'}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Booking ID</span><br><span style="font-size:15px;color:#E8621A">${booking.booking_id}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Treatment</span><br><span style="font-size:15px;color:#E8621A">${treatmentList}</span></td></tr><tr><td style="padding:12px 20px"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Date &amp; Time</span><br><span style="font-size:15px;color:#78716c;text-decoration:line-through">${formattedDate} · ${booking.preferred_time}</span></td></tr></table>${refundNote}</td></tr></table></td></tr></table></body></html>`
 }
 
 function buildRescheduleRequestEmail({ patient, booking, treatmentList, oldDate, newDateFmt, new_time, confirmUrl }: any) {
