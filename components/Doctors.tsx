@@ -79,11 +79,7 @@ export default function Doctors() {
 
               {/* Avatar / photo */}
               <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-6 overflow-hidden"
-                style={{
-                  background: dark
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,248,240,0.05) 50%, rgba(255,235,210,0.04) 100%)'
-                    : 'linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,248,240,0.55) 50%, rgba(255,235,210,0.45) 100%)'
-                }}>
+                style={{ background: '#F5ECD7' }}>
                 {doc.image ? (
                   <Image src={doc.image} alt={doc.name} width={80} height={80} className="w-full h-full object-cover object-top" />
                 ) : (
