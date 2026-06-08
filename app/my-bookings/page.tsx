@@ -13,7 +13,7 @@ const timeSlots = ['10:00 AM', '11:00 AM', '12:00 PM', '2:00 PM', '3:00 PM', '4:
 type Booking = {
   id: string; booking_id: string; preferred_date: string; preferred_time: string
   booking_type: string; status: string; payment_status: string; created_at: string; concern: string
-  booking_treatments: { treatment_name: string }[]
+  booking_treatments_v2: { treatment_name: string }[]
   payments: { amount: number; status: string }[]
 }
 type Patient = { id: string; patient_id: string; full_name: string; email: string; phone: string }
@@ -70,30 +70,57 @@ export default function MyBookingsPage() {
 
   useEffect(() => {
     setMounted(true)
-    supabase.auth.getSession().then(async ({ data }) => {
-      const u = data.session?.user ?? null
+    let loaded = false
+
+    async function init() {
+      // Try getSession first
+      const { data: sessionData } = await supabase.auth.getSession()
+      let u = sessionData.session?.user ?? null
+
+      // Fallback: getUser (makes a network request, more reliable)
+      if (!u) {
+        const { data: userData } = await supabase.auth.getUser()
+        u = userData.user ?? null
+      }
+
       setUser(u)
-      if (u) await loadData(u)
-      else setLoading(false)
-    })
+      if (u && !loaded) {
+        loaded = true
+        await loadData(u)
+      } else if (!u) {
+        setLoading(false)
+      }
+    }
+
+    init()
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
       const u = session?.user ?? null
       setUser(u)
-      if (u) await loadData(u)
-      else { setPatient(null); setBookings([]); setLoading(false) }
+      if (u && !loaded) {
+        loaded = true
+        await loadData(u)
+      } else if (!u) {
+        setPatient(null); setBookings([]); setLoading(false)
+      }
     })
+
     return () => subscription.unsubscribe()
   }, [])
 
   async function loadData(u: User) {
     const res = await fetch(`/api/patient?email=${encodeURIComponent(u.email!)}`)
     const { patient: p } = await res.json()
+    console.log('[loadData] patient:', p?.id, 'email:', u.email)
     setPatient(p)
     if (p) {
-      const { data } = await supabase.from('bookings_new')
-        .select('*, booking_treatments_v2(treatment_name), payments(amount,status)')
-        .eq('patient_uuid', p.id).eq('is_deleted', false).order('created_at', { ascending: false })
-      setBookings((data as any) || [])
+      const bRes = await fetch(`/api/book/details?patient_uuid=${encodeURIComponent(p.id)}`)
+      console.log('[loadData] bookings response ok:', bRes.ok, 'status:', bRes.status)
+      if (bRes.ok) {
+        const { bookings: data } = await bRes.json()
+        console.log('[loadData] bookings count:', data?.length)
+        setBookings(data || [])
+      }
     }
     setLoading(false)
   }
@@ -187,7 +214,7 @@ export default function MyBookingsPage() {
                   <div className="min-w-0">
                     <p className="font-sans text-xs text-stone-400 mb-0.5">{b.booking_id}</p>
                     <p className="font-sans text-sm font-semibold truncate" style={{ color: '#E8621A' }}>
-                      {(b.booking_treatments as any)?.map((t: any) => t.treatment_name).join(', ') || '—'}
+                      {(b.booking_treatments_v2 as any)?.map((t: any) => t.treatment_name).join(', ') || '—'}
                     </p>
                   </div>
                   <span className={`text-xs px-2.5 py-1 rounded-full font-sans shrink-0 ${cfg.cls}`}>{cfg.label}</span>

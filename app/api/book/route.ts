@@ -130,8 +130,11 @@ export async function POST(req: NextRequest) {
   if (action === 'confirm-booking') {
     const { booking_id, cashfree_order_id, transaction_id, payment_method } = body
 
-    const { data: booking } = await supabase.from('bookings_new').select('*, patients(*)').eq('booking_id', booking_id).single()
+    const { data: booking } = await supabase.from('bookings_new').select('*').eq('booking_id', booking_id).single()
     if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+
+    const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
+    if (!patient) return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
 
     const isCod = payment_method === 'CASH_ON_ARRIVAL'
     const paymentStatusVal = isCod ? 'PENDING' : 'SUCCESS'
@@ -152,7 +155,6 @@ export async function POST(req: NextRequest) {
 
     const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
     const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
-    const patient = booking.patients as any
     const amountLabel = isCod ? `₹${booking.booking_type === 'consultation' ? 500 : 1000} — Cash on Arrival` : `₹${booking.booking_type === 'consultation' ? 500 : 1000} — Paid Online`
 
     sendTelegram(`🏥 *${isCod ? 'Booking (Cash on Arrival)' : 'Booking Confirmed'} — Ayurshala*\n\n👤 *${patient.full_name}*\n🆔 ${patient.patient_id}\n📋 ${booking.booking_id}\n📞 ${patient.phone || '—'}\n📧 ${patient.email}\n💆 ${treatmentList}\n📅 ${booking.preferred_date} · ${booking.preferred_time}\n💳 ${amountLabel}`)

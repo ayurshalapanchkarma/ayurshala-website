@@ -50,18 +50,16 @@ export default function BookPage() {
   const availableSlots = date === today ? timeSlots.filter(s => slotMins(s) > nowMins + 30) : timeSlots
 
   const handleTherapyToggle = (t: string, checked: boolean) => {
-    if (checked) setIsConsultation(false)  // therapy and consultation are mutually exclusive
     setSelectedTreatments(prev => checked ? [...prev, t] : prev.filter(x => x !== t))
   }
 
   const handleConsultationToggle = (checked: boolean) => {
     setIsConsultation(checked)
-    if (checked) setSelectedTreatments([])  // clear therapies when consultation selected
   }
 
-  // Strictly one type per booking per architecture spec
-  const bookingType: 'consultation' | 'therapy' = isConsultation ? 'consultation' : 'therapy'
-  const amount = isConsultation ? 500 : 1000
+  // If therapies are selected, it's a therapy booking regardless of consultation checkbox
+  const bookingType: 'consultation' | 'therapy' = selectedTreatments.length > 0 ? 'therapy' : 'consultation'
+  const amount = bookingType === 'consultation' ? 500 : 1000
   const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'CASH_ON_ARRIVAL'>('ONLINE')
   const activePatient = patient || guestPatient
 
@@ -119,7 +117,8 @@ export default function BookPage() {
     if (!user && !guestPatient && !guestEmail) { alert('Please sign in or enter your email to continue.'); return }
     if (!date) { alert('Please select a date.'); return }
     if (!time) { alert('Please select a time slot.'); return }
-    if (!isConsultation && selectedTreatments.length === 0) { alert('Please select at least one treatment or consultation.'); return }    const activePhone = patient ? phone : guestPhone
+    if (!isConsultation && selectedTreatments.length === 0) { alert('Please select at least one treatment or consultation.'); return }
+    const activePhone = patient ? phone : guestPhone
     if (!validatePhone(activePhone)) return
 
     setStatus('loading')
@@ -146,7 +145,10 @@ export default function BookPage() {
         await fetch('/api/patient', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: patient.email, phone }) })
       }
 
-      const treatments = isConsultation ? ['Consultation'] : selectedTreatments
+      const treatments = [
+        ...(isConsultation ? ['Consultation'] : []),
+        ...selectedTreatments,
+      ]
       const orderRes = await fetch('/api/book', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -290,9 +292,7 @@ export default function BookPage() {
                 <span className="font-sans text-xs text-stone-400 ml-auto">₹500</span>
               </label>
 
-              {selectedTreatments.length > 0 && isConsultation && (
-                <p className="font-sans text-xs text-amber-600 mb-2">Therapy booking includes doctor assessment. Consultation removed automatically.</p>
-              )}
+
 
               {/* Therapies */}
               <div className={`rounded-xl border p-3 grid grid-cols-1 sm:grid-cols-2 gap-1 ${dark ? 'border-white/10' : 'border-stone-200'}`}>

@@ -11,7 +11,7 @@ import { Suspense } from 'react'
 
 type BookingData = {
   booking_id: string; preferred_date: string; preferred_time: string
-  booking_type: string; payment_status: string
+  booking_type: string; payment_status: string; payment_method: string
   patients: { full_name: string; patient_id: string; email: string }
   booking_treatments_v2: { treatment_name: string }[]
 }
@@ -28,9 +28,15 @@ function ConfirmedContent() {
 
   useEffect(() => {
     if (!bookingId) return
-    supabase.from('bookings_new').select('*, patients(*), booking_treatments_v2(treatment_name)')
-      .eq('booking_id', bookingId).single()
-      .then(({ data }) => setBooking(data as any))
+    async function fetchBooking() {
+      // Fetch via API route (uses service role — bypasses RLS)
+      const res = await fetch(`/api/book/details?booking_id=${encodeURIComponent(bookingId!)}`)
+      if (res.ok) {
+        const { booking } = await res.json()
+        setBooking(booking)
+      }
+    }
+    fetchBooking()
   }, [bookingId])
 
   const formattedDate = booking?.preferred_date
@@ -38,7 +44,7 @@ function ConfirmedContent() {
     : '—'
 
   const paymentStatus = booking?.payment_status
-  const isCod = paymentStatus === 'COD_PENDING'
+  const isCod = booking?.payment_method === 'CASH_ON_ARRIVAL' || paymentStatus === 'PENDING'
   const paymentLabel = paymentStatus === 'SUCCESS'
     ? '✓ ₹500 Paid Online'
     : isCod
