@@ -69,6 +69,10 @@ export default function BookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!form.date) { alert('Please select a date.'); return }
+    if (!form.time) { alert('Please select a time slot.'); return }
+    if (form.paymentMethod === 'online' && !form.amount) { alert('Please enter the amount to pay.'); return }
+
     // Validate past time slot
     if (form.date === today && form.time && slotMinutes(form.time) <= nowHour + 30) {
       alert('The selected time slot has already passed. Please choose a future time or a different date.')
@@ -321,19 +325,21 @@ export default function BookPage() {
               </label>
             </div>
 
-            {/* Amount — for all online payments */}
-            {form.paymentMethod === 'online' && (
+            {/* Amount — for all online payments, only after treatment selected */}
+            {form.paymentMethod === 'online' && form.treatment && (
               <div>
                 <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">
-                  Amount to Pay (₹)
-                  {form.treatment === 'Not sure / Consultation' && (
-                    <span className="normal-case text-stone-300 ml-1">— ₹500 for consultation</span>
-                  )}
+                  Amount to Pay (₹) *
+                  {form.treatment === 'Not sure / Consultation'
+                    ? <span className="normal-case text-stone-400 ml-1">— consultation fee pre-filled as ₹500, change if needed</span>
+                    : <span className="normal-case text-stone-400 ml-1">— enter the amount you'd like to pay</span>
+                  }
                 </label>
                 <input
+                  required
                   value={form.amount}
                   onChange={e => set('amount', e.target.value)}
-                  type="number" min="1" placeholder="Enter amount"
+                  type="number" min="1" placeholder="Enter amount in ₹"
                   className={inputCls}
                 />
               </div>
