@@ -6,12 +6,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import GlassBackground from '@/components/GlassBackground'
 
-const treatments = [
+const therapies = [
   'Shirodhara', 'Abhyanga', 'Swedana', 'Vamana', 'Virechana',
   'Basti', 'Nasya', 'Raktamokshana', 'Kati Basti', 'Greeva Basti',
   'Janu Basti', 'Shiro Basti', 'Uro Basti', 'Shiro Taila Dhara',
   'Nasya Dhoompana', 'Karan Purana', 'Anuvasana Basti',
-  'PRP Therapy', 'Regeneration Medicine', 'Not sure / Consultation',
+  'PRP Therapy', 'Regeneration Medicine',
 ]
 
 const timeSlots = [
@@ -23,8 +23,9 @@ type Status = 'idle' | 'loading' | 'success' | 'error'
 
 export default function BookPage() {
   const [form, setForm] = useState({
-    name: '', phone: '', email: '', treatment: '', date: '', time: '', concern: '', paymentMethod: 'online', amount: '',
+    name: '', phone: '', email: '', date: '', time: '', concern: '', paymentMethod: 'online', amount: '',
   })
+  const [selectedTreatments, setSelectedTreatments] = useState<string[]>([])
   const [status, setStatus] = useState<Status>('idle')
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -71,6 +72,7 @@ export default function BookPage() {
 
     if (!form.date) { alert('Please select a date.'); return }
     if (!form.time) { alert('Please select a time slot.'); return }
+    if (selectedTreatments.length === 0) { alert('Please select at least one treatment.'); return }
     if (form.paymentMethod === 'online' && !form.amount) { alert('Please enter the amount to pay.'); return }
 
     // Validate past time slot
@@ -87,11 +89,12 @@ export default function BookPage() {
     setStatus('loading')
 
     try {
+      const treatment = selectedTreatments.join(', ')
       if (form.paymentMethod === 'cod') {
         const confirmRes = await fetch('/api/book', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...form, action: 'confirm-booking' }),
+          body: JSON.stringify({ ...form, treatment, action: 'confirm-booking' }),
         })
         if (!confirmRes.ok) throw new Error()
         setStatus('success')
@@ -102,13 +105,12 @@ export default function BookPage() {
       const orderRes = await fetch('/api/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, action: 'create-order' }),
+        body: JSON.stringify({ ...form, treatment, action: 'create-order' }),
       })
       if (!orderRes.ok) throw new Error('Failed to create order')
       const { orderId, paymentSessionId } = await orderRes.json()
 
-      // Store form so we can confirm after Cashfree redirect
-      sessionStorage.setItem('pendingBooking', JSON.stringify({ ...form, cashfreeOrderId: orderId }))
+      sessionStorage.setItem('pendingBooking', JSON.stringify({ ...form, treatment, cashfreeOrderId: orderId }))
 
       const script = document.createElement('script')
       script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js'
@@ -257,17 +259,46 @@ export default function BookPage() {
 
             {/* Treatment */}
             <div>
-              <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">Treatment *</label>
-              <select required value={form.treatment} onChange={e => {
-                  const t = e.target.value
-                  set('treatment', t)
-                  if (t === 'Not sure / Consultation') set('amount', '500')
-                }}
-                className={inputCls + ' cursor-pointer'}
-              >
-                <option value="" disabled>Select a treatment…</option>
-                {treatments.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-2">Select Treatment(s) *</label>
+
+              {/* Consultation option */}
+              <label className={`flex items-center gap-3 rounded-xl px-4 py-3 mb-2 cursor-pointer border transition-colors ${
+                selectedTreatments.includes('Consultation')
+                  ? 'border-brand/40 bg-brand/10'
+                  : dark ? 'border-white/10' : 'border-stone-200'
+              }`}>
+                <input type="checkbox" className="w-4 h-4 accent-brand"
+                  checked={selectedTreatments.includes('Consultation')}
+                  onChange={e => {
+                    if (e.target.checked) {
+                      setSelectedTreatments(prev => [...prev, 'Consultation'])
+                      if (form.paymentMethod === 'online') set('amount', '500')
+                    } else {
+                      setSelectedTreatments(prev => prev.filter(t => t !== 'Consultation'))
+                      if (form.paymentMethod === 'online') set('amount', '')
+                    }
+                  }}
+                />
+                <span className="font-sans text-sm font-medium">Consultation / Not sure</span>
+                <span className="font-sans text-xs text-stone-400 ml-auto">₹500</span>
+              </label>
+
+              {/* Therapies */}
+              <div className={`rounded-xl border p-3 grid grid-cols-2 gap-1 ${dark ? 'border-white/10' : 'border-stone-200'}`}>
+                {therapies.map(t => (
+                  <label key={t} className="flex items-center gap-2 cursor-pointer py-1 px-1">
+                    <input type="checkbox" className="w-3.5 h-3.5 accent-brand flex-shrink-0"
+                      checked={selectedTreatments.includes(t)}
+                      onChange={e => {
+                        setSelectedTreatments(prev =>
+                          e.target.checked ? [...prev, t] : prev.filter(x => x !== t)
+                        )
+                      }}
+                    />
+                    <span className="font-sans text-xs">{t}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             {/* Date + Time */}
@@ -326,12 +357,12 @@ export default function BookPage() {
             </div>
 
             {/* Amount — for all online payments, only after treatment selected */}
-            {form.paymentMethod === 'online' && form.treatment && (
+            {form.paymentMethod === 'online' && selectedTreatments.length > 0 && (
               <div>
                 <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">
                   Amount to Pay (₹) *
-                  {form.treatment === 'Not sure / Consultation'
-                    ? <span className="normal-case text-stone-400 ml-1">— consultation fee pre-filled as ₹500, change if needed</span>
+                  {selectedTreatments.includes('Consultation') && selectedTreatments.length === 1
+                    ? <span className="normal-case text-stone-400 ml-1">— pre-filled ₹500 for consultation, change if needed</span>
                     : <span className="normal-case text-stone-400 ml-1">— enter the amount you'd like to pay</span>
                   }
                 </label>
