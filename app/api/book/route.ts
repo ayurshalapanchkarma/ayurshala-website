@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
   if (action === 'cancel-booking') {
     const { booking_id, patient_uuid } = body
 
-    const { data: booking } = await supabase.from('bookings_new').select('*, patients(*)')
+    const { data: booking } = await supabase.from('bookings_new').select('*')
       .eq('booking_id', booking_id).eq('patient_uuid', patient_uuid).single()
     if (!booking) return NextResponse.json({ error: 'Booking not found.' }, { status: 404 })
 
@@ -190,8 +190,8 @@ export async function POST(req: NextRequest) {
     await supabase.from('bookings_new').update({ status: 'CANCELLED', updated_at: new Date().toISOString() }).eq('booking_id', booking_id)
     await auditLog(booking.id, patient_uuid, 'BOOKING_CANCELLED', { status: booking.status }, { status: 'CANCELLED' })
 
-    const patient = booking.patients as any
-    sendTelegram(`❌ *Booking Cancelled — Ayurshala*\n\n👤 ${patient.full_name} (${patient.patient_id})\n📋 ${booking_id}\n📅 ${booking.preferred_date} · ${booking.preferred_time}`)
+    const { data: patient } = await supabase.from('patients').select('full_name,patient_id').eq('id', patient_uuid).single()
+    sendTelegram(`❌ *Booking Cancelled — Ayurshala*\n\n👤 ${patient?.full_name} (${patient?.patient_id})\n📋 ${booking_id}\n📅 ${booking.preferred_date} · ${booking.preferred_time}`)
 
     return NextResponse.json({ success: true })
   }
@@ -202,7 +202,7 @@ export async function POST(req: NextRequest) {
 
     if (!new_date || !new_time) return NextResponse.json({ error: 'New date and time required.' }, { status: 400 })
 
-    const { data: booking } = await supabase.from('bookings_new').select('*, patients(*)')
+    const { data: booking } = await supabase.from('bookings_new').select('*')
       .eq('booking_id', booking_id).eq('patient_uuid', patient_uuid).single()
     if (!booking) return NextResponse.json({ error: 'Booking not found.' }, { status: 404 })
 
@@ -241,8 +241,8 @@ export async function POST(req: NextRequest) {
       { preferred_date: booking.preferred_date, preferred_time: booking.preferred_time },
       { preferred_date: new_date, preferred_time: new_time })
 
-    const patient = booking.patients as any
-    sendTelegram(`🔄 *Booking Rescheduled — Ayurshala*\n\n👤 ${patient.full_name} (${patient.patient_id})\n📋 ${booking_id}\n📅 Old: ${booking.preferred_date} · ${booking.preferred_time}\n📅 New: ${new_date} · ${new_time}`)
+    const { data: rPatient } = await supabase.from('patients').select('full_name,patient_id').eq('id', patient_uuid).single()
+    sendTelegram(`🔄 *Booking Rescheduled — Ayurshala*\n\n👤 ${rPatient?.full_name} (${rPatient?.patient_id})\n📋 ${booking_id}\n📅 Old: ${booking.preferred_date} · ${booking.preferred_time}\n📅 New: ${new_date} · ${new_time}`)
 
     return NextResponse.json({ success: true })
   }
