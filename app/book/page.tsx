@@ -254,7 +254,11 @@ export default function BookPage() {
             {/* Treatment */}
             <div>
               <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">Treatment *</label>
-              <select required value={form.treatment} onChange={e => set('treatment', e.target.value)}
+              <select required value={form.treatment} onChange={e => {
+                  const t = e.target.value
+                  set('treatment', t)
+                  if (t === 'Not sure / Consultation') set('amount', '500')
+                }}
                 className={inputCls + ' cursor-pointer'}
               >
                 <option value="" disabled>Select a treatment…</option>
@@ -317,11 +321,14 @@ export default function BookPage() {
               </label>
             </div>
 
-            {/* Amount — only for online, non-consultation */}
-            {form.paymentMethod === 'online' && form.treatment && form.treatment !== 'Not sure / Consultation' && (
+            {/* Amount — for all online payments */}
+            {form.paymentMethod === 'online' && (
               <div>
                 <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">
                   Amount to Pay (₹)
+                  {form.treatment === 'Not sure / Consultation' && (
+                    <span className="normal-case text-stone-300 ml-1">— ₹500 for consultation</span>
+                  )}
                 </label>
                 <input
                   value={form.amount}
