@@ -93,13 +93,12 @@ export default function Navbar() {
           )}
           {mounted && (user ? (
             <div className="flex items-center gap-2">
-              <Link href="/book" className="btn-glass text-xs py-2 px-4">My Bookings</Link>
-              <button onClick={signOut} className="btn-glass text-xs py-2 px-3 flex items-center gap-1.5">
-                {user.user_metadata?.avatar_url && (
-                  <img src={user.user_metadata.avatar_url} className="w-5 h-5 rounded-full" alt="" />
-                )}
-                Sign Out
-              </button>
+              {user.user_metadata?.avatar_url && (
+                <img src={user.user_metadata.avatar_url} className="w-7 h-7 rounded-full border border-brand/30" alt="" />
+              )}
+              <span className="font-sans text-xs text-stone-600">{user.user_metadata?.full_name?.split(' ')[0] || user.email}</span>
+              <Link href="/my-bookings" className="btn-glass text-xs py-2 px-4">My Bookings</Link>
+              <button onClick={signOut} className="btn-glass text-xs py-2 px-3">Sign Out</button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
