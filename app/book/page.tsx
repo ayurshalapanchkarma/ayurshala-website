@@ -72,8 +72,7 @@ export default function BookPage() {
 
     if (!form.date) { alert('Please select a date.'); return }
     if (!form.time) { alert('Please select a time slot.'); return }
-    if (selectedTreatments.length === 0) { alert('Please select at least one treatment.'); return }
-    if (form.paymentMethod === 'online' && !form.amount) { alert('Please enter the amount to pay.'); return }
+    if (form.paymentMethod === 'online' && !form.amount && !selectedTreatments.includes('Consultation') && selectedTreatments.length === 0) { alert('Please enter the amount to pay.'); return }
 
     // Validate past time slot
     if (form.date === today && form.time && slotMinutes(form.time) <= nowHour + 30) {
@@ -89,8 +88,11 @@ export default function BookPage() {
     setStatus('loading')
 
     try {
-      const treatment = selectedTreatments.join(', ')
-      const finalAmount = selectedTreatments.includes('Consultation') ? '500' : form.amount
+      const effectiveTreatments = selectedTreatments.length === 0 ? ['Consultation'] : selectedTreatments
+      const treatment = effectiveTreatments.join(', ')
+      const finalAmount = effectiveTreatments.includes('Consultation') && effectiveTreatments.length === 1
+        ? '500'
+        : effectiveTreatments.includes('Consultation') ? '500' : form.amount
       if (form.paymentMethod === 'cod') {
         const confirmRes = await fetch('/api/book', {
           method: 'POST',
@@ -358,22 +360,22 @@ export default function BookPage() {
             </div>
 
             {/* Amount — for all online payments, only after treatment selected */}
-            {form.paymentMethod === 'online' && selectedTreatments.length > 0 && (
+            {form.paymentMethod === 'online' && (
               <div>
                 <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">
                   Amount to Pay (₹) *
-                  {selectedTreatments.includes('Consultation')
+                  {(selectedTreatments.includes('Consultation') || selectedTreatments.length === 0)
                     ? <span className="normal-case text-stone-400 ml-1">— fixed ₹500 for consultation</span>
                     : <span className="normal-case text-stone-400 ml-1">— enter any amount</span>
                   }
                 </label>
                 <input
                   required
-                  value={selectedTreatments.includes('Consultation') ? '500' : form.amount}
-                  onChange={e => { if (!selectedTreatments.includes('Consultation')) set('amount', e.target.value) }}
-                  readOnly={selectedTreatments.includes('Consultation')}
+                  value={(selectedTreatments.includes('Consultation') || selectedTreatments.length === 0) ? '500' : form.amount}
+                  onChange={e => { if (!selectedTreatments.includes('Consultation') && selectedTreatments.length > 0) set('amount', e.target.value) }}
+                  readOnly={selectedTreatments.includes('Consultation') || selectedTreatments.length === 0}
                   type="number" min="1" placeholder="Enter amount in ₹"
-                  className={inputCls + (selectedTreatments.includes('Consultation') ? ' opacity-60 cursor-not-allowed' : '')}
+                  className={inputCls + ((selectedTreatments.includes('Consultation') || selectedTreatments.length === 0) ? ' opacity-60 cursor-not-allowed' : '')}
                 />
               </div>
             )}
