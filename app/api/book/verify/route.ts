@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const payment = response.data?.[0]
     const success = payment?.payment_status === 'SUCCESS'
 
-    if (!success) return NextResponse.redirect(new URL('/book?status=failed', req.url))
+    if (!success) return NextResponse.redirect(new URL('/book/failed', req.url))
 
     // Payment for existing booking (reschedule pay-online flow)
     if (originalBookingId) {
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.redirect(new URL(`/book/confirmed?booking_id=${orderId}`, req.url))
   } catch {
-    return NextResponse.redirect(new URL('/book?status=error', req.url))
+    return NextResponse.redirect(new URL('/book/failed', req.url))
   }
 }
 

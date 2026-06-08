@@ -79,7 +79,7 @@ export default function BookPage() {
 
     const params = new URLSearchParams(window.location.search)
     if (params.get('status') === 'failed' || params.get('status') === 'error') {
-      setStatus('error'); setErrorMsg('Payment failed. Please try again.')
+      window.location.href = '/book/failed'
     }
 
     return () => subscription.unsubscribe()
