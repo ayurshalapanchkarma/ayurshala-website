@@ -41,8 +41,8 @@ export default function BookPage() {
     setMounted(true)
 
     // Load user + pre-fill form
-    supabase.auth.getUser().then(({ data }) => {
-      const u = data.user
+    supabase.auth.getSession().then(({ data }) => {
+      const u = data.session?.user ?? null
       setUser(u)
       if (u) {
         setForm(f => ({

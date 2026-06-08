@@ -7,9 +7,17 @@ export default function AuthCallback() {
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getSession().then(() => {
-      router.replace('/book')
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        subscription.unsubscribe()
+        router.replace('/book')
+      }
     })
+    // Fallback: if already signed in
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) router.replace('/book')
+    })
+    return () => subscription.unsubscribe()
   }, [router])
 
   return (
