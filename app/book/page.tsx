@@ -220,7 +220,7 @@ export default function BookPage() {
           <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 100% 110%,rgba(245,166,35,0.10) 0%,transparent 60%)' }} />
 
           <div className="text-center mb-8">
-            <Image src="/ayurshala_text.png" alt="Ayurshala" width={260} height={72} className="object-contain h-14 sm:h-20 w-auto mx-auto mb-3 sm:mb-4" />
+            <Link href="/"><Image src="/ayurshala_text.png" alt="Ayurshala" width={260} height={72} className="object-contain h-14 sm:h-20 w-auto mx-auto mb-3 sm:mb-4" /></Link>
             <h1 className="font-serif text-2xl sm:text-3xl mb-1" style={{ color: '#E8621A' }}>Book an Appointment</h1>
             <p className="font-sans text-stone-400 text-sm">We'll confirm within a few hours.</p>
           </div>
@@ -374,6 +374,7 @@ export default function BookPage() {
             <p className="font-sans text-xs text-stone-400 text-center">
               By booking you agree to our terms. Questions? <a href="tel:+919821224767" className="text-brand">+91-9821224767</a>
             </p>
+            <Link href="/" className="btn-glass w-full text-sm py-2.5 text-center block">← Back to Home</Link>
           </form>
         </motion.div>
       </div>
