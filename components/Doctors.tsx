@@ -81,7 +81,7 @@ export default function Doctors() {
               <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-6 overflow-hidden"
                 style={{ background: '#E8E0D5' }}>
                 {doc.image ? (
-                  <Image src={doc.image} alt={doc.name} width={80} height={80} className="w-full h-full object-cover object-top" />
+                  <Image src={doc.image} alt={doc.name} width={80} height={80} className="w-full h-full object-cover" style={{ objectPosition: '50% 20%' }} />
                 ) : (
                   doc.icon
                 )}
