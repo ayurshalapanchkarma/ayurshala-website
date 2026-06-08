@@ -196,13 +196,23 @@ export default function BookPage() {
         style={{ background: 'radial-gradient(circle,#E8621A 0%,transparent 70%)' }} />
 
       <div className="max-w-lg mx-auto relative">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16,1,0.3,1] }}
           className="rounded-3xl p-8 relative overflow-hidden"
           style={{
-            background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.82)',
-            backdropFilter: 'blur(40px)', border: dark ? '1px solid rgba(255,255,255,0.08)' : '1.5px solid rgba(255,255,255,0.85)',
-            boxShadow: '0 20px 80px rgba(232,98,26,0.10)',
+            background: dark
+              ? 'linear-gradient(135deg,rgba(255,255,255,0.07) 0%,rgba(255,248,240,0.05) 50%,rgba(255,235,210,0.04) 100%)'
+              : 'linear-gradient(135deg,rgba(255,255,255,0.75) 0%,rgba(255,248,240,0.55) 50%,rgba(255,235,210,0.45) 100%)',
+            backdropFilter: 'blur(40px) saturate(1.8)',
+            WebkitBackdropFilter: 'blur(40px) saturate(1.8)',
+            border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(255,255,255,0.85)',
+            boxShadow: dark
+              ? '0 20px 80px rgba(232,98,26,0.08),0 4px 24px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1)'
+              : '0 20px 80px rgba(232,98,26,0.12),0 4px 24px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)',
           }}>
+          {/* Glows */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% -10%,rgba(232,98,26,0.18) 0%,transparent 65%)' }} />
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 0% 120%,rgba(13,148,136,0.10) 0%,transparent 60%)' }} />
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 100% 110%,rgba(245,166,35,0.10) 0%,transparent 60%)' }} />
 
           <div className="text-center mb-8">
             <Image src="/ayurshala_text.png" alt="Ayurshala" width={260} height={72} className="object-contain h-20 w-auto mx-auto mb-4" />

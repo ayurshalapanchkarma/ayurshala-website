@@ -127,7 +127,7 @@ export default function MyBookingsPage() {
                 {b.preferred_time && <span>🕐 {b.preferred_time}</span>}
                 {b.payments?.[0] && b.status === 'CONFIRMED' && <span>💳 ₹{b.payments[0].amount} paid</span>}
               </div>
-              {b.concern && <p className="font-sans text-xs text-stone-400 mt-2 italic">"{b.concern}"</p>}
+              {b.concern && <p className="font-sans text-xs text-stone-400 mt-2"><span className="uppercase tracking-wider">Concern:</span> {b.concern}</p>}
             </div>
           ))}
         </div>
