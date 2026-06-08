@@ -111,6 +111,11 @@ export default function BookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!user) {
+      supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback?next=/book` } })
+      return
+    }
+
     if (!form.date) { alert('Please select a date.'); return }
     if (!form.time) { alert('Please select a time slot.'); return }
     if (form.paymentMethod === 'online' && !form.amount && !selectedTreatments.includes('Consultation') && selectedTreatments.length === 0) { alert('Please enter the amount to pay.'); return }
@@ -476,7 +481,7 @@ export default function BookPage() {
               {status === 'loading' ? (
                 <><span className="animate-spin">⟳</span> Sending…</>
               ) : (
-                <>Book Appointment →</>
+                <>{user ? 'Book Appointment →' : 'Sign in to Book →'}</>
               )}
             </button>
 
