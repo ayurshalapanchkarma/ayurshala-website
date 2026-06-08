@@ -156,16 +156,24 @@ export async function POST(req: NextRequest) {
     const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
     const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
     const amountLabel = isCod ? `₹${booking.booking_type === 'consultation' ? 500 : 1000} — Cash on Arrival` : `₹${booking.booking_type === 'consultation' ? 500 : 1000} — Paid Online`
-
-    sendTelegram(`🏥 *${isCod ? 'Booking (Cash on Arrival)' : 'Booking Confirmed'} — Ayurshala*\n\n👤 *${patient.full_name}*\n🆔 ${patient.patient_id}\n📋 ${booking.booking_id}\n📞 ${patient.phone || '—'}\n📧 ${patient.email}\n💆 ${treatmentList}\n📅 ${booking.preferred_date} · ${booking.preferred_time}\n💳 ${amountLabel}`)
-
     const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
-    const emailHtml = buildEmailHtml({ patient, booking, treatmentList, formattedDate, amountLabel, isCod })
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://ayurshalapanchakarma.com'
 
-    const emails = [resend.emails.send({ from, to: 'ayurshalapanchkarma@gmail.com', subject: `${isCod ? '💵' : '✓'} ${booking.booking_id} — ${patient.full_name}`, html: emailHtml(true) })]
-    if (patient.email) emails.push(resend.emails.send({ from, to: patient.email, subject: `${isCod ? 'Booking Received' : '✓ Booking Confirmed'} — ${booking.booking_id}`, html: emailHtml(false) }))
-    await Promise.all(emails)
+    if (isCod) {
+      // Clinic gets email with Confirm button — patient email sent only after clinic confirms
+      const confirmUrl = `${appUrl}/api/admin/confirm?booking_id=${booking_id}&secret=${process.env.ADMIN_CONFIRM_SECRET ?? 'ayurshala-confirm'}`
+      const clinicHtml = buildClinicPendingEmail({ patient, booking, treatmentList, formattedDate, amountLabel, confirmUrl })
+      await resend.emails.send({ from, to: 'ayurshalapanchkarma@gmail.com', subject: `🔔 New COD Booking — ${booking.booking_id} — ${patient.full_name}`, html: clinicHtml })
+      sendTelegram(`🔔 *New COD Booking — Ayurshala*\n\n👤 *${patient.full_name}*\n🆔 ${patient.patient_id}\n📋 ${booking.booking_id}\n📞 ${patient.phone || '—'}\n💆 ${treatmentList}\n📅 ${booking.preferred_date} · ${booking.preferred_time}\n\n✅ Confirm: ${confirmUrl}`)
+    } else {
+      // Online payment — instantly confirmed, send both emails
+      sendTelegram(`✅ *Booking Confirmed — Ayurshala*\n\n👤 *${patient.full_name}*\n🆔 ${patient.patient_id}\n📋 ${booking.booking_id}\n📞 ${patient.phone || '—'}\n📧 ${patient.email}\n💆 ${treatmentList}\n📅 ${booking.preferred_date} · ${booking.preferred_time}\n💳 ${amountLabel}`)
+      const emailHtml = buildEmailHtml({ patient, booking, treatmentList, formattedDate, amountLabel, isCod: false })
+      const emails = [resend.emails.send({ from, to: 'ayurshalapanchkarma@gmail.com', subject: `✓ ${booking.booking_id} — ${patient.full_name}`, html: emailHtml(true) })]
+      if (patient.email) emails.push(resend.emails.send({ from, to: patient.email, subject: `✓ Booking Confirmed — ${booking.booking_id}`, html: emailHtml(false) }))
+      await Promise.all(emails)
+    }
 
     return NextResponse.json({ success: true })
   }
@@ -255,6 +263,10 @@ function sendTelegram(text: string) {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text, parse_mode: 'Markdown' }),
   }).catch(console.error)
+}
+
+function buildClinicPendingEmail({ patient, booking, treatmentList, formattedDate, amountLabel, confirmUrl }: any) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#FFF3E0;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF3E0;padding:32px 16px"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:24px;overflow:hidden;background:#fff;border:1px solid rgba(232,98,26,0.18);box-shadow:0 8px 40px rgba(232,98,26,0.10)"><tr><td style="background:linear-gradient(135deg,#fff8f0,#ffe8d0);padding:32px 40px;text-align:center;border-bottom:1px solid rgba(232,98,26,0.15)"><h1 style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#1a1008">🔔 New Cash-on-Arrival Booking</h1></td></tr><tr><td style="padding:32px 40px"><table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;border-radius:14px;border:1px solid rgba(232,98,26,0.12)"><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Patient</span><br><span style="font-size:15px;color:#1a1008;font-weight:600">${patient.full_name}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Phone</span><br><span style="font-size:15px;color:#1a1008">${patient.phone || '—'}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Booking ID</span><br><span style="font-size:15px;color:#E8621A">${booking.booking_id}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Treatment</span><br><span style="font-size:15px;color:#E8621A">${treatmentList}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Date &amp; Time</span><br><span style="font-size:15px;color:#1a1008">${formattedDate} · ${booking.preferred_time}</span></td></tr><tr><td style="padding:12px 20px"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Payment</span><br><span style="font-size:15px;color:#1a1008">${amountLabel}</span></td></tr></table><div style="text-align:center;margin-top:28px"><a href="${confirmUrl}" style="display:inline-block;background:#16a34a;color:#fff;font-family:Arial,sans-serif;font-size:15px;font-weight:600;padding:14px 36px;border-radius:12px;text-decoration:none">✓ Confirm Booking</a><p style="margin:16px 0 0;font-size:12px;color:#a8a29e">Clicking this will confirm the booking and send a confirmation email to the patient.</p></div></td></tr></table></td></tr></table></body></html>`
 }
 
 function buildEmailHtml({ patient, booking, treatmentList, formattedDate, amountLabel, isCod }: any) {
