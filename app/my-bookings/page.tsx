@@ -125,7 +125,7 @@ export default function MyBookingsPage() {
               <div className="flex flex-wrap gap-3 text-xs font-sans text-stone-400">
                 {b.preferred_date && <span>📅 {new Date(b.preferred_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
                 {b.preferred_time && <span>🕐 {b.preferred_time}</span>}
-                {b.payments?.[0] && <span>💳 ₹{b.payments[0].amount} paid</span>}
+                {b.payments?.[0] && b.status === 'CONFIRMED' && <span>💳 ₹{b.payments[0].amount} paid</span>}
               </div>
               {b.concern && <p className="font-sans text-xs text-stone-400 mt-2 italic">"{b.concern}"</p>}
             </div>
