@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import GlassBackground from '@/components/GlassBackground'
@@ -9,57 +8,88 @@ import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
 type Booking = {
-  id: string; treatment: string; date: string; time: string
-  paymentmethod: string; status: string; created_at: string; concern: string
+  id: string; booking_id: string; preferred_date: string; preferred_time: string
+  booking_type: string; status: string; payment_status: string; created_at: string; concern: string
+  booking_treatments: { treatment_name: string }[]
+  payments: { amount: number }[]
 }
+type Patient = { id: string; patient_id: string; full_name: string; email: string; phone: string }
 
 export default function MyBookingsPage() {
   const [user, setUser] = useState<User | null>(null)
+  const [patient, setPatient] = useState<Patient | null>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const router = useRouter()
   const dark = mounted && theme === 'dark'
 
   useEffect(() => {
     setMounted(true)
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       const u = data.session?.user ?? null
       setUser(u)
-      if (!u) { setLoading(false); return }
-      supabase.from('bookings').select('*').eq('email', u.email!).order('created_at', { ascending: false })
-        .then(({ data }) => { setBookings(data || []); setLoading(false) })
+      if (u) await loadData(u)
+      else setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
       const u = session?.user ?? null
       setUser(u)
-      if (!u) { setBookings([]); setLoading(false); return }
-      supabase.from('bookings').select('*').eq('email', u.email!).order('created_at', { ascending: false })
-        .then(({ data }) => { setBookings(data || []); setLoading(false) })
+      if (u) await loadData(u)
+      else { setPatient(null); setBookings([]); setLoading(false) }
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  async function loadData(u: User) {
+    const res = await fetch(`/api/patient?email=${encodeURIComponent(u.email!)}`)
+    const { patient: p } = await res.json()
+    setPatient(p)
+    if (p) {
+      const { data } = await supabase.from('bookings_v2')
+        .select('*, booking_treatments(treatment_name), payments(amount)')
+        .eq('patient_uuid', p.id).order('created_at', { ascending: false })
+      setBookings((data as any) || [])
+    }
+    setLoading(false)
+  }
+
+  const statusColors: Record<string, string> = {
+    CONFIRMED: 'bg-green-100 text-green-700',
+    PAYMENT_PENDING: 'bg-amber-100 text-amber-700',
+    CANCELLED: 'bg-red-100 text-red-700',
+    COMPLETED: 'bg-blue-100 text-blue-700',
+    IN_PROGRESS: 'bg-purple-100 text-purple-700',
+    NO_SHOW: 'bg-stone-100 text-stone-600',
+  }
 
   return (
     <div className="min-h-screen px-6 py-24 relative overflow-hidden"
       style={{ background: dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)' }}>
       <GlassBackground />
       <div className="max-w-2xl mx-auto relative">
-        <Link href="/" className="inline-block mb-8">
-          <Image src="/ayurshala_text.png" alt="Ayurshala" width={160} height={48} className="object-contain h-12 w-auto" />
-        </Link>
+        <Link href="/"><Image src="/ayurshala_text.png" alt="Ayurshala" width={160} height={48} className="object-contain h-12 w-auto mb-8" /></Link>
 
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-serif text-3xl mb-1" style={{ color: '#E8621A' }}>My Bookings</h1>
-            {user && <p className="font-sans text-sm text-stone-400">{user.email}</p>}
+        {patient && (
+          <div className={`rounded-2xl p-4 mb-6 border flex items-center gap-4 ${dark ? 'border-white/10 bg-white/5' : 'border-brand/15 bg-brand/5'}`}>
+            <div className="flex-1">
+              <p className="font-sans text-sm font-semibold" style={{ color: '#E8621A' }}>{patient.full_name}</p>
+              <p className="font-sans text-xs text-stone-400">{patient.email}</p>
+            </div>
+            <div className="text-right">
+              <p className="font-sans text-xs text-stone-400">Patient ID</p>
+              <p className="font-sans text-sm font-bold" style={{ color: '#E8621A' }}>{patient.patient_id}</p>
+            </div>
           </div>
+        )}
+
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="font-serif text-3xl" style={{ color: '#E8621A' }}>My Bookings</h1>
           <Link href="/book" className="btn-glass text-xs py-2 px-5">+ New Booking</Link>
         </div>
 
         {!user && !loading && (
-          <div className="rounded-2xl p-8 text-center border border-brand/15 bg-white/40">
+          <div className={`rounded-2xl p-8 text-center border ${dark ? 'border-white/10 bg-white/5' : 'border-brand/15 bg-white/40'}`}>
             <p className="font-sans text-stone-500 mb-4">Sign in to view your bookings</p>
             <button onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback?next=/my-bookings` } })}
               className="btn-glass text-sm py-2 px-6 inline-flex items-center gap-2">
@@ -69,37 +99,38 @@ export default function MyBookingsPage() {
           </div>
         )}
 
-        {loading && (
-          <p className="font-sans text-sm text-stone-400 text-center py-12">Loading…</p>
-        )}
+        {loading && <p className="font-sans text-sm text-stone-400 text-center py-12">Loading…</p>}
 
         {user && !loading && bookings.length === 0 && (
-          <div className="rounded-2xl p-8 text-center border border-brand/15 bg-white/40">
-            <p className="font-sans text-stone-500 mb-4">You have no bookings yet.</p>
+          <div className={`rounded-2xl p-8 text-center border ${dark ? 'border-white/10 bg-white/5' : 'border-brand/15 bg-white/40'}`}>
+            <p className="font-sans text-stone-500 mb-4">No bookings yet.</p>
             <Link href="/book" className="btn-glass text-sm py-2 px-6 inline-block">Book an Appointment</Link>
           </div>
         )}
 
-        {bookings.length > 0 && (
-          <div className="space-y-3">
-            {bookings.map(b => (
-              <div key={b.id} className={`rounded-2xl p-5 border ${dark ? 'border-white/10 bg-white/5' : 'border-brand/12 bg-white/60'}`}>
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <p className="font-sans text-sm font-semibold text-brand">{b.treatment || '—'}</p>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-sans flex-shrink-0 ${b.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {b.status}
-                  </span>
+        <div className="space-y-3">
+          {bookings.map(b => (
+            <div key={b.id} className={`rounded-2xl p-5 border ${dark ? 'border-white/10 bg-white/5' : 'border-brand/12 bg-white/60'}`}>
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <p className="font-sans text-xs text-stone-400 mb-0.5">{b.booking_id}</p>
+                  <p className="font-sans text-sm font-semibold" style={{ color: '#E8621A' }}>
+                    {b.booking_treatments?.map(t => t.treatment_name).join(', ') || '—'}
+                  </p>
                 </div>
-                <div className="flex gap-4 text-xs font-sans text-stone-400">
-                  <span>📅 {b.date ? new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
-                  {b.time && <span>🕐 {b.time}</span>}
-                  <span>💳 {b.paymentmethod === 'online' ? 'Paid online' : 'Cash on arrival'}</span>
-                </div>
-                {b.concern && <p className="font-sans text-xs text-stone-400 mt-2 italic">"{b.concern}"</p>}
+                <span className={`text-xs px-2.5 py-1 rounded-full font-sans flex-shrink-0 ${statusColors[b.status] || 'bg-stone-100 text-stone-600'}`}>
+                  {b.status.replace('_', ' ')}
+                </span>
               </div>
-            ))}
-          </div>
-        )}
+              <div className="flex flex-wrap gap-3 text-xs font-sans text-stone-400">
+                {b.preferred_date && <span>📅 {new Date(b.preferred_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+                {b.preferred_time && <span>🕐 {b.preferred_time}</span>}
+                {b.payments?.[0] && <span>💳 ₹{b.payments[0].amount} paid</span>}
+              </div>
+              {b.concern && <p className="font-sans text-xs text-stone-400 mt-2 italic">"{b.concern}"</p>}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
