@@ -111,14 +111,11 @@ export default function MyBookingsPage() {
   async function loadData(u: User) {
     const res = await fetch(`/api/patient?email=${encodeURIComponent(u.email!)}`)
     const { patient: p } = await res.json()
-    console.log('[loadData] patient:', p?.id, 'email:', u.email)
     setPatient(p)
     if (p) {
       const bRes = await fetch(`/api/book/details?patient_uuid=${encodeURIComponent(p.id)}`)
-      console.log('[loadData] bookings response ok:', bRes.ok, 'status:', bRes.status)
       if (bRes.ok) {
         const { bookings: data } = await bRes.json()
-        console.log('[loadData] bookings count:', data?.length)
         setBookings(data || [])
       }
     }
