@@ -90,11 +90,12 @@ export default function BookPage() {
 
     try {
       const treatment = selectedTreatments.join(', ')
+      const finalAmount = selectedTreatments.includes('Consultation') ? '500' : form.amount
       if (form.paymentMethod === 'cod') {
         const confirmRes = await fetch('/api/book', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...form, treatment, action: 'confirm-booking' }),
+          body: JSON.stringify({ ...form, treatment, amount: finalAmount, action: 'confirm-booking' }),
         })
         if (!confirmRes.ok) throw new Error()
         setStatus('success')
@@ -105,12 +106,12 @@ export default function BookPage() {
       const orderRes = await fetch('/api/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, treatment, action: 'create-order' }),
+        body: JSON.stringify({ ...form, treatment, amount: finalAmount, action: 'create-order' }),
       })
       if (!orderRes.ok) throw new Error('Failed to create order')
       const { orderId, paymentSessionId } = await orderRes.json()
 
-      sessionStorage.setItem('pendingBooking', JSON.stringify({ ...form, treatment, cashfreeOrderId: orderId }))
+      sessionStorage.setItem('pendingBooking', JSON.stringify({ ...form, treatment, amount: finalAmount, cashfreeOrderId: orderId }))
 
       const script = document.createElement('script')
       script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js'
@@ -279,7 +280,7 @@ export default function BookPage() {
                     }
                   }}
                 />
-                <span className="font-sans text-sm font-medium">Consultation / Not sure</span>
+                <span className="font-sans text-sm font-medium">Consultation</span>
                 <span className="font-sans text-xs text-stone-400 ml-auto">₹500</span>
               </label>
 
@@ -361,17 +362,18 @@ export default function BookPage() {
               <div>
                 <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">
                   Amount to Pay (₹) *
-                  {selectedTreatments.includes('Consultation') && selectedTreatments.length === 1
-                    ? <span className="normal-case text-stone-400 ml-1">— pre-filled ₹500 for consultation, change if needed</span>
-                    : <span className="normal-case text-stone-400 ml-1">— enter the amount you'd like to pay</span>
+                  {selectedTreatments.includes('Consultation')
+                    ? <span className="normal-case text-stone-400 ml-1">— fixed ₹500 for consultation</span>
+                    : <span className="normal-case text-stone-400 ml-1">— enter any amount</span>
                   }
                 </label>
                 <input
                   required
-                  value={form.amount}
-                  onChange={e => set('amount', e.target.value)}
+                  value={selectedTreatments.includes('Consultation') ? '500' : form.amount}
+                  onChange={e => { if (!selectedTreatments.includes('Consultation')) set('amount', e.target.value) }}
+                  readOnly={selectedTreatments.includes('Consultation')}
                   type="number" min="1" placeholder="Enter amount in ₹"
-                  className={inputCls}
+                  className={inputCls + (selectedTreatments.includes('Consultation') ? ' opacity-60 cursor-not-allowed' : '')}
                 />
               </div>
             )}
