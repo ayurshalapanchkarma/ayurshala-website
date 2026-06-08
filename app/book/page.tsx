@@ -321,14 +321,14 @@ export default function BookPage() {
             {form.paymentMethod === 'online' && form.treatment && form.treatment !== 'Not sure / Consultation' && (
               <div>
                 <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1.5">
-                  Amount to Pay (₹) <span className="normal-case text-stone-300">— minimum ₹500</span>
+                  Amount to Pay (₹) <span className="normal-case text-stone-300">— minimum ₹1</span>
                 </label>
                 <input
                   value={form.amount}
                   onChange={e => set('amount', e.target.value)}
-                  type="number" min="500" placeholder="500"
+                  type="number" min="1" placeholder="1"
                   className={inputCls}
-                  onBlur={e => { if (Number(e.target.value) < 500) set('amount', '500') }}
+                  onBlur={e => { if (Number(e.target.value) < 1) set('amount', '1') }}
                 />
               </div>
             )}

@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
       const response = await cashfree.PGCreateOrder({
         order_id: orderId,
-        order_amount: Math.max(500, Number(amount) || 500),
+        order_amount: Math.max(1, Number(amount) || 1),
         order_currency: 'INR',
         customer_details: {
           customer_id: phone.replace(/\D/g, '').slice(-10),
@@ -58,9 +58,9 @@ export async function POST(req: NextRequest) {
 
   if (action === 'confirm-booking') {
     const { cashfreeOrderId, paymentMethod } = body
-    const paidAmount = Math.max(500, Number(amount) || 500)
-    if (Number(amount) > 0 && Number(amount) < 500) {
-      return NextResponse.json({ error: 'Amount must be at least ₹500' }, { status: 400 })
+    const paidAmount = Math.max(1, Number(amount) || 1)
+    if (Number(amount) > 0 && Number(amount) < 1) {
+      return NextResponse.json({ error: 'Amount must be at least ₹1' }, { status: 400 })
     }
     if (!name || !phone || !treatment) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
