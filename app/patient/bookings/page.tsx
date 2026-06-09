@@ -27,10 +27,23 @@ export default function PatientBookings() {
     if (!user) return
 
     async function fetchBookings() {
+      // Get patient record using google_user_id
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('google_user_id', user.id)
+        .single()
+
+      if (!patient) {
+        setBookingsLoading(false)
+        return
+      }
+
+      // Query bookings using patients.id
       const { data } = await supabase
         .from('bookings_new')
         .select('*')
-        .eq('patient_uuid', user.id)
+        .eq('patient_uuid', patient.id)
         .order('created_at', { ascending: false })
 
       setBookings(data || [])
