@@ -64,9 +64,14 @@ export default function RefundsPage() {
       <div className="max-w-5xl mx-auto relative">
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-serif text-3xl sm:text-4xl" style={{ color: '#E8621A' }}>Refund Requests</h1>
-          <Link href="/admin" className="btn-glass text-sm py-2 px-4 flex items-center gap-2">
-            <Home className="w-4 h-4" /> Admin
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/admin" className="btn-glass text-sm py-2 px-4">
+              Admin
+            </Link>
+            <Link href="/" className="btn-glass text-sm py-2 px-4 flex items-center gap-2">
+              <Home className="w-4 h-4" /> Home
+            </Link>
+          </div>
         </div>
 
         {/* Filter buttons */}

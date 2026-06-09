@@ -5,8 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import GlassBackground from '@/components/GlassBackground'
 import { useTheme } from 'next-themes'
-
-const ADMIN_PASSWORD = '786110@Ayurshala'
+import { Home } from 'lucide-react'
 
 type Booking = {
   id: number; booking_id: string; preferred_date: string; preferred_time: string
@@ -20,6 +19,8 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
   CANCELLED:            { label: 'Cancelled',    cls: 'bg-red-100 text-red-600' },
   COMPLETED:            { label: 'Completed',    cls: 'bg-blue-100 text-blue-700' },
 }
+
+const ADMIN_PASSWORD = '786110@Ayurshala'
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
@@ -142,9 +143,14 @@ export default function AdminPage() {
       <div className="max-w-5xl mx-auto relative">
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-serif text-3xl sm:text-4xl" style={{ color: '#E8621A' }}>Admin Console</h1>
-          <Link href="/admin/refunds" className="btn-glass text-sm py-2 px-4">
-            Refunds
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/admin/refunds" className="btn-glass text-sm py-2 px-4">
+              Refunds
+            </Link>
+            <Link href="/" className="btn-glass text-sm py-2 px-4 flex items-center gap-2">
+              <Home className="w-4 h-4" /> Home
+            </Link>
+          </div>
         </div>
 
         <div className="flex gap-2 mb-6">
