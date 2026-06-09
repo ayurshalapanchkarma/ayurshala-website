@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import type { User as AuthUser } from '@supabase/supabase-js'
 
 const therapies = [
+  'TEST - ₹1 (Remove later)',
   'Shirodhara', 'Abhyanga', 'Swedana', 'Vamana', 'Virechana',
   'Basti', 'Nasya', 'Raktamokshana', 'Kati Basti', 'Greeva Basti',
   'Janu Basti', 'Shiro Basti', 'Uro Basti', 'Shiro Taila Dhara',
@@ -62,7 +63,7 @@ export default function BookPage() {
   }
 
   const consultationAdvance = isConsultation ? 500 : 0
-  const therapyAdvance = selectedTreatments.length > 0 ? 500 : 0
+  const therapyAdvance = selectedTreatments.length > 0 ? (selectedTreatments.includes('TEST - ₹1 (Remove later)') ? 1 : 500) : 0
   const amount = consultationAdvance + therapyAdvance
   const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'CASH_ON_ARRIVAL'>('ONLINE')
   const activePatient = patient || guestPatient
