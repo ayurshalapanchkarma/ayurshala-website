@@ -16,6 +16,7 @@ const supabase = createClient(
 export default function AdminLogin() {
   const router = useRouter()
   const { theme } = useTheme()
+  const [email, setEmail] = useState('ayurshalapanchkarma@gmail.com')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,51 +27,45 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
-      // Verify password
-      const res = await fetch('/api/admin/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', password }),
+      // Sign in with Supabase Email+Password
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
-      const { success } = await res.json()
 
-      if (!success) {
-        setError('Incorrect password')
+      if (signInError) {
+        setError('Invalid credentials')
         setLoading(false)
         return
       }
 
-      // Password is correct, now get the authenticated user and verify role
-      const { data } = await supabase.auth.getSession()
-      const user = data.session?.user
-      
-      if (!user) {
-        setError('Session not found')
+      if (!data.session) {
+        setError('Session creation failed')
         setLoading(false)
         return
       }
 
-      // Fetch user profile to verify role
+      console.log({
+        email: data.session.user.email,
+        sessionExists: !!data.session,
+        userId: data.session.user.id,
+      })
+
+      // Verify profile and role
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', user.id)
+        .eq('id', data.session.user.id)
         .single()
 
-      console.log({
-        email: user.email,
-        role: profile?.role,
-        redirectTarget: profile?.role === 'ADMIN' ? '/admin' : '/patient/dashboard'
-      })
-
       if (profileError || !profile) {
-        setError('Unable to verify user profile')
+        await supabase.auth.signOut()
+        setError('Unable to load profile')
         setLoading(false)
         return
       }
 
       if (profile.role !== 'ADMIN') {
-        // User is not admin - sign them out and redirect
         await supabase.auth.signOut()
         setError('You are not authorized to access the Admin Portal.')
         setTimeout(() => {
@@ -80,13 +75,17 @@ export default function AdminLogin() {
         return
       }
 
-      // User is admin - store session and redirect
-      localStorage.setItem('adminSessionTime', Date.now().toString())
+      // Admin verified - redirect
+      console.log({
+        email: data.session.user.email,
+        role: profile.role,
+        redirectTarget: '/admin',
+      })
+
       router.push('/admin')
     } catch (err) {
       console.error('Login error:', err)
       setError('Login failed. Please try again.')
-    } finally {
       setLoading(false)
     }
   }
@@ -122,10 +121,13 @@ export default function AdminLogin() {
           <label className="block text-xs font-semibold text-stone-600 mb-2">Email</label>
           <input
             type="email"
-            value="ayurshalapanchkarma@gmail.com"
-            placeholder="ayurshalapanchkarma@gmail.com"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setError('')
+            }}
+            placeholder="admin@example.com"
             className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 border border-white/80 focus:outline-none focus:border-orange-300 backdrop-blur-md"
-            disabled
           />
         </div>
 
@@ -151,7 +153,7 @@ export default function AdminLogin() {
           disabled={loading}
           className="w-full py-2.5 rounded-xl bg-orange-500 text-white font-sans text-sm hover:bg-orange-600 transition disabled:opacity-50 mb-3"
         >
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
 
         <button
@@ -162,7 +164,7 @@ export default function AdminLogin() {
         </button>
 
         <p className="text-center text-xs text-stone-500 mt-6">
-          Secure access for administrators only
+          Secure Supabase authentication
         </p>
       </motion.div>
     </div>
