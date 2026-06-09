@@ -19,7 +19,9 @@ export async function GET(req: NextRequest) {
     const response = await cashfree.PGOrderFetchPayments(orderId)
     const payment = response.data?.[0]
     const success = payment?.payment_status === 'SUCCESS'
+    const cancelled = payment?.payment_status === 'USER_DROPPED' || payment?.payment_status === 'CANCELLED'
 
+    if (cancelled) return NextResponse.redirect(new URL(`/book/payment-cancelled?order_id=${orderId}`, req.url))
     if (!success) return NextResponse.redirect(new URL(`/book/payment-failed?order_id=${orderId}`, req.url))
 
     // Payment for existing booking (reschedule pay-online flow)

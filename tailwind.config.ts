@@ -15,7 +15,7 @@ const config: Config = {
       },
       fontFamily: {
         serif: ['Marcellus', 'Georgia', 'serif'],
-        sans:  ['Poppins', 'system-ui', 'sans-serif'],
+        sans:  ['Marcellus', 'Georgia', 'serif'],
       },
       animation: {
         blob1: 'blob1 18s ease-in-out infinite',
