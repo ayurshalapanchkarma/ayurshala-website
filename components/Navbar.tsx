@@ -27,7 +27,7 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const { user, profile, loading } = useAuth()
+  const { user, loading, isAdmin } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -103,7 +103,7 @@ export default function Navbar() {
                       <span>Admin</span>
                     </Link>
                   </>
-                ) : profile?.role === 'ADMIN' ? (
+                ) : isAdmin ? (
                   <>
                     <Link href="/admin" className="btn-glass text-xs py-2 px-4">
                       Admin Console
@@ -246,7 +246,7 @@ export default function Navbar() {
                 )}
                 {!loading && mounted && user && (
                   <>
-                    {profile?.role === 'ADMIN' ? (
+                    {isAdmin ? (
                       <>
                         <li>
                           <Link
