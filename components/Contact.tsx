@@ -201,7 +201,7 @@ export default function Contact() {
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Your Name *"
-                      className={`w-full glass rounded-xl px-4 py-3 font-sans text-sm bg-transparent placeholder-stone-400 focus:outline-none transition-colors border ${dark ? 'text-stone-200 border-white/10' : 'text-stone-700 border-stone-200'} ${formErrors.name ? 'border-red-400' : ''}`}
+                      className={`w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 backdrop-blur-md placeholder-stone-400 focus:outline-none transition-all border ${dark ? 'text-stone-200 border-white/20 focus:border-white/40' : 'text-stone-700 border-stone-200/60 focus:border-stone-300'} ${formErrors.name ? 'border-red-400' : ''}`}
                     />
                     {formErrors.name && <p className="font-sans text-xs text-red-400 mt-1">✗ {formErrors.name}</p>}
                   </div>
@@ -213,7 +213,7 @@ export default function Contact() {
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
                       placeholder="Your Email *"
-                      className={`w-full glass rounded-xl px-4 py-3 font-sans text-sm bg-transparent placeholder-stone-400 focus:outline-none transition-colors border ${dark ? 'text-stone-200 border-white/10' : 'text-stone-700 border-stone-200'} ${formErrors.email ? 'border-red-400' : ''}`}
+                      className={`w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 backdrop-blur-md placeholder-stone-400 focus:outline-none transition-all border ${dark ? 'text-stone-200 border-white/20 focus:border-white/40' : 'text-stone-700 border-stone-200/60 focus:border-stone-300'} ${formErrors.email ? 'border-red-400' : ''}`}
                     />
                     {formErrors.email && <p className="font-sans text-xs text-red-400 mt-1">✗ {formErrors.email}</p>}
                   </div>
@@ -225,7 +225,7 @@ export default function Contact() {
                       onChange={e => setFormData({ ...formData, message: e.target.value.slice(0, 500) })}
                       placeholder="Your Message *"
                       rows={3}
-                      className={`w-full glass rounded-xl px-4 py-3 font-sans text-sm bg-transparent placeholder-stone-400 focus:outline-none transition-colors border resize-none ${dark ? 'text-stone-200 border-white/10' : 'text-stone-700 border-stone-200'} ${formErrors.message ? 'border-red-400' : ''}`}
+                      className={`w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 backdrop-blur-md placeholder-stone-400 focus:outline-none transition-all border resize-none ${dark ? 'text-stone-200 border-white/20 focus:border-white/40' : 'text-stone-700 border-stone-200/60 focus:border-stone-300'} ${formErrors.message ? 'border-red-400' : ''}`}
                     />
                     <div className="flex justify-between items-center mt-1">
                       <p className={`font-sans text-xs ${formData.message.length > 450 ? 'text-amber-500' : 'text-stone-400'}`}>{formData.message.length}/500</p>
