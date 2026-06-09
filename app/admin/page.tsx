@@ -104,11 +104,12 @@ export default function AdminPage() {
 
   async function fetchBookings() {
     setLoading(true)
-    let filter = 'all'
-    if (activeTab === 'online') filter = 'ONLINE'
-    else if (activeTab === 'offline') filter = 'OFFLINE'
+    let filterValue = 'ALL'
     
-    const res = await fetch(`/api/admin/bookings?payment=${filter}`)
+    if (activeTab === 'online') filterValue = 'ONLINE'
+    else if (activeTab === 'offline') filterValue = 'CASH_ON_ARRIVAL'
+    
+    const res = await fetch(`/api/admin/bookings?payment=${filterValue}`)
     const { bookings: data } = await res.json()
     
     // Calculate stats
@@ -121,7 +122,7 @@ export default function AdminPage() {
     setStats({
       today: today.length,
       pending: data?.filter((b: Booking) => b.status === 'PENDING_CONFIRMATION').length || 0,
-      cash: data?.filter((b: Booking) => b.payment_method === 'OFFLINE').length || 0,
+      cash: data?.filter((b: Booking) => b.payment_method === 'CASH_ON_ARRIVAL').length || 0,
       refunds: data?.filter((b: Booking) => b.payment_status === 'REFUNDED').length || 0,
       completed: data?.filter((b: Booking) => b.status === 'COMPLETED').length || 0,
       revenue: data?.reduce((sum: number, b: Booking) => sum + (b.amount || 0), 0) || 0,
@@ -218,6 +219,9 @@ export default function AdminPage() {
     })
     if (res.ok) {
       setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, status: 'CONFIRMED' } : b))
+      // Show success toast
+      const evt = new CustomEvent('bookingUpdated', { detail: { booking_id, action: 'confirmed' } })
+      window.dispatchEvent(evt)
     }
   }
 
@@ -229,6 +233,9 @@ export default function AdminPage() {
     })
     if (res.ok) {
       setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, status: 'CANCELLED' } : b))
+      // Show success toast
+      const evt = new CustomEvent('bookingUpdated', { detail: { booking_id, action: 'cancelled' } })
+      window.dispatchEvent(evt)
     }
   }
 

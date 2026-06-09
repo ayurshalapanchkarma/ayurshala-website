@@ -12,7 +12,11 @@ export async function GET(req: NextRequest) {
 
   let query = supabase.from('bookings_new').select('*').eq('is_deleted', false).order('created_at', { ascending: false })
   if (status && status !== 'ALL') query = query.eq('status', status)
-  if (payment && payment !== 'ALL') query = query.eq('payment_method', payment)
+  if (payment && payment !== 'ALL' && payment !== 'all') {
+    // Map filter values to actual payment_method values
+    if (payment === 'ONLINE') query = query.eq('payment_method', 'ONLINE')
+    else if (payment === 'CASH_ON_ARRIVAL') query = query.eq('payment_method', 'CASH_ON_ARRIVAL')
+  }
 
   const { data: bookings } = await query
   if (!bookings?.length) return NextResponse.json({ bookings: [] })
@@ -21,11 +25,13 @@ export async function GET(req: NextRequest) {
   const { data: patients } = await supabase.from('patients').select('id,full_name,patient_id,phone,email').in('id', patientIds)
   const bookingIds = bookings.map(b => b.id)
   const { data: treatments } = await supabase.from('booking_treatments_v2').select('booking_uuid,treatment_name').in('booking_uuid', bookingIds)
+  const { data: payments } = await supabase.from('payments').select('booking_uuid,amount').in('booking_uuid', bookingIds)
 
   const result = bookings.map(b => {
     const p = patients?.find(p => p.id === b.patient_uuid)
     const t = treatments?.filter(t => t.booking_uuid === b.id).map(t => t.treatment_name).join(', ') || '—'
-    return { ...b, patient_name: p?.full_name || '—', patient_id: p?.patient_id || '—', patient_phone: p?.phone || '', patient_email: p?.email || '', treatments: t }
+    const amount = payments?.find(p => p.booking_uuid === b.id)?.amount || 0
+    return { ...b, patient_name: p?.full_name || '—', patient_id: p?.patient_id || '—', patient_phone: p?.phone || '', patient_email: p?.email || '', treatments: t, amount }
   })
 
   return NextResponse.json({ bookings: result })
@@ -37,12 +43,28 @@ export async function POST(req: NextRequest) {
   if (action === 'confirm') {
     const { data: booking } = await supabase.from('bookings_new').select('*').eq('booking_id', booking_id).single()
     if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    if (booking.status === 'CONFIRMED') return NextResponse.json({ error: 'Already confirmed' }, { status: 400 })
 
     const { data: patient } = await supabase.from('patients').select('full_name,email,patient_id').eq('id', booking.patient_uuid).single()
     const { data: treatments } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
     const treatmentList = treatments?.map(t => t.treatment_name).join(', ') || '—'
 
     await supabase.from('bookings_new').update({ status: 'CONFIRMED', updated_at: new Date().toISOString() }).eq('booking_id', booking_id)
+
+    // Audit log
+    try {
+      await supabase.from('appointment_audit').insert({
+        booking_uuid: booking.id,
+        patient_uuid: booking.patient_uuid,
+        action: 'CONFIRMED',
+        old_value: { status: booking.status },
+        new_value: { status: 'CONFIRMED' },
+        performed_by: null,
+        created_at: new Date().toISOString()
+      })
+    } catch (e) {
+      // Ignore if audit table doesn't exist
+    }
 
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
     const patientEmail = patient?.email
@@ -75,12 +97,28 @@ export async function POST(req: NextRequest) {
   if (action === 'cancel') {
     const { data: booking } = await supabase.from('bookings_new').select('*').eq('booking_id', booking_id).single()
     if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    if (booking.status === 'CANCELLED') return NextResponse.json({ error: 'Already cancelled' }, { status: 400 })
 
     const { data: patient } = await supabase.from('patients').select('full_name,email,patient_id').eq('id', booking.patient_uuid).single()
     const { data: treatments } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
     const treatmentList = treatments?.map(t => t.treatment_name).join(', ') || '—'
 
     await supabase.from('bookings_new').update({ status: 'CANCELLED', updated_at: new Date().toISOString() }).eq('booking_id', booking_id)
+
+    // Audit log
+    try {
+      await supabase.from('appointment_audit').insert({
+        booking_uuid: booking.id,
+        patient_uuid: booking.patient_uuid,
+        action: 'CANCELLED',
+        old_value: { status: booking.status },
+        new_value: { status: 'CANCELLED' },
+        performed_by: null,
+        created_at: new Date().toISOString()
+      })
+    } catch (e) {
+      // Ignore if audit table doesn't exist
+    }
 
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
     const patientEmail = patient?.email
