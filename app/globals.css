@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 @layer base {
-  html { scroll-behavior: smooth; overflow-x: hidden; width: 100%; max-width: 100%; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
   body {
     @apply font-sans antialiased;
     color: #1a1008;
@@ -13,10 +13,8 @@
     transition: color 0.3s;
     background: #FFF3E0;
     overflow-x: hidden;
-    width: 100%;
-    max-width: 100%;
   }
-  main { position: relative; z-index: 1; overflow-x: hidden; }
+  main { position: relative; z-index: 1; }
 
   .dark body {
     color: #f5f0e8;
