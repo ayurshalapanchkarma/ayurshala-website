@@ -5,12 +5,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import GlassBackground from '@/components/GlassBackground'
 import { useTheme } from 'next-themes'
-import { Home } from 'lucide-react'
+import { Home, LogOut, Clock } from 'lucide-react'
 
 type Booking = {
   id: number; booking_id: string; preferred_date: string; preferred_time: string
   booking_type: string; status: string; payment_method: string; created_at: string
-  patient_name: string; patient_id: string; patient_phone: string; treatments: string
+  patient_name: string; patient_id: string; patient_phone: string; patient_email: string; treatments: string
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
@@ -20,16 +20,16 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
   COMPLETED:            { label: 'Completed',    cls: 'bg-blue-100 text-blue-700' },
 }
 
-const ADMIN_PASSWORD = '786110@Ayurshala'
-
 export default function AdminPage() {
+  const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || ''
   const [authed, setAuthed] = useState(false)
   const [pw, setPw] = useState('')
   const [pwError, setPwError] = useState('')
   const [showForgot, setShowForgot] = useState(false)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(false)
-  const [filter, setFilter] = useState<'PENDING_CONFIRMATION' | 'ALL'>('PENDING_CONFIRMATION')
+  const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'ONLINE' | 'OFFLINE'>('ALL')
+  const [currentTime, setCurrentTime] = useState('')
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
   
@@ -37,12 +37,20 @@ export default function AdminPage() {
   const dark = mounted && theme === 'dark'
 
   useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date()
+      setCurrentTime(now.toLocaleString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
     if (authed) fetchBookings()
-  }, [filter])
+  }, [paymentFilter])
 
   async function fetchBookings() {
     setLoading(true)
-    const res = await fetch(`/api/admin/bookings?status=${filter}`)
+    const res = await fetch(`/api/admin/bookings?payment=${paymentFilter}`)
     const { bookings: data } = await res.json()
     setBookings(data || [])
     setLoading(false)
@@ -141,25 +149,35 @@ export default function AdminPage() {
     <div className="min-h-screen px-4 sm:px-6 py-16 sm:py-24 relative overflow-hidden" style={{ background: bg }}>
       <GlassBackground />
       <div className="max-w-5xl mx-auto relative">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-2">
           <h1 className="font-serif text-3xl sm:text-4xl" style={{ color: '#E8621A' }}>Admin Console</h1>
-          <div className="flex gap-2">
-            <Link href="/admin/refunds" className="btn-glass text-sm py-2 px-4">
-              Refunds
+          <div className="flex items-center gap-3">
+            <div className="text-right text-xs">
+              <p className="font-sans text-stone-600">@ayurshala gmail</p>
+              <p className="font-mono text-stone-500 flex items-center gap-1"><Clock className="w-3 h-3" />{currentTime}</p>
+            </div>
+            <Link href="/" className="btn-glass text-sm py-2 px-3 flex items-center gap-1">
+              <Home className="w-4 h-4" />
             </Link>
-            <Link href="/" className="btn-glass text-sm py-2 px-4 flex items-center gap-2">
-              <Home className="w-4 h-4" /> Home
-            </Link>
+            <button onClick={() => { setAuthed(false); setPw('') }} className="btn-glass text-sm py-2 px-3 flex items-center gap-1 text-red-600">
+              <LogOut className="w-4 h-4" />
+            </button>
+            <button onClick={() => setShowForgot(true)} className="btn-glass text-sm py-2 px-3 text-blue-600">
+              Reset Password
+            </button>
           </div>
         </div>
 
         <div className="flex gap-2 mb-6">
-          {(['PENDING_CONFIRMATION', 'ALL'] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
+          <Link href="/admin/refunds" className="btn-glass text-sm py-2 px-4">
+            Refunds
+          </Link>
+          {(['ALL', 'ONLINE', 'OFFLINE'] as const).map(f => (
+            <button key={f} onClick={() => setPaymentFilter(f)}
               className={`px-4 py-2 rounded-xl text-sm font-sans transition ${
-                filter === f ? 'bg-orange-500 text-white' : 'bg-white/60 text-stone-700 border border-white/80'
+                paymentFilter === f ? 'bg-orange-500 text-white' : 'bg-white/60 text-stone-700 border border-white/80'
               }`}>
-              {f === 'PENDING_CONFIRMATION' ? 'Pending Confirmation' : 'All Bookings'}
+              {f === 'ALL' ? 'All Appointments' : f}
             </button>
           ))}
         </div>
@@ -174,8 +192,10 @@ export default function AdminPage() {
               <thead style={{ background: 'rgba(232,98,26,0.08)' }}>
                 <tr className="border-b border-white/30">
                   <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Booking ID</th>
-                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Patient</th>
-                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Date & Time</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Patient ID</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Name</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Email</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Date</th>
                   <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Status</th>
                   <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Action</th>
                 </tr>
@@ -183,12 +203,11 @@ export default function AdminPage() {
               <tbody>
                 {bookings.map((b, i) => (
                   <tr key={b.id} className={`border-b border-white/20 ${i % 2 === 0 ? 'bg-white/15' : 'bg-white/10'}`}>
-                    <td className="px-4 sm:px-6 py-3 font-mono font-semibold" style={{ color: '#E8621A' }}>{b.booking_id}</td>
-                    <td className="px-4 sm:px-6 py-3">
-                      <p className="font-semibold text-stone-900">{b.patient_name}</p>
-                      <p className="text-xs text-stone-500">{b.patient_id}</p>
-                    </td>
-                    <td className="px-4 sm:px-6 py-3 text-stone-700">{b.preferred_date} · {b.preferred_time}</td>
+                    <td className="px-4 sm:px-6 py-3 font-mono font-semibold text-xs" style={{ color: '#E8621A' }}>{b.booking_id}</td>
+                    <td className="px-4 sm:px-6 py-3 font-semibold text-xs text-stone-700">{b.patient_id}</td>
+                    <td className="px-4 sm:px-6 py-3 text-stone-900">{b.patient_name}</td>
+                    <td className="px-4 sm:px-6 py-3 text-xs text-stone-600">{b.patient_email}</td>
+                    <td className="px-4 sm:px-6 py-3 text-xs text-stone-700">{b.preferred_date} {b.preferred_time}</td>
                     <td className="px-4 sm:px-6 py-3"><span className={`px-2 py-1 rounded-lg text-xs ${statusConfig[b.status]?.cls}`}>{statusConfig[b.status]?.label || b.status}</span></td>
                     <td className="px-4 sm:px-6 py-3">
                       {b.status === 'PENDING_CONFIRMATION' && (
