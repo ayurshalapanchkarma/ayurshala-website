@@ -57,19 +57,39 @@ export default function AdminPage() {
   }
 
   async function confirm(booking_id: string) {
-    await fetch('/api/admin/bookings', {
+    const booking = bookings.find(b => b.booking_id === booking_id)
+    if (!booking) return
+    
+    setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, status: 'CONFIRMED' } : b))
+    
+    const res = await fetch('/api/admin/bookings', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'confirm', booking_id }),
     })
-    fetchBookings()
+    
+    if (!res.ok) {
+      setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, status: 'PENDING_CONFIRMATION' } : b))
+    } else {
+      setPaymentFilter('ALL')
+    }
   }
 
   async function cancel(booking_id: string) {
-    await fetch('/api/admin/bookings', {
+    const booking = bookings.find(b => b.booking_id === booking_id)
+    if (!booking) return
+    
+    setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, status: 'CANCELLED' } : b))
+    
+    const res = await fetch('/api/admin/bookings', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'cancel', booking_id }),
     })
-    fetchBookings()
+    
+    if (!res.ok) {
+      setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, status: 'PENDING_CONFIRMATION' } : b))
+    } else {
+      setPaymentFilter('ALL')
+    }
   }
 
   const bg = dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)'
