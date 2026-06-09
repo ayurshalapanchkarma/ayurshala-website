@@ -54,10 +54,18 @@ export async function POST(req: NextRequest) {
     const isCod           = payment_method === 'CASH_ON_ARRIVAL'
     
     // Calculate amount: consultation 500 + therapy 500 if both selected
+    // Special handling for TEST therapy (₹1)
+    const isTestOnly = treatments.length === 1 && treatments[0].includes('TEST')
     let amount = 0
-    if (booking_type === 'consultation') amount = consultationFee
-    else if (booking_type === 'therapy') amount = therapyAdvanceFee
-    else if (booking_type === 'consultation_and_therapy') amount = consultationFee + therapyAdvanceFee
+    if (isTestOnly) {
+      amount = 1
+    } else if (booking_type === 'consultation') {
+      amount = consultationFee
+    } else if (booking_type === 'therapy') {
+      amount = therapyAdvanceFee
+    } else if (booking_type === 'consultation_and_therapy') {
+      amount = consultationFee + therapyAdvanceFee
+    }
 
     // Get clinic
     const { data: clinic } = await supabase.from('clinics').select('id').eq('is_active', true).single()
