@@ -112,7 +112,7 @@ export default function Testimonials() {
   const dark = mounted && theme === 'dark'
 
   return (
-    <section id="testimonials" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden overflow-hidden">
+    <section id="testimonials" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full opacity-10 pointer-events-none"
         style={{ background: 'radial-gradient(circle, #E8621A 0%, transparent 70%)' }} />
 

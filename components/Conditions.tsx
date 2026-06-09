@@ -21,7 +21,7 @@ export default function Conditions() {
   const dark = mounted && theme === 'dark'
 
   return (
-    <section id="conditions" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden overflow-hidden">
+    <section id="conditions" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full opacity-10 pointer-events-none"
         style={{ background: 'radial-gradient(circle, #0D9488 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }} />
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-10 pointer-events-none"

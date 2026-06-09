@@ -91,7 +91,7 @@ export default function Gallery() {
 
   return (
     <>
-      <section id="gallery" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden overflow-hidden" ref={ref}>
+      <section id="gallery" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden" ref={ref}>
         <div className="w-full max-w-6xl mx-auto">
 
           {/* Header */}
