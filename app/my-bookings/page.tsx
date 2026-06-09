@@ -14,7 +14,7 @@ const timeSlots = ['10:00 AM', '11:00 AM', '12:00 PM', '2:00 PM', '3:00 PM', '4:
 type Booking = {
   id: string; booking_id: string; preferred_date: string; preferred_time: string
   booking_type: string; status: string; payment_status: string; payment_method: string
-  created_at: string; concern: string
+  created_at: string; concern: string; is_rescheduled?: boolean
   booking_treatments_v2: { treatment_name: string }[]
   payments: { amount: number; status: string }[]
 }
@@ -160,6 +160,14 @@ export default function MyBookingsPage() {
     if (!patient || !rescheduleBooking || !newDate || !newTime) return
     setRescheduling(true)
     setRescheduleError('')
+    
+    // Check if reschedule is already pending (is_rescheduled = true)
+    if (rescheduleBooking.is_rescheduled || (rescheduleBooking as any).is_rescheduled) {
+      setRescheduleError('A reschedule request is already pending. Please wait for clinic confirmation.')
+      setRescheduling(false)
+      return
+    }
+    
     const res = await fetch('/api/book', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'reschedule-booking', booking_id: rescheduleBooking.booking_id, patient_uuid: patient.id, new_date: newDate, new_time: newTime }),
