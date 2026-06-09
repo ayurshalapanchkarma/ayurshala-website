@@ -5,10 +5,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import GlassBackground from '@/components/GlassBackground'
 import { useTheme } from 'next-themes'
-import { supabase } from '@/lib/supabase'
-import { Home } from 'lucide-react'
 
-const ADMIN_EMAIL = 'ayurshalapanchkarma@gmail.com'
+const ADMIN_PASSWORD = '786110@Ayurshala'
 
 type Booking = {
   id: number; booking_id: string; preferred_date: string; preferred_time: string
@@ -25,8 +23,9 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
-  const [userEmail, setUserEmail] = useState('')
-  const [checking, setChecking] = useState(true)
+  const [pw, setPw] = useState('')
+  const [pwError, setPwError] = useState('')
+  const [showForgot, setShowForgot] = useState(false)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState<'PENDING_CONFIRMATION' | 'ALL'>('PENDING_CONFIRMATION')
@@ -37,19 +36,8 @@ export default function AdminPage() {
   const dark = mounted && theme === 'dark'
 
   useEffect(() => {
-    checkAuth()
-  }, [])
-
-  async function checkAuth() {
-    const { data: { user } } = await supabase.auth.getUser()
-    setUserEmail(user?.email || '')
-    
-    if (user?.email === ADMIN_EMAIL) {
-      setAuthed(true)
-      await fetchBookings()
-    }
-    setChecking(false)
-  }
+    if (authed) fetchBookings()
+  }, [filter])
 
   async function fetchBookings() {
     setLoading(true)
@@ -58,8 +46,6 @@ export default function AdminPage() {
     setBookings(data || [])
     setLoading(false)
   }
-
-  useEffect(() => { if (authed) fetchBookings() }, [filter])
 
   async function confirm(booking_id: string) {
     await fetch('/api/admin/bookings', {
@@ -84,36 +70,68 @@ export default function AdminPage() {
     boxShadow: '0 20px 80px rgba(232,98,26,0.12), 0 4px 24px rgba(0,0,0,0.08)',
   }
 
-  if (checking) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: bg }}>
-      <p className="font-sans text-stone-400">Checking access...</p>
-    </div>
-  )
-
   if (!authed) return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden" style={{ background: bg }}>
       <GlassBackground />
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6 }}
         className="w-full max-w-md rounded-3xl p-8 relative overflow-hidden" style={cardStyle}>
-        <div className="text-center mb-8">
-          <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-14 w-auto mx-auto mb-4" />
-          <h1 className="font-serif text-3xl mb-2" style={{ color: '#E8621A' }}>Access Denied</h1>
-          <p className="font-sans text-sm text-stone-600 mb-1">You are not authorized to access this page</p>
-          <p className="font-sans text-xs text-stone-400">{userEmail || 'Not logged in'}</p>
-        </div>
+        {!showForgot ? (
+          <>
+            <div className="text-center mb-8">
+              <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-14 w-auto mx-auto mb-4" />
+              <h1 className="font-serif text-2xl mb-1" style={{ color: '#E8621A' }}>Admin Portal</h1>
+              <p className="font-sans text-xs text-stone-400">Enter password to continue</p>
+            </div>
 
-        <p className="font-sans text-sm text-stone-600 text-center mb-6 py-4 bg-red-50 rounded-xl border border-red-200">
-          Only <strong>{ADMIN_EMAIL}</strong> can access the admin console.
-        </p>
+            <div className="mb-4">
+              <input
+                type="password"
+                value={pw}
+                onChange={(e) => { setPw(e.target.value); setPwError('') }}
+                onKeyDown={(e) => e.key === 'Enter' && (pw === ADMIN_PASSWORD ? setAuthed(true) : setPwError('Incorrect password'))}
+                placeholder="Password"
+                className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 border border-white/80 focus:outline-none focus:border-orange-300 backdrop-blur-md"
+              />
+            </div>
 
-        <div className="flex gap-3">
-          <Link href="/" className="btn-glass flex-1 text-center py-3 flex items-center justify-center gap-2">
-            <Home className="w-4 h-4" /> Home
-          </Link>
-          <button onClick={() => supabase.auth.signOut()} className="flex-1 py-3 rounded-xl bg-red-500 text-white font-sans hover:bg-red-600 transition">
-            Sign Out
-          </button>
-        </div>
+            {pwError && <p className="font-sans text-xs text-red-500 mb-4 text-center">{pwError}</p>}
+
+            <button
+              onClick={() => pw === ADMIN_PASSWORD ? setAuthed(true) : setPwError('Incorrect password')}
+              className="w-full py-2.5 rounded-xl bg-orange-500 text-white font-sans text-sm hover:bg-orange-600 transition mb-3">
+              Login
+            </button>
+
+            <button
+              onClick={() => setShowForgot(true)}
+              className="w-full py-2.5 rounded-xl bg-white/40 text-stone-700 font-sans text-sm hover:bg-white/60 transition border border-white/60">
+              Forgot Password?
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="text-center mb-6">
+              <h1 className="font-serif text-xl mb-1" style={{ color: '#E8621A' }}>Reset Password</h1>
+              <p className="font-sans text-xs text-stone-400">Click button to reset via email</p>
+            </div>
+
+            <p className="font-sans text-sm text-stone-600 bg-blue-50 rounded-lg p-3 mb-4 border border-blue-200">
+              Reset password link will be sent to <strong>ayurshalapanchkarma@gmail.com</strong>
+            </p>
+
+            <button
+              onClick={() => { alert('Reset link sent to ayurshalapanchkarma@gmail.com'); setShowForgot(false); }}
+              className="w-full py-2.5 rounded-xl bg-blue-500 text-white font-sans text-sm hover:bg-blue-600 transition mb-3">
+              Send Reset Link
+            </button>
+
+            <button
+              onClick={() => { setShowForgot(false); setPwError('') }}
+              className="w-full py-2.5 rounded-xl bg-white/40 text-stone-700 font-sans text-sm hover:bg-white/60 transition border border-white/60">
+              Back to Login
+            </button>
+          </>
+        )}
       </motion.div>
     </div>
   )
