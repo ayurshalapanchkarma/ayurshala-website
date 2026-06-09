@@ -4,8 +4,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import GlassBackground from '@/components/GlassBackground'
+import { AdminGuard } from '@/components/AdminGuard'
 import { useTheme } from 'next-themes'
 import { Home, LogOut, Clock, X, AlertCircle, CheckCircle } from 'lucide-react'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+)
 
 type Booking = {
   id: number
@@ -318,8 +325,9 @@ export default function AdminPage() {
 
   // Dashboard
   return (
-    <div className="min-h-screen px-4 sm:px-6 py-8 relative overflow-hidden" style={{ background: bg }}>
-      <GlassBackground />
+    <AdminGuard>
+      <div className="min-h-screen px-4 sm:px-6 py-8 relative overflow-hidden" style={{ background: bg }}>
+        <GlassBackground />
       
       <div className="max-w-7xl mx-auto relative">
         {/* Header */}
@@ -529,5 +537,6 @@ export default function AdminPage() {
         )}
       </AnimatePresence>
     </div>
+    </AdminGuard>
   )
 }
