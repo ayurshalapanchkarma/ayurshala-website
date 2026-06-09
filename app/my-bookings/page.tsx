@@ -281,18 +281,23 @@ export default function MyBookingsPage() {
         {cancelId && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0"
-            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
             onClick={() => setCancelId(null)}>
-            <motion.div initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
+            <motion.div initial={{ y: 60, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 60, opacity: 0, scale: 0.95 }}
               onClick={e => e.stopPropagation()}
-              className="w-full max-w-sm rounded-3xl p-6 text-center"
-              style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.9)', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-              <p className="font-serif text-xl mb-2" style={{ color: '#1a1008' }}>Cancel Booking?</p>
-              <p className="font-sans text-sm text-stone-500 mb-6">This cannot be undone. Booking <strong>{cancelId}</strong> will be cancelled.</p>
+              className="w-full max-w-sm rounded-3xl p-8 text-center relative"
+              style={{ 
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,250,245,0.95) 100%)',
+                backdropFilter: 'blur(50px)',
+                border: '1px solid rgba(255,255,255,0.8)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 20px 60px rgba(220,38,38,0.15), 0 8px 30px rgba(0,0,0,0.08)'
+              }}>
+              <p className="font-serif text-2xl mb-2" style={{ color: '#991b1b' }}>Cancel Booking?</p>
+              <p className="font-sans text-sm text-stone-600 mb-8">This cannot be undone. Booking <strong>{cancelId}</strong> will be cancelled immediately.</p>
               <div className="flex gap-3">
                 <button onClick={() => setCancelId(null)} className="btn-glass flex-1 py-2.5 text-sm">Keep It</button>
                 <button onClick={() => handleCancel(cancelId!)} disabled={cancelling}
-                  className="flex-1 py-2.5 text-sm rounded-xl bg-red-500 text-white font-sans disabled:opacity-50">
+                  className="flex-1 py-2.5 text-sm rounded-xl bg-red-500 text-white font-sans disabled:opacity-50 hover:bg-red-600 transition-colors">
                   {cancelling ? 'Cancelling…' : 'Yes, Cancel'}
                 </button>
               </div>
