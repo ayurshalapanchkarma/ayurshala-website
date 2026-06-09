@@ -183,10 +183,25 @@ export async function POST(req: NextRequest) {
     const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
     const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
     
-    // Get actual payment amount from database
-    const { data: paymentData } = await supabase.from('payments').select('amount').eq('booking_uuid', booking.id).single()
-    const actualAmount = paymentData?.amount || (booking.booking_type === 'consultation' ? 500 : 1000)
-    const amountLabel = isCod ? `₹${actualAmount} — Cash on Arrival` : `₹${actualAmount} — Paid Online`
+    // Recalculate amount same as in create-order
+    const consultationFee = parseInt(await getSetting('consultation_fee', '500'))
+    const therapyAdvanceFee = parseInt(await getSetting('therapy_advance_fee', '500'))
+    let amount = 0
+    if (booking.booking_type === 'consultation') {
+      amount = consultationFee
+    } else if (booking.booking_type === 'therapy') {
+      amount = therapyAdvanceFee
+    } else if (booking.booking_type === 'consultation_and_therapy') {
+      amount = consultationFee + therapyAdvanceFee
+    }
+    
+    // Check for TEST therapy (₹1)
+    const testTreatments = treatmentRows?.filter((t: any) => t.treatment_name.includes('TEST')) || []
+    if (testTreatments.length > 0 && treatmentRows?.length === 1) {
+      amount = 1
+    }
+    
+    const amountLabel = isCod ? `₹${amount} — Cash on Arrival` : `₹${amount} — Paid Online`
     const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://ayurshalapanchakarma.com'
