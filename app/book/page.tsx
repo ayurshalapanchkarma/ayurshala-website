@@ -223,15 +223,15 @@ export default function BookPage() {
     }
   }
 
-  const inputCls = `w-full glass rounded-xl px-4 py-3 font-sans text-sm bg-transparent placeholder-stone-400 focus:outline-none focus:border-brand/50 transition-colors border ${dark ? 'text-stone-200 border-white/10' : 'text-stone-700 border-stone-200'}`
+  const inputCls = `w-full rounded-xl px-4 py-3 font-sans text-sm backdrop-filter backdrop-blur-md placeholder-stone-400 focus:outline-none transition-all border ${dark ? 'bg-white/10 text-stone-200 border-white/30 focus:border-brand focus:bg-white/15 focus:shadow-lg' : 'bg-white/60 text-stone-700 border-white/80 focus:border-brand/70 focus:bg-white/80 focus:shadow-lg focus:shadow-brand/20'}`
 
   return (
     <div className="min-h-screen px-4 sm:px-6 py-12 sm:py-16 relative overflow-hidden"
       style={{ background: dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)' }}>
       <GlassBackground />
-      <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full opacity-40 pointer-events-none animate-blob1"
+      <div className="absolute top-[10%] left-[5%] w-64 sm:w-96 h-64 sm:h-96 rounded-full opacity-40 pointer-events-none animate-blob1"
         style={{ background: 'radial-gradient(circle,#4a7c59 0%,transparent 70%)' }} />
-      <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] rounded-full opacity-35 pointer-events-none animate-blob2"
+      <div className="absolute bottom-[10%] right-[5%] w-56 sm:w-80 h-56 sm:h-80 rounded-full opacity-35 pointer-events-none animate-blob2"
         style={{ background: 'radial-gradient(circle,#E8621A 0%,transparent 70%)' }} />
 
       <div className="max-w-lg mx-auto relative">
@@ -239,31 +239,31 @@ export default function BookPage() {
           className="rounded-3xl p-5 sm:p-8 relative overflow-hidden"
           style={{
             background: dark
-              ? 'linear-gradient(135deg,rgba(255,255,255,0.07) 0%,rgba(255,248,240,0.05) 50%,rgba(255,235,210,0.04) 100%)'
-              : 'linear-gradient(135deg,rgba(255,255,255,0.75) 0%,rgba(255,248,240,0.55) 50%,rgba(255,235,210,0.45) 100%)',
-            backdropFilter: 'blur(40px) saturate(1.8)',
-            WebkitBackdropFilter: 'blur(40px) saturate(1.8)',
-            border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(255,255,255,0.85)',
+              ? 'linear-gradient(135deg,rgba(255,255,255,0.12) 0%,rgba(255,248,240,0.08) 50%,rgba(255,235,210,0.06) 100%)'
+              : 'linear-gradient(135deg,rgba(255,255,255,0.85) 0%,rgba(255,248,240,0.70) 50%,rgba(255,235,210,0.60) 100%)',
+            backdropFilter: 'blur(50px) saturate(2)',
+            WebkitBackdropFilter: 'blur(50px) saturate(2)',
+            border: dark ? '1px solid rgba(255,255,255,0.15)' : '1.5px solid rgba(255,255,255,0.95)',
             boxShadow: dark
-              ? '0 20px 80px rgba(232,98,26,0.08),0 4px 24px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1)'
-              : '0 20px 80px rgba(232,98,26,0.12),0 4px 24px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)',
+              ? '0 25px 100px rgba(232,98,26,0.15),0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.2)'
+              : '0 25px 100px rgba(232,98,26,0.20),0 8px 32px rgba(0,0,0,0.12),inset 0 1px 0 rgba(255,255,255,1),inset 0 -1px 0 rgba(0,0,0,0.08)',
           }}>
           {/* Glows */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% -10%,rgba(232,98,26,0.18) 0%,transparent 65%)' }} />
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 0% 120%,rgba(13,148,136,0.10) 0%,transparent 60%)' }} />
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 100% 110%,rgba(245,166,35,0.10) 0%,transparent 60%)' }} />
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% -10%,rgba(232,98,26,0.25) 0%,transparent 65%)' }} />
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 0% 120%,rgba(13,148,136,0.15) 0%,transparent 60%)' }} />
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 100% 110%,rgba(245,166,35,0.15) 0%,transparent 60%)' }} />
 
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-8 relative">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link href="/"><Image src="/ayurshala_text.png" alt="Ayurshala" width={260} height={72} className="object-contain h-14 sm:h-20 w-auto mx-auto mb-3 sm:mb-4 drop-shadow-lg hover:drop-shadow-2xl transition-all" /></Link>
             </motion.div>
             <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="font-serif text-2xl sm:text-3xl mb-1 font-light" style={{ color: '#E8621A' }}>Book an Appointment</motion.h1>
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="font-sans text-stone-400 text-sm">✨ We'll confirm within a few hours.</motion.p>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="font-sans text-stone-500 text-sm">✨ We'll confirm within a few hours.</motion.p>
           </motion.div>
 
           {/* Auth / Patient Info */}
           {user && patient ? (
-            <div className={`rounded-2xl p-4 mb-6 border ${dark ? 'border-white/10 bg-white/5' : 'border-brand/15 bg-brand/5'}`}>
+            <div className={`rounded-2xl p-4 mb-6 border ${dark ? 'border-white/15 bg-white/8' : 'border-brand/25 bg-gradient-to-r from-brand/8 to-brand/5'}`}>
               <div className="flex items-center gap-3">
                 {patient.avatar_url && <img src={patient.avatar_url} className="w-10 h-10 rounded-full" alt="" />}
                 <div>
