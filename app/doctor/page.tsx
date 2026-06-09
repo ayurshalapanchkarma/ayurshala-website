@@ -4,14 +4,14 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function DoctorDashboard() {
-  const { user, profile, loading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== 'DOCTOR')) {
+    if (!loading && !user) {
       router.push(user ? '/dashboard' : '/login')
     }
-  }, [loading, user, profile, router])
+  }, [loading, user, router])
 
   if (loading) {
     return (
@@ -24,7 +24,7 @@ export default function DoctorDashboard() {
     )
   }
 
-  if (!user || profile?.role !== 'DOCTOR') {
+  if (!user) {
     return null
   }
 

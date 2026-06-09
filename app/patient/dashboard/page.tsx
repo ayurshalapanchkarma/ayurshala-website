@@ -12,7 +12,7 @@ const supabase = createClient(
 )
 
 export default function PatientDashboard() {
-  const { user, profile, loading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function PatientDashboard() {
             </div>
             <div>
               <p className="text-stone-600">Role:</p>
-              <p className="font-medium text-stone-900 capitalize">{profile?.role || 'Patient'}</p>
+              <p className="font-medium text-stone-900">Patient</p>
             </div>
           </div>
         </div>

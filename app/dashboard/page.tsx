@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 
 export default function Dashboard() {
-  const { user, profile, loading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {

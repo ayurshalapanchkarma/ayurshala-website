@@ -4,14 +4,14 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function ReceptionDashboard() {
-  const { user, profile, loading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== 'RECEPTIONIST')) {
+    if (!loading && !user) {
       router.push(user ? '/dashboard' : '/login')
     }
-  }, [loading, user, profile, router])
+  }, [loading, user, router])
 
   if (loading) {
     return (
@@ -24,7 +24,7 @@ export default function ReceptionDashboard() {
     )
   }
 
-  if (!user || profile?.role !== 'RECEPTIONIST') {
+  if (!user) {
     return null
   }
 
