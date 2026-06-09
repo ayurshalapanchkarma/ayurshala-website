@@ -15,6 +15,7 @@ type BookingData = {
   booking_type: string; payment_status: string; payment_method: string
   patients: { full_name: string; patient_id: string; email: string }
   booking_treatments_v2: { treatment_name: string }[]
+  payments?: { amount: number; status: string }[]
 }
 
 const iconMap: Record<string, any> = {
@@ -67,8 +68,11 @@ function ConfirmedContent() {
 
   const paymentStatus = booking?.payment_status
   const isCod = booking?.payment_method === 'CASH_ON_ARRIVAL' || paymentStatus === 'PENDING'
+  
+  // Get actual payment amount from payments array
+  const paymentAmount = booking?.payments?.[0]?.amount || (booking?.booking_type === 'consultation' ? 500 : 1000)
   const paymentLabel = paymentStatus === 'SUCCESS'
-    ? '✓ ₹500 Paid Online'
+    ? `✓ ₹${paymentAmount} Paid Online`
     : isCod
     ? '⏳ Cash on Arrival — Payment Pending'
     : paymentStatus === 'THERAPY_LATER'
