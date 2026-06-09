@@ -9,29 +9,28 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleAuth = async () => {
-      // Check if session exists
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (session) {
-        // Already signed in, redirect
-        const next = new URLSearchParams(window.location.search).get('next') || '/book'
-        router.replace(next)
-      } else {
-        // Wait for auth state change (OAuth redirect)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-          if (event === 'SIGNED_IN' && newSession) {
-            const next = new URLSearchParams(window.location.search).get('next') || '/book'
-            router.replace(next)
-            subscription.unsubscribe()
-          }
-        })
-        
-        // Timeout after 5 seconds
-        setTimeout(() => {
-          setChecking(false)
+      // Wait for onAuthStateChange to fire (OAuth redirect sets session)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const next = new URLSearchParams(window.location.search).get('next') || '/my-bookings'
           subscription.unsubscribe()
-        }, 5000)
+          router.replace(next)
+        }
+      })
+      
+      // Also check immediately in case session is already set
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const next = new URLSearchParams(window.location.search).get('next') || '/my-bookings'
+        subscription.unsubscribe()
+        router.replace(next)
       }
+      
+      // Timeout after 8 seconds
+      setTimeout(() => {
+        setChecking(false)
+        subscription.unsubscribe()
+      }, 8000)
     }
 
     handleAuth()

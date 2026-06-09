@@ -75,6 +75,9 @@ export default function MyBookingsPage() {
     let loaded = false
 
     async function init() {
+      // Force refresh session to get latest from server
+      await supabase.auth.refreshSession()
+      
       // Try getSession first
       const { data: sessionData } = await supabase.auth.getSession()
       let u = sessionData.session?.user ?? null
