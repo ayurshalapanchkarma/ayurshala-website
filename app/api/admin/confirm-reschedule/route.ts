@@ -21,6 +21,9 @@ export async function GET(req: NextRequest) {
   if (!booking) return new NextResponse('Booking not found', { status: 404 })
   if (!booking.is_rescheduled) return new NextResponse(`<html><body style="font-family:Arial;text-align:center;padding:60px"><h2>No pending reschedule</h2></body></html>`, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
 
+  // Update booking: mark reschedule as confirmed and reset the flag
+  await supabase.from('bookings_new').update({ is_rescheduled: false, updated_at: new Date().toISOString() }).eq('booking_id', booking_id)
+
   const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
   const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
   const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'

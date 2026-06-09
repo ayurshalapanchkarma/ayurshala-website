@@ -195,6 +195,7 @@ export default function Contact() {
                   <h3 className="font-serif text-2xl" style={{ color: dark ? '#f5f0e8' : '#1a1008' }}>Send us a Message</h3>
                   
                   <div>
+                    <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Name</label>
                     <input
                       type="text"
                       value={formData.name}
@@ -206,6 +207,7 @@ export default function Contact() {
                   </div>
 
                   <div>
+                    <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1 flex items-center gap-1"><Mail className="w-3 h-3" /> Email</label>
                     <input
                       type="email"
                       value={formData.email}
@@ -217,6 +219,7 @@ export default function Contact() {
                   </div>
 
                   <div>
+                    <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1 flex items-center gap-1"><Send className="w-3 h-3" /> Message</label>
                     <textarea
                       value={formData.message}
                       onChange={e => setFormData({ ...formData, message: e.target.value.slice(0, 500) })}

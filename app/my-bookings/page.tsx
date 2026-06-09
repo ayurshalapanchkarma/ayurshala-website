@@ -322,16 +322,16 @@ export default function MyBookingsPage() {
 
               <div className="space-y-3 mb-4">
                 <div>
-                  <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1">New Date</label>
+                  <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1 flex items-center gap-1"><Calendar className="w-3 h-3" /> New Date</label>
                   <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                     min={today} max={maxDateStr} onKeyDown={e => e.preventDefault()}
                     className="w-full rounded-xl px-4 py-2.5 text-sm border border-stone-200 bg-white/80 focus:outline-none focus:border-brand/50" />
                   {newDate && new Date(newDate).getUTCDay() === 5 && (
-                    <p className="font-sans text-xs text-red-500 mt-1">Closed on Fridays. Please choose another day.</p>
+                    <p className="font-sans text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Closed on Fridays. Please choose another day.</p>
                   )}
                 </div>
                 <div>
-                  <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1">New Time</label>
+                  <label className="font-sans text-xs text-stone-400 uppercase tracking-wider block mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> New Time</label>
                   <select value={newTime} onChange={e => setNewTime(e.target.value)}
                     className="w-full rounded-xl px-4 py-2.5 text-sm border border-stone-200 bg-white/80 focus:outline-none focus:border-brand/50 cursor-pointer">
                     <option value="">Select time…</option>
