@@ -115,6 +115,26 @@ CREATE TABLE IF NOT EXISTS doctors (
   created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ── ADMIN CREDENTIALS ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS admin_credentials (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  reset_token TEXT,
+  reset_token_expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO admin_credentials (email, password_hash) 
+VALUES ('ayurshalapanchkarma@gmail.com', '$2b$10$rDVt7fJcCrMZEIGWjZJJaORSyVWPT.ynwKUKzPD2LYxCHUKQ5L7D.') 
+ON CONFLICT (email) DO NOTHING;
+
+ALTER TABLE admin_credentials ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role only" ON admin_credentials
+  USING (false) WITH CHECK (false);
+
 -- ── SYSTEM SETTINGS ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS settings (
   id            BIGSERIAL PRIMARY KEY,

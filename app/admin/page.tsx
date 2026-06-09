@@ -21,11 +21,14 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
 }
 
 export default function AdminPage() {
-  const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || ''
   const [authed, setAuthed] = useState(false)
   const [pw, setPw] = useState('')
   const [pwError, setPwError] = useState('')
   const [showForgot, setShowForgot] = useState(false)
+  const [resetStage, setResetStage] = useState<'request' | 'confirm'>('request')
+  const [newPw, setNewPw] = useState('')
+  const [newPwConfirm, setNewPwConfirm] = useState('')
+  const [resetToken, setResetToken] = useState('')
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(false)
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'ONLINE' | 'OFFLINE'>('ALL')
@@ -46,7 +49,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (authed) fetchBookings()
-  }, [paymentFilter])
+  }, [paymentFilter, authed])
 
   async function fetchBookings() {
     setLoading(true)
@@ -54,6 +57,62 @@ export default function AdminPage() {
     const { bookings: data } = await res.json()
     setBookings(data || [])
     setLoading(false)
+  }
+
+  async function handleLogin() {
+    const res = await fetch('/api/admin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email: 'ayurshalapanchkarma@gmail.com', password: pw }),
+    })
+    const { success } = await res.json()
+    if (success) {
+      setAuthed(true)
+      setPw('')
+    } else {
+      setPwError('Incorrect password')
+    }
+  }
+
+  async function handleResetRequest() {
+    const res = await fetch('/api/admin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset-request', email: 'ayurshalapanchkarma@gmail.com' }),
+    })
+    if (res.ok) {
+      setResetStage('confirm')
+      alert('Reset link sent to ayurshalapanchkarma@gmail.com')
+    }
+  }
+
+  async function handleResetPassword() {
+    if (newPw !== newPwConfirm) {
+      setPwError('Passwords do not match')
+      return
+    }
+    if (newPw.length < 8) {
+      setPwError('Password must be at least 8 characters')
+      return
+    }
+
+    const res = await fetch('/api/admin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset-password', token: resetToken, newPassword: newPw }),
+    })
+    const { success, msg } = await res.json()
+    if (success) {
+      setShowForgot(false)
+      setResetStage('request')
+      setResetToken('')
+      setNewPw('')
+      setNewPwConfirm('')
+      setPwError('')
+      alert('Password reset successful!')
+    } else {
+      setPwError(msg || 'Reset failed')
+    }
   }
 
   async function confirm(booking_id: string) {
@@ -99,7 +158,7 @@ export default function AdminPage() {
     boxShadow: '0 20px 80px rgba(232,98,26,0.12), 0 4px 24px rgba(0,0,0,0.08)',
   }
 
-  if (!authed) return (
+  const loginUI = (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden" style={{ background: bg }}>
       <GlassBackground />
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6 }}
@@ -117,7 +176,7 @@ export default function AdminPage() {
                 type="password"
                 value={pw}
                 onChange={(e) => { setPw(e.target.value); setPwError('') }}
-                onKeyDown={(e) => e.key === 'Enter' && (pw === ADMIN_PASSWORD ? setAuthed(true) : setPwError('Incorrect password'))}
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                 placeholder="Password"
                 className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 border border-white/80 focus:outline-none focus:border-orange-300 backdrop-blur-md"
               />
@@ -126,7 +185,7 @@ export default function AdminPage() {
             {pwError && <p className="font-sans text-xs text-red-500 mb-4 text-center">{pwError}</p>}
 
             <button
-              onClick={() => pw === ADMIN_PASSWORD ? setAuthed(true) : setPwError('Incorrect password')}
+              onClick={handleLogin}
               className="w-full py-2.5 rounded-xl bg-orange-500 text-white font-sans text-sm hover:bg-orange-600 transition mb-3">
               Login
             </button>
@@ -141,21 +200,63 @@ export default function AdminPage() {
           <>
             <div className="text-center mb-6">
               <h1 className="font-serif text-xl mb-1" style={{ color: '#E8621A' }}>Reset Password</h1>
-              <p className="font-sans text-xs text-stone-400">Click button to reset via email</p>
+              <p className="font-sans text-xs text-stone-400">
+                {resetStage === 'request' ? 'Send reset link to email' : 'Set new password'}
+              </p>
             </div>
 
-            <p className="font-sans text-sm text-stone-600 bg-blue-50 rounded-lg p-3 mb-4 border border-blue-200">
-              Reset password link will be sent to <strong>ayurshalapanchkarma@gmail.com</strong>
-            </p>
+            {resetStage === 'request' ? (
+              <>
+                <p className="font-sans text-sm text-stone-600 bg-blue-50 rounded-lg p-3 mb-4 border border-blue-200">
+                  Reset link will be sent to <strong>ayurshalapanchkarma@gmail.com</strong>
+                </p>
+                <button
+                  onClick={handleResetRequest}
+                  className="w-full py-2.5 rounded-xl bg-blue-500 text-white font-sans text-sm hover:bg-blue-600 transition mb-3">
+                  Send Reset Link
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={resetToken}
+                  onChange={(e) => { setResetToken(e.target.value); setPwError('') }}
+                  placeholder="Paste token from email"
+                  className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 border border-white/80 focus:outline-none focus:border-orange-300 backdrop-blur-md mb-3"
+                />
+                <input
+                  type="password"
+                  value={newPw}
+                  onChange={(e) => { setNewPw(e.target.value); setPwError('') }}
+                  placeholder="New password"
+                  className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 border border-white/80 focus:outline-none focus:border-orange-300 backdrop-blur-md mb-3"
+                />
+                <input
+                  type="password"
+                  value={newPwConfirm}
+                  onChange={(e) => { setNewPwConfirm(e.target.value); setPwError('') }}
+                  placeholder="Confirm password"
+                  className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 border border-white/80 focus:outline-none focus:border-orange-300 backdrop-blur-md mb-3"
+                />
+                {pwError && <p className="font-sans text-xs text-red-500 mb-4 text-center">{pwError}</p>}
+                <button
+                  onClick={handleResetPassword}
+                  className="w-full py-2.5 rounded-xl bg-green-500 text-white font-sans text-sm hover:bg-green-600 transition mb-3">
+                  Reset Password
+                </button>
+              </>
+            )}
 
             <button
-              onClick={() => { alert('Reset link sent to ayurshalapanchkarma@gmail.com'); setShowForgot(false); }}
-              className="w-full py-2.5 rounded-xl bg-blue-500 text-white font-sans text-sm hover:bg-blue-600 transition mb-3">
-              Send Reset Link
-            </button>
-
-            <button
-              onClick={() => { setShowForgot(false); setPwError('') }}
+              onClick={() => {
+                setShowForgot(false)
+                setResetStage('request')
+                setResetToken('')
+                setNewPw('')
+                setNewPwConfirm('')
+                setPwError('')
+              }}
               className="w-full py-2.5 rounded-xl bg-white/40 text-stone-700 font-sans text-sm hover:bg-white/60 transition border border-white/60">
               Back to Login
             </button>
@@ -164,6 +265,8 @@ export default function AdminPage() {
       </motion.div>
     </div>
   )
+
+  if (!authed) return loginUI
 
   return (
     <div className="min-h-screen px-4 sm:px-6 py-16 sm:py-24 relative overflow-hidden" style={{ background: bg }}>
