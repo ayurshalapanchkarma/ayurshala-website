@@ -51,21 +51,14 @@ export default function AdminLogin() {
         userId: data.session.user.id,
       })
 
-      // Verify profile and role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
+      // Verify user is in admins table
+      const { data: admin, error: adminError } = await supabase
+        .from('admins')
+        .select('id')
         .eq('id', data.session.user.id)
         .single()
 
-      if (profileError || !profile) {
-        await supabase.auth.signOut()
-        setError('Unable to load profile')
-        setLoading(false)
-        return
-      }
-
-      if (profile.role !== 'ADMIN') {
+      if (adminError || !admin) {
         await supabase.auth.signOut()
         setError('You are not authorized to access the Admin Portal.')
         setTimeout(() => {
@@ -75,10 +68,9 @@ export default function AdminLogin() {
         return
       }
 
-      // Admin verified - redirect
       console.log({
         email: data.session.user.email,
-        role: profile.role,
+        isAdmin: true,
         redirectTarget: '/admin',
       })
 

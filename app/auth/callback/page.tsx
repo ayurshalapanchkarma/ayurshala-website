@@ -16,25 +16,21 @@ export default function AuthCallback() {
     const handleAuth = async () => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Get user profile to determine redirect
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
+          // Check if user is admin
+          const { data: admin } = await supabase
+            .from('admins')
+            .select('id')
             .eq('id', session.user.id)
             .single()
 
           let redirectTarget = '/patient/dashboard'
-          if (profile?.role === 'ADMIN') {
+          if (admin) {
             redirectTarget = '/admin'
-          } else if (profile?.role === 'DOCTOR') {
-            redirectTarget = '/doctor'
-          } else if (profile?.role === 'RECEPTIONIST') {
-            redirectTarget = '/reception'
           }
 
           console.log({
             email: session.user.email,
-            role: profile?.role,
+            isAdmin: !!admin,
             redirectTarget
           })
 
@@ -46,24 +42,20 @@ export default function AuthCallback() {
       // Also check immediately
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
+        const { data: admin } = await supabase
+          .from('admins')
+          .select('id')
           .eq('id', session.user.id)
           .single()
 
         let redirectTarget = '/patient/dashboard'
-        if (profile?.role === 'ADMIN') {
+        if (admin) {
           redirectTarget = '/admin'
-        } else if (profile?.role === 'DOCTOR') {
-          redirectTarget = '/doctor'
-        } else if (profile?.role === 'RECEPTIONIST') {
-          redirectTarget = '/reception'
         }
 
         console.log({
           email: session.user.email,
-          role: profile?.role,
+          isAdmin: !!admin,
           redirectTarget
         })
 

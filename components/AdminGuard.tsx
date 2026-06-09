@@ -26,9 +26,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     console.log({
       loading,
       user: user?.email,
-      profile,
-      role: profile?.role,
-      isAdmin: profile?.role === 'ADMIN'
+      isAdmin
     })
 
     if (loading) return
@@ -44,20 +42,15 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       return
     }
 
-    if (!profile) {
-      setError('Unable to load user profile. Please refresh the page.')
+    if (!isAdmin) {
+      console.log('User is not admin, redirecting to /patient/dashboard')
+      setRedirecting(true)
+      router.push('/patient/dashboard')
       return
     }
 
-    if (profile.role === 'ADMIN') {
-      console.log('Admin user verified, granting access')
-      return
-    }
-
-    console.log(`User is ${profile.role}, not admin. Redirecting...`)
-    setRedirecting(true)
-    router.push('/patient/dashboard')
-  }, [loading, user, profile, timedOut, router])
+    console.log('Admin user verified, granting access')
+  }, [loading, user, isAdmin, timedOut, router])
 
   if (error) {
     return (

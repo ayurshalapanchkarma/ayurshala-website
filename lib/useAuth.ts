@@ -8,13 +8,12 @@ const supabase = createClient(
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let isMounted = true
 
-    // Load session and profile
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!isMounted) return
 
@@ -22,35 +21,27 @@ export function useAuth() {
 
       if (session?.user) {
         try {
-          const { data: prof, error } = await supabase
-            .from('profiles')
-            .select('*')
+          // Check if user is admin
+          const { data: admin } = await supabase
+            .from('admins')
+            .select('id')
             .eq('id', session.user.id)
             .single()
 
           if (!isMounted) return
-
-          if (error) {
-            console.error('Profile fetch error:', error)
-            setProfile(null)
-          } else {
-            setProfile(prof)
-          }
+          setIsAdmin(!!admin)
         } catch (err) {
           if (!isMounted) return
-          console.error('Profile fetch exception:', err)
-          setProfile(null)
+          setIsAdmin(false)
         }
       }
 
       setLoading(false)
-    }).catch(err => {
+    }).catch(() => {
       if (!isMounted) return
-      console.error('Session fetch error:', err)
       setLoading(false)
     })
 
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
       if (!isMounted) return
 
@@ -58,27 +49,20 @@ export function useAuth() {
 
       if (session?.user) {
         try {
-          const { data: prof, error } = await supabase
-            .from('profiles')
-            .select('*')
+          const { data: admin } = await supabase
+            .from('admins')
+            .select('id')
             .eq('id', session.user.id)
             .single()
 
           if (!isMounted) return
-
-          if (error) {
-            console.error('Profile fetch error:', error)
-            setProfile(null)
-          } else {
-            setProfile(prof)
-          }
+          setIsAdmin(!!admin)
         } catch (err) {
           if (!isMounted) return
-          console.error('Profile fetch exception:', err)
-          setProfile(null)
+          setIsAdmin(false)
         }
       } else {
-        setProfile(null)
+        setIsAdmin(false)
       }
 
       setLoading(false)
@@ -90,5 +74,5 @@ export function useAuth() {
     }
   }, [])
 
-  return { user, profile, loading, isAdmin: profile?.role === 'ADMIN' }
+  return { user, loading, isAdmin }
 }
