@@ -6,11 +6,16 @@ import { motion } from 'framer-motion'
 import GlassBackground from '@/components/GlassBackground'
 import { useTheme } from 'next-themes'
 import { ShieldCheck } from 'lucide-react'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+)
 
 export default function AdminLogin() {
   const router = useRouter()
   const { theme } = useTheme()
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,6 +26,7 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
+      // Verify password
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -28,13 +34,57 @@ export default function AdminLogin() {
       })
       const { success } = await res.json()
 
-      if (success) {
-        localStorage.setItem('adminSessionTime', Date.now().toString())
-        router.push('/admin')
-      } else {
+      if (!success) {
         setError('Incorrect password')
+        setLoading(false)
+        return
       }
+
+      // Password is correct, now get the authenticated user and verify role
+      const { data } = await supabase.auth.getSession()
+      const user = data.session?.user
+      
+      if (!user) {
+        setError('Session not found')
+        setLoading(false)
+        return
+      }
+
+      // Fetch user profile to verify role
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      console.log({
+        email: user.email,
+        role: profile?.role,
+        redirectTarget: profile?.role === 'ADMIN' ? '/admin' : '/patient/dashboard'
+      })
+
+      if (profileError || !profile) {
+        setError('Unable to verify user profile')
+        setLoading(false)
+        return
+      }
+
+      if (profile.role !== 'ADMIN') {
+        // User is not admin - sign them out and redirect
+        await supabase.auth.signOut()
+        setError('You are not authorized to access the Admin Portal.')
+        setTimeout(() => {
+          router.push('/patient/dashboard')
+        }, 2000)
+        setLoading(false)
+        return
+      }
+
+      // User is admin - store session and redirect
+      localStorage.setItem('adminSessionTime', Date.now().toString())
+      router.push('/admin')
     } catch (err) {
+      console.error('Login error:', err)
       setError('Login failed. Please try again.')
     } finally {
       setLoading(false)
@@ -72,8 +122,7 @@ export default function AdminLogin() {
           <label className="block text-xs font-semibold text-stone-600 mb-2">Email</label>
           <input
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value="ayurshalapanchkarma@gmail.com"
             placeholder="ayurshalapanchkarma@gmail.com"
             className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-white/50 border border-white/80 focus:outline-none focus:border-orange-300 backdrop-blur-md"
             disabled
