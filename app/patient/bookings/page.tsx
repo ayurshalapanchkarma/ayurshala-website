@@ -27,6 +27,8 @@ export default function PatientBookings() {
     if (!user) return
 
     async function fetchBookings() {
+      console.log('Google User:', user.id)
+
       // Get patient record using google_user_id
       const { data: patient } = await supabase
         .from('patients')
@@ -34,7 +36,10 @@ export default function PatientBookings() {
         .eq('google_user_id', user.id)
         .single()
 
+      console.log('Patient UUID:', patient?.id)
+
       if (!patient) {
+        console.log('Patient not found')
         setBookingsLoading(false)
         return
       }
@@ -45,6 +50,8 @@ export default function PatientBookings() {
         .select('*')
         .eq('patient_uuid', patient.id)
         .order('created_at', { ascending: false })
+
+      console.log('Bookings Count:', data?.length)
 
       setBookings(data || [])
       setBookingsLoading(false)
