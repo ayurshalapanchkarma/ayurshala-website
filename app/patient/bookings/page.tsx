@@ -27,31 +27,39 @@ export default function PatientBookings() {
     if (!user) return
 
     async function fetchBookings() {
-      console.log('Google User:', user.id)
+      console.log('=== BOOKING FETCH START ===')
+      console.log('Auth user:', user)
+      console.log('Auth user id:', user?.id)
 
       // Get patient record using google_user_id
-      const { data: patient } = await supabase
+      const { data: patient, error: patientError } = await supabase
         .from('patients')
         .select('id')
         .eq('google_user_id', user.id)
         .single()
 
-      console.log('Patient UUID:', patient?.id)
+      console.log('Patient lookup result:', patient)
+      console.log('Patient lookup error:', patientError)
+      console.log('Patient UUID used:', patient?.id)
 
       if (!patient) {
-        console.log('Patient not found')
+        console.log('Patient not found - stopping')
         setBookingsLoading(false)
         return
       }
 
       // Query bookings using patients.id
-      const { data } = await supabase
+      const { data, error: bookingsError } = await supabase
         .from('bookings_new')
         .select('*')
         .eq('patient_uuid', patient.id)
         .order('created_at', { ascending: false })
 
-      console.log('Bookings Count:', data?.length)
+      console.log('Bookings query error:', bookingsError)
+      console.log('Bookings returned:', data)
+      console.log('Bookings count:', data?.length)
+      console.log('First booking sample:', data?.[0])
+      console.log('=== BOOKING FETCH END ===')
 
       setBookings(data || [])
       setBookingsLoading(false)
@@ -74,6 +82,10 @@ export default function PatientBookings() {
   if (!user) {
     return null
   }
+
+  console.log('RENDER STATE - bookings array:', bookings)
+  console.log('RENDER STATE - bookings.length:', bookings.length)
+  console.log('RENDER STATE - bookingsLoading:', bookingsLoading)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
