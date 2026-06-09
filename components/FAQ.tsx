@@ -81,7 +81,7 @@ export default function FAQ() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   return (
-    <section id="faq" className="py-24 px-6 relative">
+    <section id="faq" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full opacity-[0.07] pointer-events-none"
         style={{ background: 'radial-gradient(circle, #4a7c59 0%, transparent 70%)' }} />
 

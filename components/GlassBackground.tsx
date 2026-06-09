@@ -19,7 +19,7 @@ export default function GlassBackground() {
 
       {/* Blob 1 — orange, top-left */}
       <div className="absolute rounded-full" style={{
-        width: '65vw', height: '65vw',
+        width: 'min(65vw, 500px)', height: 'min(65vw, 500px)',
         top: '-15%', left: '-15%',
         background: dark
           ? 'radial-gradient(circle, rgba(232,98,26,0.35) 0%, transparent 65%)'
@@ -30,7 +30,7 @@ export default function GlassBackground() {
 
       {/* Blob 2 — green, bottom-right */}
       <div className="absolute rounded-full" style={{
-        width: '60vw', height: '60vw',
+        width: 'min(60vw, 450px)', height: 'min(60vw, 450px)',
         bottom: '-15%', right: '-15%',
         background: dark
           ? 'radial-gradient(circle, rgba(74,124,89,0.30) 0%, transparent 65%)'
@@ -41,7 +41,7 @@ export default function GlassBackground() {
 
       {/* Blob 3 — amber, center-right */}
       <div className="absolute rounded-full" style={{
-        width: '45vw', height: '45vw',
+        width: 'min(45vw, 350px)', height: 'min(45vw, 350px)',
         top: '30%', right: '5%',
         background: dark
           ? 'radial-gradient(circle, rgba(245,166,35,0.20) 0%, transparent 65%)'
@@ -52,7 +52,7 @@ export default function GlassBackground() {
 
       {/* Blob 4 — teal, center-left */}
       <div className="absolute rounded-full" style={{
-        width: '40vw', height: '40vw',
+        width: 'min(40vw, 300px)', height: 'min(40vw, 300px)',
         top: '50%', left: '5%',
         background: dark
           ? 'radial-gradient(circle, rgba(13,148,136,0.18) 0%, transparent 65%)'

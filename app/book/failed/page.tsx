@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
+import { RotateCcw, Home, X, Eye } from 'lucide-react'
 import GlassBackground from '@/components/GlassBackground'
 import { useTheme } from 'next-themes'
 import { useState, useEffect } from 'react'
@@ -13,13 +14,13 @@ export default function PaymentFailedPage() {
   const dark = mounted && theme === 'dark'
 
   return (
-    <div className="min-h-screen px-6 py-16 relative overflow-hidden flex items-center justify-center"
+    <div className="min-h-screen px-4 sm:px-6 py-16 sm:py-20 relative overflow-hidden flex items-center justify-center"
       style={{ background: dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)' }}>
       <GlassBackground />
 
-      <div className="max-w-md w-full relative">
+      <div className="w-full max-w-md relative">
         <motion.div initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.7 }}
-          className="rounded-3xl p-8 relative overflow-hidden"
+          className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden"
           style={{
             background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.75)',
             backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
@@ -33,7 +34,7 @@ export default function PaymentFailedPage() {
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
               className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
               style={{ background: 'rgba(220,38,38,0.12)', border: '1.5px solid rgba(220,38,38,0.3)' }}>
-              <span className="text-3xl">✕</span>
+              <X className="w-8 h-8 text-red-600" />
             </motion.div>
 
             <h1 className="font-serif text-3xl mb-2" style={{ color: '#dc2626' }}>Payment Failed</h1>
@@ -47,8 +48,15 @@ export default function PaymentFailedPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <Link href="/book" className="btn-glass w-full text-sm py-3 text-center">🔄 Try Booking Again</Link>
-            <Link href="/" className="btn-glass w-full text-sm py-3 text-center">← Back to Home</Link>
+            <Link href="/book" className="btn-glass w-full text-sm py-3 text-center flex items-center justify-center gap-2">
+              <RotateCcw className="w-4 h-4" /> Try Booking Again
+            </Link>
+            <Link href="/my-bookings" className="btn-glass w-full text-sm py-3 text-center flex items-center justify-center gap-2">
+              <Eye className="w-4 h-4" /> My Bookings
+            </Link>
+            <Link href="/" className="btn-glass w-full text-sm py-3 text-center flex items-center justify-center gap-2">
+              <Home className="w-4 h-4" /> Back to Home
+            </Link>
           </div>
 
           <p className="font-sans text-xs text-stone-400 text-center mt-4">

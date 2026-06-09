@@ -282,21 +282,21 @@ export default function Treatments() {
     : treatments.filter(t => t.category === activeCategory)
 
   return (
-    <section id="treatments" className="py-24 px-6 relative">
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-10 pointer-events-none"
+    <section id="treatments" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 sm:w-96 md:w-[600px] h-64 sm:h-96 md:h-[600px] rounded-full opacity-10 pointer-events-none hidden sm:block"
         style={{ background: 'radial-gradient(circle, #4a7c59 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto">
         <motion.div
           ref={ref}
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-center mb-10"
+          className="text-center mb-8 sm:mb-10 px-2"
         >
           <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/60 mb-3"></p>
-          <h2 className="section-title mb-4">Treatments We Offer</h2>
-          <p className="font-sans text-stone-500 max-w-xl mx-auto text-sm leading-relaxed">
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light leading-tight mb-4" style={{ color: '#1a1008' }}>Treatments We Offer</h2>
+          <p className="font-sans text-xs sm:text-sm text-stone-500 max-w-2xl mx-auto leading-relaxed">
             Every therapy is performed as prescribed by classical Ayurvedic texts — in authentic sequence, by trained practitioners under senior consultant supervision.
           </p>
         </motion.div>
@@ -306,13 +306,13 @@ export default function Treatments() {
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ delay: 0.3 }}
-          className="flex flex-wrap justify-center gap-2 mb-10"
+          className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-10 px-2"
         >
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`font-sans text-xs tracking-wider rounded-full px-5 py-2 transition-all duration-300 border ${
+              className={`font-sans text-xs tracking-wider rounded-full px-3 sm:px-5 py-2 transition-all duration-300 border whitespace-nowrap ${
                 activeCategory === cat
                   ? 'bg-brand/15 border-brand/50 text-brand'
                   : 'glass border-stone-200 text-stone-400 hover:text-stone-700'
@@ -324,7 +324,7 @@ export default function Treatments() {
         </motion.div>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 px-2">
           {filtered.map((t, i) => <TreatmentCard key={t.name} t={t} i={i} />)}
         </div>
       </div>

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
       <head>
         <link rel="icon" type="image/png" href="/ayurshala.png" />
         {/* Google Analytics */}
@@ -31,7 +31,7 @@ gtag('js', new Date());
 gtag('config', 'G-JDJFTB5DDK');`}
         </Script>
       </head>
-      <body>
+      <body style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {children}
         </ThemeProvider>

@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
+import { CheckCircle2, Home, Eye, User, Badge, FileText, Activity, Calendar, Clock, CreditCard } from 'lucide-react'
 import GlassBackground from '@/components/GlassBackground'
 import { supabase } from '@/lib/supabase'
 import { useTheme } from 'next-themes'
@@ -14,6 +15,27 @@ type BookingData = {
   booking_type: string; payment_status: string; payment_method: string
   patients: { full_name: string; patient_id: string; email: string }
   booking_treatments_v2: { treatment_name: string }[]
+}
+
+const iconMap: Record<string, any> = {
+  'User': User, 'Badge': Badge, 'FileText': FileText, 'Activity': Activity,
+  'Calendar': Calendar, 'Clock': Clock, 'CreditCard': CreditCard,
+}
+
+function BookingDetailRow({ label, value, icon, isLast, isPayment, isBookingId, paymentColor, dark }: any) {
+  const IconComponent = iconMap[icon]
+  return (
+    <div className={`flex items-center gap-3 px-4 py-3 ${isLast ? '' : (dark ? 'border-b border-white/06' : 'border-b border-white/15')}`}
+      style={{ background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.3)' }}>
+      <IconComponent className="w-4 h-4 flex-shrink-0" style={{ color: isPayment ? paymentColor : '#E8621A' }} />
+      <div className="flex-1 flex flex-col">
+        <span className="font-sans text-xs text-stone-400 uppercase tracking-wider">{label}</span>
+        <span className="font-sans text-sm font-medium" style={{ color: isPayment ? paymentColor : isBookingId ? '#E8621A' : dark ? '#e7e5e4' : '#1a1008' }}>
+          {value}
+        </span>
+      </div>
+    </div>
+  )
 }
 
 function ConfirmedContent() {
@@ -61,7 +83,7 @@ function ConfirmedContent() {
     : 'Your healing journey begins here 🌿'
 
   return (
-    <div className="min-h-screen px-6 py-16 relative overflow-hidden flex items-center justify-center"
+    <div className="min-h-screen px-4 sm:px-6 py-16 sm:py-20 relative overflow-hidden flex items-center justify-center"
       style={{ background: dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)' }}>
       <GlassBackground />
       <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full opacity-40 pointer-events-none animate-blob1"
@@ -93,7 +115,7 @@ function ConfirmedContent() {
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
               className="w-16 h-16 rounded-full flex items-center justify-center"
               style={{ background: isCod ? 'linear-gradient(135deg,rgba(217,119,6,0.15),rgba(217,119,6,0.25))' : 'linear-gradient(135deg,rgba(22,163,74,0.15),rgba(22,163,74,0.25))', border: `1.5px solid ${isCod ? 'rgba(217,119,6,0.3)' : 'rgba(22,163,74,0.3)'}` }}>
-              <span className="text-3xl">✓</span>
+              <CheckCircle2 className="w-8 h-8" style={{ color: isCod ? '#d97706' : '#16a34a' }} />
             </motion.div>
           </div>
 
@@ -104,36 +126,36 @@ function ConfirmedContent() {
           </div>
 
           {booking ? (
-            <div className={`rounded-2xl overflow-hidden mb-6 border ${dark ? 'border-white/10' : 'border-brand/15'}`}>
+            <div className={`rounded-2xl overflow-hidden mb-6 border backdrop-filter backdrop-blur-xl ${dark ? 'border-white/10 bg-white/5' : 'border-white/85 bg-white/75'}`}
+              style={{ boxShadow: dark ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 32px rgba(232,98,26,0.1)' }}>
               {([
-                ['Patient', booking.patients?.full_name],
-                ['Patient ID', booking.patients?.patient_id],
-                ['Booking ID', booking.booking_id],
-                ['Treatment', booking.booking_treatments_v2?.map((t: any) => t.treatment_name).join(', ') || '—'],
-                ['Date', formattedDate],
-                ['Time', booking.preferred_time],
-                ['Payment', paymentLabel],
-              ] as [string, string][]).map(([label, value], i, arr) => (
-                <div key={label}
-                  className={`flex justify-between items-start px-4 py-3 gap-4 ${i < arr.length - 1 ? (dark ? 'border-b border-white/06' : 'border-b border-brand/08') : ''}`}
-                  style={{ background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(232,98,26,0.02)' }}>
-                  <span className="font-sans text-xs text-stone-400 uppercase tracking-wider shrink-0">{label}</span>
-                  <span className="font-sans text-sm font-medium text-right"
-                    style={{ color: label === 'Payment' ? paymentColor : label === 'Patient ID' || label === 'Booking ID' ? '#E8621A' : dark ? '#e7e5e4' : '#1a1008' }}>
-                    {value}
-                  </span>
-                </div>
+                ['Patient', booking.patients?.full_name, 'User'],
+                ['Patient ID', booking.patients?.patient_id, 'Badge'],
+                ['Booking ID', booking.booking_id, 'FileText'],
+                ['Treatment', booking.booking_treatments_v2?.map((t: any) => t.treatment_name).join(', ') || '—', 'Activity'],
+                ['Date', formattedDate, 'Calendar'],
+                ['Time', booking.preferred_time, 'Clock'],
+                ['Payment', paymentLabel, 'CreditCard'],
+              ] as any[]).map(([label, value, icon], i, arr) => (
+                <BookingDetailRow key={label} label={label} value={value} icon={icon} 
+                  isLast={i === arr.length - 1} isPayment={label === 'Payment'} 
+                  isBookingId={label === 'Booking ID' || label === 'Patient ID'}
+                  paymentColor={paymentColor} dark={dark} />
               ))}
             </div>
           ) : (
-            <div className={`rounded-2xl p-6 mb-6 text-center border ${dark ? 'border-white/10 bg-white/5' : 'border-brand/15 bg-brand/5'}`}>
+            <div className={`rounded-2xl p-6 mb-6 text-center border backdrop-filter backdrop-blur-xl ${dark ? 'border-white/10 bg-white/5' : 'border-white/85 bg-white/75'}`}>
               <p className="font-sans text-sm text-stone-400">Loading booking details…</p>
             </div>
           )}
 
           <div className="flex gap-3">
-            <Link href="/my-bookings" className="btn-glass flex-1 text-sm py-3 text-center">My Bookings</Link>
-            <Link href="/" className="btn-glass flex-1 text-sm py-3 text-center">Home</Link>
+            <Link href="/my-bookings" className="btn-glass flex-1 text-sm py-3 text-center flex items-center justify-center gap-2">
+              <Eye className="w-4 h-4" /> My Bookings
+            </Link>
+            <Link href="/" className="btn-glass flex-1 text-sm py-3 text-center flex items-center justify-center gap-2">
+              <Home className="w-4 h-4" /> Home
+            </Link>
           </div>
         </motion.div>
       </div>

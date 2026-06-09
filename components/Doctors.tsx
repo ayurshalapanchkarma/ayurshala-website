@@ -36,11 +36,11 @@ export default function Doctors() {
   const dark = mounted && theme === 'dark'
 
   return (
-    <section id="doctors" className="py-24 px-6 relative overflow-hidden">
+    <section id="doctors" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden overflow-hidden">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-10 pointer-events-none"
         style={{ background: 'radial-gradient(circle, #E8621A 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
 
-      <div className="max-w-6xl mx-auto" ref={ref}>
+      <div className="w-full max-w-6xl mx-auto" ref={ref}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}

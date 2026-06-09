@@ -19,7 +19,7 @@ export default function Stats() {
   const dark = mounted && theme === 'dark'
 
   return (
-    <section ref={ref} className="py-6 px-6 relative">
+    <section ref={ref} className="py-3 sm:py-6 px-4 sm:px-6 relative overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={inView ? { opacity: 1, y: 0 } : {}}

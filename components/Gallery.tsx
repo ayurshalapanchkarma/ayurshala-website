@@ -91,8 +91,8 @@ export default function Gallery() {
 
   return (
     <>
-      <section id="gallery" className="py-24 px-6 relative overflow-hidden" ref={ref}>
-        <div className="max-w-6xl mx-auto">
+      <section id="gallery" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden overflow-hidden" ref={ref}>
+        <div className="w-full max-w-6xl mx-auto">
 
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8 }} className="text-center mb-16">

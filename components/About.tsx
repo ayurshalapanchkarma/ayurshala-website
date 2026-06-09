@@ -42,25 +42,25 @@ export default function About() {
   const dark = mounted && theme === 'dark'
 
   return (
-    <section id="about" className="py-24 px-6 relative overflow-hidden">
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-10 pointer-events-none"
+    <section id="about" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
+      <div className="absolute bottom-0 left-0 w-64 sm:w-96 md:w-[500px] h-64 sm:h-96 md:h-[500px] rounded-full opacity-10 pointer-events-none hidden sm:block"
         style={{ background: 'radial-gradient(circle, #E8621A 0%, transparent 70%)', transform: 'translate(-40%, 40%)' }} />
 
-      <div className="max-w-6xl mx-auto" ref={ref}>
+      <div className="w-full max-w-6xl mx-auto px-2 sm:px-0" ref={ref}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="text-center mb-12 sm:mb-16 px-2"
         >
           <p className="font-sans text-xs tracking-[0.4em] uppercase text-stone-500 mb-3">Our Story</p>
-          <h2 className="section-title mb-4">The Panchakarma Journey</h2>
-          <p className="font-sans text-stone-500 max-w-2xl mx-auto text-sm leading-relaxed">
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light leading-tight mb-4" style={{ color: '#1a1008' }}>The Panchakarma Journey</h2>
+          <p className="font-sans text-xs sm:text-sm text-stone-500 max-w-2xl mx-auto leading-relaxed">
             Ayurveda — the "knowledge of life" — has guided humanity for over 3,000 years. At Ayurshala, we practice it as the ancient texts prescribe: methodically, authentically, and with complete care for each individual.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16 px-2">
           {stages.map((s, i) => (
             <motion.div
               key={s.num}

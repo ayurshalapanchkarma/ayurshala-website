@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const payment = response.data?.[0]
     const success = payment?.payment_status === 'SUCCESS'
 
-    if (!success) return NextResponse.redirect(new URL('/book/failed', req.url))
+    if (!success) return NextResponse.redirect(new URL(`/book/payment-failed?order_id=${orderId}`, req.url))
 
     // Payment for existing booking (reschedule pay-online flow)
     if (originalBookingId) {
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         if (patient?.email) {
           await resend.emails.send({
             from, to: patient.email,
-            subject: `✓ Payment Received & Booking Confirmed — ${originalBookingId}`,
+            subject: `Payment Received & Booking Confirmed — ${originalBookingId}`,
             html: buildPaymentConfirmedEmail({ patient, booking, treatmentList, formattedDate, amountLabel }),
           })
         }
@@ -53,20 +53,20 @@ export async function GET(req: NextRequest) {
         // Notify clinic
         await resend.emails.send({
           from, to: 'ayurshalapanchkarma@gmail.com',
-          subject: `✓ ${originalBookingId} — ${patient?.full_name} — Online Payment`,
+          subject: `${originalBookingId} — ${patient?.full_name} — Online Payment`,
           html: buildPaymentConfirmedEmail({ patient, booking, treatmentList, formattedDate, amountLabel }),
         })
 
         fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, parse_mode: 'Markdown', text: `💳 *Payment Received — Ayurshala*\n\n👤 *${patient?.full_name}*\n📋 ${originalBookingId}\n💆 ${treatmentList}\n📅 ${booking.preferred_date} · ${booking.preferred_time}\n💰 ${amountLabel}` }),
+          body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, parse_mode: 'Markdown', text: `*Payment Received — Ayurshala*\n\n*${patient?.full_name}*\n${originalBookingId}\n${treatmentList}\n${booking.preferred_date} · ${booking.preferred_time}\n${amountLabel}` }),
         }).catch(() => {})
       }
       return NextResponse.redirect(new URL(`/book/confirmed?booking_id=${originalBookingId}`, req.url))
     }
 
     // Normal new booking flow
-    await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/book`, {
+    await fetch(`${req.nextUrl.origin}/api/book`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -77,8 +77,9 @@ export async function GET(req: NextRequest) {
       }),
     })
     return NextResponse.redirect(new URL(`/book/confirmed?booking_id=${orderId}`, req.url))
-  } catch {
-    return NextResponse.redirect(new URL('/book/failed', req.url))
+  } catch (error) {
+    console.error('Payment verification error:', error)
+    return NextResponse.redirect(new URL(`/book/payment-failed?order_id=${orderId}`, req.url))
   }
 }
 

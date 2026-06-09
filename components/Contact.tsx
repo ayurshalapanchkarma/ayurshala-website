@@ -3,6 +3,7 @@ import { motion, useInView } from 'framer-motion'
 import { useRef, useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
+import { Clock, MapPin, Phone, Mail, FileText, Send, X, CheckCircle, AlertCircle, Calendar, Loader } from 'lucide-react'
 
 const services = [
   'Lifestyle Consultation', 'Nadi Pariksha (Pulse Diagnosis)',
@@ -11,13 +12,53 @@ const services = [
   'Preconception & Post-conception Care', 'Swarna Prashan',
 ]
 
+type FormErrors = { name?: string; email?: string; phone?: string; message?: string }
+
 export default function Contact() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' })
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  
   useEffect(() => setMounted(true), [])
   const dark = mounted && theme === 'dark'
+
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {}
+    if (!formData.name.trim() || formData.name.length < 2) errors.name = 'Name must be at least 2 characters'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Enter a valid email'
+    if (!formData.message.trim() || formData.message.length < 10) errors.message = 'Message must be at least 10 characters'
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validateForm()) return
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      if (res.ok) {
+        setSubmitStatus('success')
+        setFormData({ name: '', email: '', message: '' })
+        setTimeout(() => { setShowForm(false); setSubmitStatus('idle') }, 3000)
+      } else {
+        setSubmitStatus('error')
+      }
+    } catch {
+      setSubmitStatus('error')
+    }
+    setSubmitting(false)
+  }
 
   const cardStyle = {
     background: dark
@@ -31,27 +72,28 @@ export default function Contact() {
 
   return (
     <>
-      <section id="contact" className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full opacity-10 pointer-events-none"
+      <section id="contact" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
+        <div className="absolute bottom-0 right-0 w-56 sm:w-96 md:w-[500px] h-56 sm:h-96 md:h-[500px] rounded-full opacity-10 pointer-events-none hidden sm:block"
           style={{ background: 'radial-gradient(circle, #E8621A 0%, transparent 70%)', transform: 'translate(30%, 30%)' }} />
-        <div className="absolute top-0 left-0 w-[400px] h-[400px] rounded-full opacity-10 pointer-events-none"
+        <div className="absolute top-0 left-0 w-48 sm:w-80 md:w-[400px] h-48 sm:h-80 md:h-[400px] rounded-full opacity-10 pointer-events-none hidden sm:block"
           style={{ background: 'radial-gradient(circle, #4a7c59 0%, transparent 70%)', transform: 'translate(-30%, -30%)' }} />
 
-        <div className="max-w-6xl mx-auto" ref={ref}>
+        <div className="w-full max-w-6xl mx-auto px-2 sm:px-0" ref={ref}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            className="text-center mb-12 sm:mb-16"
           >
             <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/60 mb-3">Get In Touch</p>
-            <h2 className="section-title mb-4">Begin Your Healing Journey</h2>
-            <p className="font-sans text-stone-500 max-w-xl mx-auto text-sm leading-relaxed">
+            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light leading-tight mb-4" style={{ color: '#1a1008' }}>Begin Your Healing Journey</h2>
+            <p className="font-sans text-xs sm:text-sm text-stone-500 max-w-2xl mx-auto leading-relaxed">
               Our certified Ayurvedic physicians are ready to guide you. Book a consultation and take the first step toward restored balance.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            {/* Contact Info Card */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
@@ -64,78 +106,153 @@ export default function Contact() {
               <div className="absolute inset-0 rounded-3xl pointer-events-none"
                 style={{ background: 'radial-gradient(ellipse at 100% 100%, rgba(13,148,136,0.07) 0%, transparent 60%)' }} />
 
-              <h3 className="font-serif text-2xl mb-8" style={{ color: dark ? '#f5f0e8' : '#1a1008' }}>Contact Us</h3>
+              <h3 className="font-serif text-2xl mb-8" style={{ color: dark ? '#f5f0e8' : '#1a1008' }}>Contact Info</h3>
 
               <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <span className="text-brand/60 text-lg mt-0.5">🕐</span>
+                <motion.div whileHover={{ x: 5 }} className="flex items-start gap-4">
+                  <Clock className="w-5 h-5 text-brand/60 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-sans text-xs text-stone-400 uppercase tracking-wider mb-1">Opening Hours</p>
                     <p className="font-sans text-stone-600 text-sm">Mon – Thu & Sat: 9:00 AM – 7:00 PM</p>
                     <p className="font-sans text-stone-600 text-sm">Sunday: 10:00 AM – 2:00 PM</p>
                     <p className="font-sans text-stone-600 text-sm">Friday: Closed</p>
                   </div>
-                </div>
+                </motion.div>
 
-                <div className="flex items-start gap-4">
-                  <span className="text-brand/60 text-lg mt-0.5">📍</span>
+                <motion.div whileHover={{ x: 5 }} className="flex items-start gap-4">
+                  <MapPin className="w-5 h-5 text-brand/60 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-sans text-xs text-stone-400 uppercase tracking-wider mb-1">Address</p>
                     <p className="font-sans text-stone-600 text-sm leading-relaxed">
                       SP-28, Wajidpur, Sector-130<br />Noida, Uttar Pradesh — 201301
                     </p>
                   </div>
-                </div>
+                </motion.div>
 
-                <div className="flex items-start gap-4">
-                  <span className="text-brand/60 text-lg mt-0.5">📞</span>
+                <motion.div whileHover={{ x: 5 }} className="flex items-start gap-4">
+                  <Phone className="w-5 h-5 text-brand/60 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-sans text-xs text-stone-400 uppercase tracking-wider mb-1">Phone</p>
                     <a href="tel:+919821224767" className="block font-sans text-stone-600 text-sm hover:text-brand transition-colors">+91-9821224767</a>
                     <a href="tel:+919773853554" className="block font-sans text-stone-600 text-sm hover:text-brand transition-colors">+91-9773853554</a>
                   </div>
-                </div>
+                </motion.div>
 
-                <div className="flex items-start gap-4">
-                  <span className="text-brand/60 text-lg mt-0.5">✉️</span>
+                <motion.div whileHover={{ x: 5 }} className="flex items-start gap-4">
+                  <Mail className="w-5 h-5 text-brand/60 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-sans text-xs text-stone-400 uppercase tracking-wider mb-1">Email</p>
                     <a href="mailto:ayurshalapanchkarma@gmail.com" className="font-sans text-stone-600 text-sm hover:text-brand transition-colors break-all">
                       ayurshalapanchkarma@gmail.com
                     </a>
                   </div>
-                </div>
+                </motion.div>
               </div>
 
-              <div className="mt-10">
-                <a href="/book" target="_blank" rel="noopener noreferrer" className="btn-glass w-full text-center block">
-                  Book an Appointment
+              <motion.div whileHover={{ scale: 1.02 }} className="mt-10">
+                <a href="/book" className="btn-glass w-full text-center block flex items-center justify-center gap-2">
+                  <Calendar className="w-4 h-4" /> Book Appointment
                 </a>
-              </div>
+              </motion.div>
+              
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                onClick={() => setShowForm(!showForm)}
+                className="btn-glass w-full text-center mt-3 font-sans text-sm py-2 border-brand/40 hover:border-brand/70 transition-all flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4" /> Send Message
+              </motion.button>
             </motion.div>
 
+            {/* Contact Form */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.3 }}
               className="glass rounded-3xl p-8 md:p-10"
             >
-              <h3 className="font-serif text-2xl mb-6" style={{ color: dark ? '#f5f0e8' : '#1a1008' }}>What We Offer</h3>
-              <ul className="space-y-3">
-                {services.map((s) => (
-                  <li key={s} className="flex items-center gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand/50 flex-shrink-0" />
-                    <span className="font-sans text-sm text-stone-600">{s}</span>
-                  </li>
-                ))}
-              </ul>
+              {!showForm ? (
+                <div>
+                  <h3 className="font-serif text-2xl mb-6" style={{ color: dark ? '#f5f0e8' : '#1a1008' }}>What We Offer</h3>
+                  <ul className="space-y-3">
+                    {services.map((s) => (
+                      <motion.li key={s} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand/50 flex-shrink-0" />
+                        <span className="font-sans text-sm text-stone-600">{s}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
 
-              <div className="mt-8 glass rounded-2xl p-5">
-                <p className="font-sans text-xs text-stone-400 uppercase tracking-wider mb-2">Vision</p>
-                <p className="font-sans text-sm text-stone-500 leading-relaxed italic">
-                  "To impart quality Panchakarma education and apply scientific therapy in clinical practice to relinquish dosha for core care of diseases."
-                </p>
-              </div>
+                  <div className="mt-8 glass rounded-2xl p-5">
+                    <p className="font-sans text-xs text-stone-400 uppercase tracking-wider mb-2">Vision</p>
+                    <p className="font-sans text-sm text-stone-500 leading-relaxed italic">
+                      "To impart quality Panchakarma education and apply scientific therapy in clinical practice to relinquish dosha for core care of diseases."
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <h3 className="font-serif text-2xl" style={{ color: dark ? '#f5f0e8' : '#1a1008' }}>Send us a Message</h3>
+                  
+                  <div>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Your Name *"
+                      className={`w-full glass rounded-xl px-4 py-3 font-sans text-sm bg-transparent placeholder-stone-400 focus:outline-none transition-colors border ${dark ? 'text-stone-200 border-white/10' : 'text-stone-700 border-stone-200'} ${formErrors.name ? 'border-red-400' : ''}`}
+                    />
+                    {formErrors.name && <p className="font-sans text-xs text-red-400 mt-1">✗ {formErrors.name}</p>}
+                  </div>
+
+                  <div>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="Your Email *"
+                      className={`w-full glass rounded-xl px-4 py-3 font-sans text-sm bg-transparent placeholder-stone-400 focus:outline-none transition-colors border ${dark ? 'text-stone-200 border-white/10' : 'text-stone-700 border-stone-200'} ${formErrors.email ? 'border-red-400' : ''}`}
+                    />
+                    {formErrors.email && <p className="font-sans text-xs text-red-400 mt-1">✗ {formErrors.email}</p>}
+                  </div>
+
+                  <div>
+                    <textarea
+                      value={formData.message}
+                      onChange={e => setFormData({ ...formData, message: e.target.value.slice(0, 500) })}
+                      placeholder="Your Message *"
+                      rows={3}
+                      className={`w-full glass rounded-xl px-4 py-3 font-sans text-sm bg-transparent placeholder-stone-400 focus:outline-none transition-colors border resize-none ${dark ? 'text-stone-200 border-white/10' : 'text-stone-700 border-stone-200'} ${formErrors.message ? 'border-red-400' : ''}`}
+                    />
+                    <div className="flex justify-between items-center mt-1">
+                      <p className={`font-sans text-xs ${formData.message.length > 450 ? 'text-amber-500' : 'text-stone-400'}`}>{formData.message.length}/500</p>
+                      {formErrors.message && <p className="font-sans text-xs text-red-400">✗ {formErrors.message}</p>}
+                    </div>
+                  </div>
+
+                  {submitStatus === 'success' && <p className="font-sans text-xs text-green-600 bg-green-50 border border-green-200 rounded-lg p-2 text-center flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3" /> Message sent! We'll get back soon.</p>}
+                  {submitStatus === 'error' && <p className="font-sans text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2 text-center flex items-center justify-center gap-1"><AlertCircle className="w-3 h-3" /> Error sending message. Try again.</p>}
+
+                  <div className="flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      type="submit"
+                      disabled={submitting}
+                      className="flex-1 btn-glass py-3 disabled:opacity-50 font-semibold flex items-center justify-center gap-2"
+                    >
+                      {submitting ? <><Loader className="w-4 h-4 animate-spin" />Sending...</> : <><Send className="w-4 h-4" />Send Message</>}
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      type="button"
+                      onClick={() => setShowForm(false)}
+                      className="flex-1 glass rounded-full px-4 py-3 font-sans text-sm font-medium transition-all flex items-center justify-center gap-2"
+                    >
+                      <X className="w-4 h-4" /> Cancel
+                    </motion.button>
+                  </div>
+                </form>
+              )}
             </motion.div>
           </div>
 

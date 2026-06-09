@@ -40,12 +40,12 @@ export default function Navbar() {
   const signOut = () => supabase.auth.signOut()
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 px-6 pt-6 pointer-events-none">
+    <div className="fixed top-0 left-0 right-0 z-50 px-2 sm:px-4 pt-2 sm:pt-6 pointer-events-none overflow-hidden">
       <motion.nav
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="max-w-6xl mx-auto rounded-3xl transition-all duration-300 pointer-events-auto"
+        className="w-full mx-auto rounded-2xl sm:rounded-3xl transition-all duration-300 pointer-events-auto"
         style={{
           background: mounted && theme === 'dark'
             ? 'rgba(15,26,18,0.08)'
@@ -56,14 +56,14 @@ export default function Navbar() {
           boxShadow: '0 8px 32px rgba(232,98,26,0.06), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(255,255,255,0.1)',
         }}
       >
-        <div className="px-8 flex items-center justify-between h-20">
-        <Link href="/" className="flex items-center h-full py-2">
+        <div className="px-3 sm:px-6 md:px-8 flex items-center justify-between h-14 sm:h-16 md:h-20">
+        <Link href="/" className="flex items-center h-full py-1 sm:py-2">
           <Image
             src="/ayurshala_text.png"
             alt="Ayurshala"
             width={260}
             height={80}
-            className="object-contain h-full w-auto"
+            className="object-contain h-full w-auto max-w-[120px] sm:max-w-[180px]"
             priority
           />
         </Link>
@@ -81,32 +81,32 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2 lg:gap-3">
           {mounted && (
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="btn-glass text-xs py-2 px-3"
+              className="btn-glass text-xs py-1.5 sm:py-2 px-2 sm:px-3"
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
           )}
           {mounted && (user ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 lg:gap-2">
               {user.user_metadata?.avatar_url && (
-                <img src={user.user_metadata.avatar_url} className="w-7 h-7 rounded-full border border-brand/30" alt="" />
+                <img src={user.user_metadata.avatar_url} className="w-5 sm:w-7 h-5 sm:h-7 rounded-full border border-brand/30" alt="" />
               )}
-              <span className="font-sans text-xs" style={{ color: '#E8621A' }}>Hello, {user.user_metadata?.full_name?.split(' ')[0] || user.email}</span>
-              <Link href="/my-bookings" className="btn-glass text-xs py-2 px-4">My Bookings</Link>
-              <button onClick={signOut} className="btn-glass text-xs py-2 px-3">Sign Out</button>
+              <span className="font-sans text-xs hidden lg:inline" style={{ color: '#E8621A' }}>Hello, {user.user_metadata?.full_name?.split(' ')[0] || user.email}</span>
+              <Link href="/my-bookings" className="btn-glass text-xs py-1.5 sm:py-2 px-2 sm:px-3">My Bookings</Link>
+              <button onClick={signOut} className="btn-glass text-xs py-1.5 sm:py-2 px-2 sm:px-3">Sign Out</button>
             </div>
           ) : (
-            <Link href="/book" className="btn-glass text-xs py-2 px-6">Book Now</Link>
+            <Link href="/book" className="btn-glass text-xs py-1.5 sm:py-2 px-3 sm:px-6">Book Now</Link>
           ))}
         </div>
 
         <button
-          className="md:hidden text-stone-600 p-2 flex flex-col gap-1.5"
+          className="md:hidden text-stone-600 p-1 flex flex-col gap-1"
           onClick={() => setOpen(!open)}
           aria-label="Toggle menu"
         >

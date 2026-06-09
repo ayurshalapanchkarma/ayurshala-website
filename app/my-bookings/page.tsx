@@ -4,6 +4,7 @@ import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Calendar, Clock, CheckCircle2, AlertCircle, RotateCcw, Trash2, Loader } from 'lucide-react'
 import GlassBackground from '@/components/GlassBackground'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
@@ -30,10 +31,10 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
 }
 
 const paymentConfig: Record<string, { label: string; cls: string }> = {
-  SUCCESS:       { label: '✓ Paid Online',         cls: 'text-green-600' },
-  COD_PENDING:   { label: '⏳ Cash on Arrival',     cls: 'text-amber-600' },
-  THERAPY_LATER: { label: 'ℹ After Consultation',  cls: 'text-stone-500' },
-  PENDING:       { label: '⏳ Pending',             cls: 'text-amber-600' },
+  SUCCESS:       { label: 'Paid Online',         cls: 'text-green-600' },
+  COD_PENDING:   { label: 'Cash on Arrival',     cls: 'text-amber-600' },
+  THERAPY_LATER: { label: 'After Consultation',  cls: 'text-stone-500' },
+  PENDING:       { label: 'Pending',             cls: 'text-amber-600' },
 }
 
 function hoursUntil(date: string, time: string) {
@@ -170,7 +171,7 @@ export default function MyBookingsPage() {
     setRescheduleBooking(null)
   }
 
-  const cardCls = `rounded-2xl p-5 border ${dark ? 'border-white/10 bg-white/5' : 'border-brand/12 bg-white/60'}`
+  const cardCls = `rounded-2xl p-5 border backdrop-filter backdrop-blur-xl ${dark ? 'border-white/10 bg-white/5' : 'border-white/85 bg-white/75'}`
 
   return (
     <div className="min-h-screen px-4 sm:px-6 py-20 sm:py-24 relative overflow-hidden"
@@ -237,9 +238,13 @@ export default function MyBookingsPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-sans text-stone-400 mb-3">
-                  {b.preferred_date && <span>📅 {new Date(b.preferred_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
-                  {b.preferred_time && <span>🕐 {b.preferred_time}</span>}
-                  <span className={pCfg.cls}>{pCfg.label}</span>
+                  {b.preferred_date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(b.preferred_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+                  {b.preferred_time && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {b.preferred_time}</span>}
+                  <span className={`flex items-center gap-1 ${pCfg.cls}`}>
+                    {b.payment_status === 'SUCCESS' && <CheckCircle2 className="w-3 h-3" />}
+                    {(b.payment_status === 'PENDING' || b.payment_status === 'COD_PENDING') && <AlertCircle className="w-3 h-3" />}
+                    {pCfg.label}
+                  </span>
                 </div>
 
                 {b.concern && <p className="font-sans text-xs text-stone-400 mb-3 line-clamp-2">{b.concern}</p>}
@@ -247,17 +252,17 @@ export default function MyBookingsPage() {
                 {canModify && (
                   <div className="flex gap-2 flex-wrap">
                     <button onClick={() => { setRescheduleBooking(b); setNewDate(''); setNewTime(''); setRescheduleError('') }}
-                      className="btn-glass text-xs py-1.5 px-3">🔄 Reschedule</button>
+                      className="btn-glass text-xs py-1.5 px-3 flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Reschedule</button>
                     <button onClick={() => setCancelId(b.booking_id)}
-                      className="text-xs py-1.5 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors">✕ Cancel</button>
+                      className="text-xs py-1.5 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors flex items-center gap-1"><Trash2 className="w-3 h-3" /> Cancel</button>
                   </div>
                 )}
                 {b.status === 'PENDING_CONFIRMATION' && b.payment_method === 'CASH_ON_ARRIVAL' && (
                   <div className="flex gap-2 flex-wrap mt-2">
                     <button onClick={() => handlePayOnline(b)}
-                      className="text-xs py-1.5 px-3 rounded-xl border font-sans transition-colors"
+                      className="text-xs py-1.5 px-3 rounded-xl border font-sans transition-colors flex items-center gap-1"
                       style={{ borderColor: '#E8621A', color: '#E8621A' }}>
-                      💳 Pay Online to Confirm
+                      <CheckCircle2 className="w-3 h-3" /> Pay Online to Confirm
                     </button>
                   </div>
                 )}
