@@ -294,12 +294,15 @@ export default function MyBookingsPage() {
               }}>
               <p className="font-serif text-2xl mb-2" style={{ color: '#991b1b' }}>Cancel Booking?</p>
               <p className="font-sans text-sm text-red-700 mb-8">This cannot be undone. Booking <strong>{cancelId}</strong> will be cancelled immediately.</p>
-              <div className="flex gap-3">
-                <button onClick={() => setCancelId(null)} className="btn-glass flex-1 py-2.5 text-sm">Keep It</button>
-                <button onClick={() => handleCancel(cancelId!)} disabled={cancelling}
-                  className="flex-1 py-2.5 text-sm rounded-xl bg-red-500 text-white font-sans disabled:opacity-50 hover:bg-red-600 transition-colors">
-                  {cancelling ? 'Cancelling…' : 'Yes, Cancel'}
-                </button>
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <button onClick={() => setCancelId(null)} className="btn-glass flex-1 py-2.5 text-sm">Keep It</button>
+                  <button onClick={() => handleCancel(cancelId!)} disabled={cancelling}
+                    className="flex-1 py-2.5 text-sm rounded-xl bg-red-500 text-white font-sans disabled:opacity-50 hover:bg-red-600 transition-colors">
+                    {cancelling ? 'Cancelling…' : 'Yes, Cancel'}
+                  </button>
+                </div>
+                <Link href="/my-bookings" className="btn-glass w-full py-2.5 text-sm text-center">Go to My Bookings</Link>
               </div>
             </motion.div>
           </motion.div>
@@ -342,13 +345,16 @@ export default function MyBookingsPage() {
 
               {rescheduleError && <p className="font-sans text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2 mb-3">{rescheduleError}</p>}
 
-              <div className="flex gap-3">
-                <button onClick={() => setRescheduleBooking(null)} className="btn-glass flex-1 py-2.5 text-sm">Cancel</button>
-                <button onClick={handleReschedule} disabled={rescheduling || !newDate || !newTime || new Date(newDate).getUTCDay() === 5}
-                  className="flex-1 py-2.5 text-sm rounded-xl font-sans text-white disabled:opacity-50 hover:brightness-110 transition-all"
-                  style={{ background: '#10b981' }}>
-                  {rescheduling ? 'Saving…' : 'Confirm'}
-                </button>
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <button onClick={() => setRescheduleBooking(null)} className="btn-glass flex-1 py-2.5 text-sm">Cancel</button>
+                  <button onClick={handleReschedule} disabled={rescheduling || !newDate || !newTime || new Date(newDate).getUTCDay() === 5}
+                    className="flex-1 py-2.5 text-sm rounded-xl font-sans text-white disabled:opacity-50 hover:brightness-110 transition-all"
+                    style={{ background: '#10b981' }}>
+                    {rescheduling ? 'Saving…' : 'Confirm'}
+                  </button>
+                </div>
+                <Link href="/my-bookings" className="btn-glass w-full py-2.5 text-sm text-center">Go to My Bookings</Link>
               </div>
             </motion.div>
           </motion.div>
