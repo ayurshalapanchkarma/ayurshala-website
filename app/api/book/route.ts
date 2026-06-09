@@ -275,6 +275,19 @@ export async function POST(req: NextRequest) {
     await supabase.from('bookings_new').update({ status: 'CANCELLED', updated_at: new Date().toISOString() }).eq('booking_id', booking_id)
     await auditLog(booking.id, patient_uuid, 'BOOKING_CANCELLED', { status: booking.status }, { status: 'CANCELLED' })
 
+    // Create refund record if online payment
+    const { data: payment } = await supabase.from('payments').select('amount').eq('booking_uuid', booking.id).single()
+    if (booking.payment_method === 'ONLINE' && payment && payment.amount > 1) {
+      await supabase.from('refunds').insert({
+        booking_uuid: booking.id,
+        booking_id: booking_id,
+        patient_uuid: patient_uuid,
+        amount: payment.amount,
+        reason: 'User cancelled booking',
+        status: 'PENDING',
+      })
+    }
+
     const { data: patient } = await supabase.from('patients').select('full_name,patient_id,email,phone').eq('id', patient_uuid).single()
     const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
     const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
@@ -282,7 +295,7 @@ export async function POST(req: NextRequest) {
     const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
 
-    sendTelegram(`*Booking Cancelled — Ayurshala*\n\n${patient?.full_name} (${patient?.patient_id})\n${booking_id}\n${treatmentList}\n${booking.preferred_date} · ${booking.preferred_time}\n${wasOnline ? 'ONLINE PAID — Refund required' : 'Cash on Arrival — No dues'}`)
+    sendTelegram(`*Booking Cancelled — Ayurshala*\n\n${patient?.full_name} (${patient?.patient_id})\n${booking_id}\n${treatmentList}\n${booking.preferred_date} · ${booking.preferred_time}\n${wasOnline && payment && payment.amount > 1 ? `ONLINE PAID ₹${payment.amount} — Refund required` : 'No refund'}`)
 
     const clinicHtml = buildCancellationClinicEmail({ patient, booking, treatmentList, formattedDate, wasOnline })
     await resend.emails.send({ from, to: 'ayurshalapanchkarma@gmail.com', subject: `Booking Cancelled — ${booking_id} — ${patient?.full_name}${wasOnline ? ' — REFUND REQUIRED' : ''}`, html: clinicHtml })
