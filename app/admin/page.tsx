@@ -135,13 +135,14 @@ export default function AdminPage() {
     const res = await fetch('/api/admin/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'login', email: 'ayurshalapanchkarma@gmail.com', password: pw }),
+      body: JSON.stringify({ action: 'login', password: pw }),
     })
     const { success } = await res.json()
     if (success) {
       localStorage.setItem('adminSessionTime', Date.now().toString())
       setAuthed(true)
       setPw('')
+      setPwError('')
     } else {
       setPwError('Incorrect password')
     }
@@ -190,6 +191,22 @@ export default function AdminPage() {
       }, 2000)
     } else {
       setResetPwError('Failed to update password')
+    }
+  }
+
+  async function handleForgotPassword() {
+    const res = await fetch('/api/admin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'send-reset-link' }),
+    })
+    if (res.ok) {
+      setShowForgot(true)
+      setTimeout(() => {
+        setShowForgot(false)
+      }, 3000)
+    } else {
+      setPwError('Failed to send reset link')
     }
   }
 
@@ -265,7 +282,7 @@ export default function AdminPage() {
               </button>
 
               <button
-                onClick={() => setShowForgot(true)}
+                onClick={handleForgotPassword}
                 className="w-full py-2.5 rounded-xl bg-white/40 text-stone-700 font-sans text-sm hover:bg-white/60 transition border border-white/60"
               >
                 Forgot Password?
