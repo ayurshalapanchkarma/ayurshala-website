@@ -24,8 +24,8 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
   CONFIRMED:            { label: 'Confirmed',             cls: 'bg-green-100 text-green-700' },
   PENDING_CONFIRMATION: { label: 'Awaiting Confirmation', cls: 'bg-amber-100 text-amber-700' },
   PAYMENT_PENDING:      { label: 'Payment Pending',       cls: 'bg-amber-100 text-amber-700' },
-  RESCHEDULED:          { label: 'Rescheduled',           cls: 'bg-orange-100 text-orange-700' },
-  RESCHEDULE_REJECTED:  { label: 'Reschedule Declined',   cls: 'bg-red-100 text-red-700' },
+  RESCHEDULED:          { label: 'Awaiting Reschedule Approval', cls: 'bg-orange-100 text-orange-700' },
+  RESCHEDULE_REJECTED:  { label: 'Reschedule Declined, Original Appointment Retained', cls: 'bg-red-100 text-red-700' },
   CANCELLED:            { label: 'Cancelled',             cls: 'bg-red-100 text-red-700' },
   COMPLETED:            { label: 'Completed',             cls: 'bg-blue-100 text-blue-700' },
   IN_PROGRESS:          { label: 'In Progress',           cls: 'bg-purple-100 text-purple-700' },
@@ -161,7 +161,7 @@ export default function PatientBookingsPage() {
     const data = await res.json()
     setRescheduling(false)
     if (!res.ok) { setRescheduleError(data.error); return }
-    setBookings(prev => prev.map(b => b.booking_id === rescheduleBooking.booking_id ? { ...b, preferred_date: newDate, preferred_time: newTime } : b))
+    setBookings(prev => prev.map(b => b.booking_id === rescheduleBooking.booking_id ? { ...b, status: 'RESCHEDULED' } : b))
     setRescheduleBooking(null)
   }
 
@@ -213,18 +213,17 @@ export default function PatientBookingsPage() {
         <div className="space-y-3">
           {bookings.map(b => {
             const hours = hoursUntil(b.preferred_date, b.preferred_time)
-            const isRescheduled = (b as any).rescheduled_at !== null
             const canCancel = (b.status === 'PENDING_CONFIRMATION' || b.status === 'CONFIRMED') && hours >= 24
-            const canReschedule = (b.status === 'PENDING_CONFIRMATION' || (b.status === 'CONFIRMED' && !b.is_rescheduled)) && hours >= 24
+            const canReschedule = b.status === 'CONFIRMED' && !b.is_rescheduled && hours >= 24
             
             // Badge logic
             let badgeLabel = '', badgeCls = ''
-            if (b.status === 'CONFIRMED' && (b as any).rescheduled_at) {
-              badgeLabel = 'Rescheduled Confirmed'
-              badgeCls = 'bg-emerald-100 text-emerald-700'
-            } else if (b.status === 'RESCHEDULED') {
-              badgeLabel = 'Rescheduled'
+            if (b.status === 'RESCHEDULED' && !b.is_rescheduled) {
+              badgeLabel = 'Awaiting Reschedule Approval'
               badgeCls = 'bg-orange-100 text-orange-700'
+            } else if (b.status === 'RESCHEDULED' && b.is_rescheduled) {
+              badgeLabel = 'Rescheduled'
+              badgeCls = 'bg-emerald-100 text-emerald-700'
             } else {
               const cfg = statusConfig[b.status] || { label: b.status, cls: 'bg-stone-100 text-stone-600' }
               badgeLabel = cfg.label
@@ -245,8 +244,8 @@ export default function PatientBookingsPage() {
                   <span className={`text-xs px-2.5 py-1 rounded-full font-sans shrink-0 ${badgeCls}`}>{badgeLabel}</span>
                 </div>
 
-                {b.status === 'RESCHEDULED' && <p className="font-sans text-xs text-orange-600 mb-2">Your reschedule request is awaiting clinic approval.</p>}
-                {b.status === 'CONFIRMED' && b.is_rescheduled && <p className="font-sans text-xs text-emerald-600 mb-2">Your rescheduled appointment has been approved by the clinic.</p>}
+                {b.status === 'RESCHEDULED' && !b.is_rescheduled && <p className="font-sans text-xs text-orange-600 mb-2">Your reschedule request is awaiting clinic approval.</p>}
+                {b.status === 'RESCHEDULED' && b.is_rescheduled && <p className="font-sans text-xs text-emerald-600 mb-2">Your reschedule request has been approved. Your new appointment is confirmed.</p>}
                 {b.status === 'RESCHEDULE_REJECTED' && <p className="font-sans text-xs text-red-600 mb-2">Your reschedule request was declined. Your original appointment remains valid.</p>}
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-sans text-stone-400 mb-3">
@@ -263,9 +262,6 @@ export default function PatientBookingsPage() {
 
                 {b.status === 'CONFIRMED' && hours < 24 && (
                   <p className="font-sans text-xs text-stone-400 italic">This appointment can no longer be modified online.</p>
-                )}
-                {isRescheduled && b.status === 'CONFIRMED' && (
-                  <p className="font-sans text-xs text-stone-400 italic">This appointment has already been rescheduled.</p>
                 )}
                 {(canReschedule || canCancel) && (
                   <div className="flex gap-2 flex-wrap">
