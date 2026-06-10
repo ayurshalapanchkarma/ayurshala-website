@@ -305,9 +305,10 @@ export async function POST(req: NextRequest) {
 
   // ── RESCHEDULE BOOKING ────────────────────────────────────────────────────────
   if (action === 'reschedule-booking') {
-    const { booking_id, patient_uuid, new_date, new_time } = body
+    const { booking_id, patient_uuid, new_date, new_time, reschedule_reason } = body
 
     if (!new_date || !new_time) return NextResponse.json({ error: 'New date and time required.' }, { status: 400 })
+    if (!reschedule_reason || reschedule_reason.length < 10) return NextResponse.json({ error: 'Reschedule reason required (minimum 10 characters).' }, { status: 400 })
     if (new Date(new_date).getUTCDay() === 5) return NextResponse.json({ error: 'Clinic is closed on Fridays. Please choose another day.' }, { status: 400 })
 
     const { data: booking } = await supabase.from('bookings_new').select('*')
@@ -342,7 +343,9 @@ export async function POST(req: NextRequest) {
       old_date: booking.preferred_date, old_time: booking.preferred_time,
       new_date, new_time,
       is_rescheduled: true, rescheduled_at: new Date().toISOString(),
-      status: 'PENDING_CONFIRMATION',
+      status: 'RESCHEDULED',
+      reschedule_reason: reschedule_reason.trim(),
+      rescheduled_by: 'PATIENT',
       updated_at: new Date().toISOString(),
     }).eq('booking_id', booking_id)
 
