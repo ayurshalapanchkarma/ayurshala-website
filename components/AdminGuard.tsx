@@ -3,53 +3,47 @@ import { useAuth } from '@/lib/useAuth'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { supabase } from '@/lib/supabase'
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, loading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
-  const [timedOut, setTimedOut] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loading) {
-        setTimedOut(true)
+    async function checkAdmin() {
+      if (!user) {
+        router.push('/admin/login')
+        return
       }
-    }, 10000)
-    return () => clearTimeout(timer)
-  }, [loading])
 
-  useEffect(() => {
-    if (loading || timedOut) return
+      try {
+        const { data: admin } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('id', user.id)
+          .single()
 
-    if (!user) {
-      router.push('/admin/login')
-      return
+        if (!admin) {
+          router.push('/patient/dashboard')
+          return
+        }
+
+        setIsAdmin(true)
+      } catch {
+        router.push('/patient/dashboard')
+      } finally {
+        setChecking(false)
+      }
     }
 
-    if (!isAdmin) {
-      router.push('/patient/dashboard')
-      return
+    if (!loading) {
+      checkAdmin()
     }
-  }, [loading, timedOut, user, isAdmin, router])
+  }, [loading, user, router])
 
-  if (timedOut) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">Error</h1>
-          <p className="text-stone-600 mb-6">Unable to verify permissions. Please refresh.</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
-          >
-            Refresh Page
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
+  if (loading || checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }}>
@@ -59,7 +53,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!user || !isAdmin) {
+  if (!isAdmin) {
     return null
   }
 

@@ -4,12 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-)
+import { supabase } from '@/lib/supabase'
 
 export default function PatientBookings() {
   const { user, loading } = useAuth()
@@ -27,39 +22,28 @@ export default function PatientBookings() {
     if (!user) return
 
     async function fetchBookings() {
-      console.log('=== BOOKING FETCH START ===')
-      console.log('Auth user:', user)
-      console.log('Auth user id:', user?.id)
+      console.log('Auth User:', user)
 
-      // Get patient record using google_user_id
-      const { data: patient, error: patientError } = await supabase
+      const { data: patient } = await supabase
         .from('patients')
         .select('id')
-        .eq('google_user_id', user.id)
+        .eq('google_user_id', user?.id)
         .single()
 
-      console.log('Patient lookup result:', patient)
-      console.log('Patient lookup error:', patientError)
-      console.log('Patient UUID used:', patient?.id)
-
       if (!patient) {
-        console.log('Patient not found - stopping')
+        setBookings([])
         setBookingsLoading(false)
         return
       }
 
-      // Query bookings using patients.id
-      const { data, error: bookingsError } = await supabase
+      const { data } = await supabase
         .from('bookings_new')
         .select('*')
         .eq('patient_uuid', patient.id)
         .order('created_at', { ascending: false })
 
-      console.log('Bookings query error:', bookingsError)
-      console.log('Bookings returned:', data)
-      console.log('Bookings count:', data?.length)
-      console.log('First booking sample:', data?.[0])
-      console.log('=== BOOKING FETCH END ===')
+      console.log('Bookings:', data)
+      console.log('Bookings Length:', data?.length)
 
       setBookings(data || [])
       setBookingsLoading(false)
@@ -82,10 +66,6 @@ export default function PatientBookings() {
   if (!user) {
     return null
   }
-
-  console.log('RENDER STATE - bookings array:', bookings)
-  console.log('RENDER STATE - bookings.length:', bookings.length)
-  console.log('RENDER STATE - bookingsLoading:', bookingsLoading)
 
   return (
     <pre style={{ padding: 40 }}>

@@ -6,13 +6,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { Menu, X, ShieldCheck, LogOut, LayoutDashboard, CalendarPlus, ChevronDown } from 'lucide-react'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-)
 
 const publicLinks = [
   { label: 'Home', href: '/#home' },
@@ -25,14 +20,37 @@ const publicLinks = [
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const { user, loading, isAdmin } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false)
+      return
+    }
+
+    async function checkAdmin() {
+      try {
+        const { data: admin } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('id', user?.id)
+          .single()
+        setIsAdmin(!!admin)
+      } catch {
+        setIsAdmin(false)
+      }
+    }
+
+    checkAdmin()
+  }, [user])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
