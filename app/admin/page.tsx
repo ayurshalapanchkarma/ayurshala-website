@@ -46,11 +46,15 @@ const getStatusBadge = (status: string, dark: boolean) => {
   return badges[status] || { label: status, cls: 'bg-gray-100 text-gray-700' }
 }
 
-const paymentStatusConfig: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: 'Pending', cls: 'bg-gray-100 text-gray-700' },
-  SUCCESS: { label: 'Paid', cls: 'bg-green-100 text-green-700' },
-  FAILED: { label: 'Failed', cls: 'bg-red-100 text-red-600' },
-  REFUNDED: { label: 'Refunded', cls: 'bg-blue-100 text-blue-700' },
+const getPaymentBadge = (status: string, dark: boolean) => {
+  const badges: Record<string, any> = {
+    SUCCESS: dark ? { label: 'Paid', cls: 'bg-emerald-900/40 text-emerald-300' } : { label: 'Paid', cls: 'bg-green-100 text-green-800' },
+    PENDING: dark ? { label: 'Pending', cls: 'bg-amber-900/40 text-amber-300' } : { label: 'Pending', cls: 'bg-amber-100 text-amber-800' },
+    FAILED: dark ? { label: 'Failed', cls: 'bg-red-900/40 text-red-300' } : { label: 'Failed', cls: 'bg-red-100 text-red-800' },
+    REFUNDED: dark ? { label: 'Refunded', cls: 'bg-blue-900/40 text-blue-300' } : { label: 'Refunded', cls: 'bg-blue-100 text-blue-700' },
+    COD_PENDING: dark ? { label: 'Cash Pending', cls: 'bg-amber-900/40 text-amber-300' } : { label: 'Cash Pending', cls: 'bg-amber-100 text-amber-800' },
+  }
+  return badges[status] || { label: status, cls: 'bg-gray-100 text-gray-700' }
 }
 
 export default function AdminPage() {
@@ -258,18 +262,19 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {bookings.map((b, i) => (
-                    <tr key={b.id} className={`border-b border-white/20 ${i % 2 === 0 ? 'bg-white/15' : 'bg-white/10'}`}>
-                      <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: '#E8621A' }}>{b.booking_id}</td>
-                      <td className="px-4 py-3 text-sm text-stone-900"><p>{b.patient_name}</p><p className="text-xs text-stone-600">{b.patient_email}</p></td>
-                      <td className="px-4 py-3 text-xs text-stone-700">{b.preferred_date} {b.preferred_time}</td>
+                    <tr key={b.id} className={`rounded-lg transition ${dark ? 'bg-slate-900/50 hover:bg-slate-800/50' : 'bg-white/60 hover:bg-white/80'} backdrop-blur-md border ${dark ? 'border-white/10' : 'border-white/20'}`}
+                      style={{ boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.5)' }}>
+                      <td className="px-4 py-3 font-mono font-semibold tracking-wide" style={{ color: '#E8621A' }}>{b.booking_id}</td>
+                      <td className={`px-4 py-3 text-sm ${dark ? 'text-gray-200' : 'text-stone-900'}`}><p>{b.patient_name}</p><p className={`text-xs ${dark ? 'text-gray-400' : 'text-stone-600'}`}>{b.patient_email}</p></td>
+                      <td className={`px-4 py-3 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>{b.preferred_date} {b.preferred_time}</td>
                       <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs ${getStatusBadge(b.status, dark).cls}`}>{getStatusBadge(b.status, dark).label}</span></td>
-                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs ${paymentStatusConfig[b.payment_status]?.cls || 'bg-gray-100'}`}>{paymentStatusConfig[b.payment_status]?.label || b.payment_status}</span></td>
-                      {activeTab === 'online' && <td className="px-4 py-3 text-xs">₹{b.amount || 0}</td>}
+                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs ${getPaymentBadge(b.payment_status, dark).cls}`}>{getPaymentBadge(b.payment_status, dark).label}</span></td>
+                      {activeTab === 'online' && <td className={`px-4 py-3 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>₹{b.amount || 0}</td>}
                       <td className="px-4 py-3">
                         {b.status === 'PENDING_CONFIRMATION' && (
                           <div className="flex gap-2">
-                            <button onClick={() => confirm(b.booking_id)} className="px-2 py-1 rounded bg-green-500 text-white text-xs hover:bg-green-600">Confirm</button>
-                            <button onClick={() => cancel(b.booking_id)} className="px-2 py-1 rounded bg-red-500 text-white text-xs hover:bg-red-600">Cancel</button>
+                            <button onClick={() => confirm(b.booking_id)} className="px-2 py-1 rounded bg-green-500 text-white text-xs hover:bg-green-600 transition">Confirm</button>
+                            <button onClick={() => cancel(b.booking_id)} className="px-2 py-1 rounded bg-red-500 text-white text-xs hover:bg-red-600 transition">Cancel</button>
                           </div>
                         )}
                       </td>

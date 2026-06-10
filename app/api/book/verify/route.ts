@@ -12,7 +12,13 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 export async function GET(req: NextRequest) {
   const orderId = req.nextUrl.searchParams.get('order_id')
   const originalBookingId = req.nextUrl.searchParams.get('original_booking_id')
-  if (!orderId) return NextResponse.redirect(new URL('/book?status=error', req.url))
+  
+  console.log(`[PAYMENT_VERIFY] Start - orderId: ${orderId}, originalBookingId: ${originalBookingId}`)
+  
+  if (!orderId) {
+    console.error('[PAYMENT_VERIFY] No order_id provided')
+    return NextResponse.redirect(new URL('/book?status=error', req.url))
+  }
 
   try {
     const cashfree = new Cashfree(CFEnvironment.PRODUCTION, process.env.CASHFREE_APP_ID, process.env.CASHFREE_SECRET_KEY)
@@ -21,13 +27,25 @@ export async function GET(req: NextRequest) {
     const success = payment?.payment_status === 'SUCCESS'
     const cancelled = payment?.payment_status === 'USER_DROPPED' || payment?.payment_status === 'CANCELLED'
 
-    if (cancelled) return NextResponse.redirect(new URL(`/book/payment-cancelled?order_id=${orderId}`, req.url))
-    if (!success) return NextResponse.redirect(new URL(`/book/payment-failed?order_id=${orderId}`, req.url))
+    console.log(`[PAYMENT_VERIFY] Payment status: ${payment?.payment_status}, Amount: ${payment?.order_amount}`)
+
+    if (cancelled) {
+      console.log(`[PAYMENT_VERIFY] Payment cancelled by user`)
+      return NextResponse.redirect(new URL(`/book/payment-cancelled?order_id=${orderId}`, req.url))
+    }
+    if (!success) {
+      console.log(`[PAYMENT_VERIFY] Payment failed`)
+      return NextResponse.redirect(new URL(`/book/payment-failed?order_id=${orderId}`, req.url))
+    }
+
+    console.log(`[PAYMENT_VERIFY] Payment successful - proceeding with booking confirmation`)
 
     // Payment for existing booking (reschedule pay-online flow)
     if (originalBookingId) {
       const { data: booking } = await supabase.from('bookings_new').select('*').eq('booking_id', originalBookingId).single()
       if (booking) {
+        console.log(`[PAYMENT_VERIFY] Updating existing booking: ${originalBookingId}`)
+        
         await supabase.from('bookings_new').update({
           status: 'CONFIRMED', payment_status: 'SUCCESS', payment_method: 'ONLINE', updated_at: new Date().toISOString(),
         }).eq('booking_id', originalBookingId)
@@ -35,6 +53,8 @@ export async function GET(req: NextRequest) {
         await supabase.from('payments').update({
           status: 'SUCCESS', transaction_id: payment?.cf_payment_id || '', paid_at: new Date().toISOString(),
         }).eq('cashfree_order_id', booking.booking_id)
+
+        console.log(`[PAYMENT_VERIFY] Booking updated: status=CONFIRMED, payment_status=SUCCESS`)
 
         const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
         const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
@@ -45,7 +65,6 @@ export async function GET(req: NextRequest) {
         const amountLabel = `₹${actualAmount} — Paid Online`
         const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
 
-        // Send confirmation to patient
         if (patient?.email) {
           await resend.emails.send({
             from, to: patient.email,
@@ -54,22 +73,20 @@ export async function GET(req: NextRequest) {
           })
         }
 
-        // Notify clinic
         await resend.emails.send({
           from, to: 'ayurshalapanchkarma@gmail.com',
           subject: `${originalBookingId} — ${patient?.full_name} — Online Payment`,
           html: buildPaymentConfirmedEmail({ patient, booking, treatmentList, formattedDate, amountLabel }),
         })
 
-        fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, parse_mode: 'Markdown', text: `*Payment Received — Ayurshala*\n\n*${patient?.full_name}*\n${originalBookingId}\n${treatmentList}\n${booking.preferred_date} · ${booking.preferred_time}\n${amountLabel}` }),
-        }).catch(() => {})
+        console.log(`[PAYMENT_VERIFY] Confirmation emails sent`)
       }
       return NextResponse.redirect(new URL(`/book/confirmed?booking_id=${originalBookingId}`, req.url))
     }
 
     // Normal new booking flow
+    console.log(`[PAYMENT_VERIFY] Creating new booking from payment`)
+    
     await fetch(`${req.nextUrl.origin}/api/book`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -80,9 +97,11 @@ export async function GET(req: NextRequest) {
         transaction_id: payment?.cf_payment_id || '',
       }),
     })
+    
+    console.log(`[PAYMENT_VERIFY] Success - redirecting to confirmed page`)
     return NextResponse.redirect(new URL(`/book/confirmed?booking_id=${orderId}`, req.url))
   } catch (error) {
-    console.error('Payment verification error:', error)
+    console.error('[PAYMENT_VERIFY] Error:', error)
     return NextResponse.redirect(new URL(`/book/payment-failed?order_id=${orderId}`, req.url))
   }
 }
