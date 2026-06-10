@@ -60,6 +60,7 @@ export default function PatientBookingsPage() {
   const [rescheduleBooking, setRescheduleBooking] = useState<Booking | null>(null)
   const [newDate, setNewDate] = useState('')
   const [newTime, setNewTime] = useState('')
+  const [rescheduleReason, setRescheduleReason] = useState('')
   const [rescheduling, setRescheduling] = useState(false)
   const [rescheduleError, setRescheduleError] = useState('')
 
@@ -139,6 +140,12 @@ export default function PatientBookingsPage() {
     setRescheduling(true)
     setRescheduleError('')
     
+    if (rescheduleReason.length < 10) {
+      setRescheduleError('Please provide a reason with at least 10 characters.')
+      setRescheduling(false)
+      return
+    }
+    
     if (rescheduleBooking.is_rescheduled || (rescheduleBooking as any).is_rescheduled) {
       setRescheduleError('A reschedule request is already pending. Please wait for clinic confirmation.')
       setRescheduling(false)
@@ -147,7 +154,7 @@ export default function PatientBookingsPage() {
     
     const res = await fetch('/api/book', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'reschedule-booking', booking_id: rescheduleBooking.booking_id, patient_uuid: patient.id, new_date: newDate, new_time: newTime }),
+      body: JSON.stringify({ action: 'reschedule-booking', booking_id: rescheduleBooking.booking_id, patient_uuid: patient.id, new_date: newDate, new_time: newTime, reschedule_reason: rescheduleReason }),
     })
     const data = await res.json()
     setRescheduling(false)
@@ -233,7 +240,7 @@ export default function PatientBookingsPage() {
 
                 {canModify && (
                   <div className="flex gap-2 flex-wrap">
-                    <button onClick={() => { setRescheduleBooking(b); setNewDate(''); setNewTime(''); setRescheduleError('') }}
+                    <button onClick={() => { setRescheduleBooking(b); setNewDate(''); setNewTime(''); setRescheduleReason(''); setRescheduleError('') }}
                       className="btn-glass text-xs py-1.5 px-3 flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Reschedule</button>
                     <button onClick={() => setCancelId(b.booking_id)}
                       className="text-xs py-1.5 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors flex items-center gap-1"><Trash2 className="w-3 h-3" /> Cancel</button>
@@ -309,14 +316,19 @@ export default function PatientBookingsPage() {
                     {timeSlots.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="font-sans text-xs text-emerald-700 uppercase tracking-wider block mb-1">Reason for Rescheduling *</label>
+                  <textarea value={rescheduleReason} onChange={e => setRescheduleReason(e.target.value.slice(0, 500))} rows={3}
+                    placeholder="Please tell us why you would like to reschedule this appointment."
+                    className="w-full rounded-xl px-4 py-2.5 text-sm border border-emerald-200 bg-white/60 focus:outline-none focus:border-emerald-400 focus:bg-white/80 resize-none" />
+                  <p className={`font-sans text-xs mt-1 ${rescheduleReason.length < 10 ? 'text-amber-600' : 'text-emerald-600'}`}>{rescheduleReason.length}/500 (minimum 10)</p>
+                </div>
               </div>
-
-              {rescheduleError && <p className="font-sans text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2 mb-3">{rescheduleError}</p>}
 
               <div className="flex flex-col gap-3">
                 <div className="flex gap-3">
                   <button onClick={() => setRescheduleBooking(null)} className="btn-glass flex-1 py-2.5 text-sm">Cancel</button>
-                  <button onClick={handleReschedule} disabled={rescheduling || !newDate || !newTime || new Date(newDate).getUTCDay() === 5}
+                  <button onClick={handleReschedule} disabled={rescheduling || !newDate || !newTime || rescheduleReason.length < 10 || new Date(newDate).getUTCDay() === 5}
                     className="flex-1 py-2.5 text-sm rounded-xl font-sans text-white disabled:opacity-50 hover:brightness-110 transition-all"
                     style={{ background: '#10b981' }}>
                     {rescheduling ? 'Saving…' : 'Confirm'}
