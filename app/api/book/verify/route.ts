@@ -84,19 +84,60 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL(`/book/confirmed?booking_id=${originalBookingId}`, req.url))
     }
 
-    // Normal new booking flow
-    console.log(`[PAYMENT_VERIFY] Creating new booking from payment`)
+    // Normal new booking flow - send emails for online bookings
+    console.log(`[PAYMENT_VERIFY] Confirming new online booking from payment`)
     
-    await fetch(`${req.nextUrl.origin}/api/book`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'confirm-booking',
-        booking_id: orderId,
-        cashfree_order_id: orderId,
+    const { data: booking } = await supabase.from('bookings_new').select('*').eq('booking_id', orderId).single()
+    if (booking) {
+      // Update booking status directly (bypass /api/book to avoid double emails)
+      await supabase.from('bookings_new').update({
+        status: 'CONFIRMED',
+        payment_status: 'PAID',
+        updated_at: new Date().toISOString(),
+      }).eq('booking_id', orderId)
+
+      await supabase.from('payments').update({
+        status: 'PAID',
         transaction_id: payment?.cf_payment_id || '',
-      }),
-    })
+        paid_at: new Date().toISOString(),
+      }).eq('cashfree_order_id', orderId)
+
+      const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
+      const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
+      const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
+      const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+      const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
+
+      console.log(`[PAYMENT_VERIFY] Sending confirmation emails for ${orderId}`)
+
+      // Send patient email
+      if (patient?.email) {
+        try {
+          await resend.emails.send({
+            from,
+            to: patient.email,
+            subject: `✓ Booking Confirmed — ${orderId}`,
+            html: buildBookingConfirmedEmail({ patient, booking, treatmentList, formattedDate }),
+          })
+          console.log(`[PAYMENT_VERIFY] Patient email sent to ${patient.email}`)
+        } catch (err) {
+          console.error(`[PAYMENT_VERIFY] Patient email failed:`, err)
+        }
+      }
+
+      // Send admin email
+      try {
+        await resend.emails.send({
+          from,
+          to: 'ayurshalapanchkarma@gmail.com',
+          subject: `New Online Booking — ${orderId} — ${patient?.full_name}`,
+          html: buildAdminBookingEmail({ patient, booking, treatmentList, formattedDate }),
+        })
+        console.log(`[PAYMENT_VERIFY] Admin email sent`)
+      } catch (err) {
+        console.error(`[PAYMENT_VERIFY] Admin email failed:`, err)
+      }
+    }
     
     console.log(`[PAYMENT_VERIFY] Success - redirecting to confirmed page`)
     return NextResponse.redirect(new URL(`/book/confirmed?booking_id=${orderId}`, req.url))
@@ -104,6 +145,14 @@ export async function GET(req: NextRequest) {
     console.error('[PAYMENT_VERIFY] Error:', error)
     return NextResponse.redirect(new URL(`/book/payment-failed?order_id=${orderId}`, req.url))
   }
+}
+
+function buildBookingConfirmedEmail({ patient, booking, treatmentList, formattedDate }: any) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#FFF3E0;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF3E0;padding:32px 16px"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:24px;overflow:hidden;background:#fff;border:1px solid rgba(232,98,26,0.18);box-shadow:0 8px 40px rgba(232,98,26,0.10)"><tr><td style="background:linear-gradient(135deg,#fff8f0,#ffe8d0);padding:32px 40px;text-align:center;border-bottom:1px solid rgba(232,98,26,0.15)"><h1 style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#1a1008">✓ Booking Confirmed</h1><p style="margin:8px 0 0;font-size:13px;color:#a8a29e">Your appointment is booked</p></td></tr><tr><td style="padding:32px 40px"><table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;border-radius:14px;border:1px solid rgba(232,98,26,0.12)"><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Booking ID</span><br><span style="font-size:15px;color:#E8621A;font-weight:600">${booking.booking_id}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Date & Time</span><br><span style="font-size:15px;color:#1a1008">${formattedDate} · ${booking.preferred_time}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Treatment</span><br><span style="font-size:15px;color:#E8621A">${treatmentList}</span></td></tr><tr><td style="padding:12px 20px"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Status</span><br><span style="font-size:15px;color:#16a34a;font-weight:600">Payment Received</span></td></tr></table><p style="text-align:center;font-size:13px;color:#78716c;margin-top:20px">Please arrive 10 minutes early. Questions? Call <a href="tel:+919821224767" style="color:#E8621A">+91-9821224767</a></p></td></tr><tr><td style="padding:20px 40px;text-align:center;background:#fffaf5"><p style="margin:0;font-size:12px;color:#78716c">Ayurshala Panchakarma Center</p></td></tr></table></td></tr></table></body></html>`
+}
+
+function buildAdminBookingEmail({ patient, booking, treatmentList, formattedDate }: any) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#FFF3E0;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF3E0;padding:32px 16px"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:24px;overflow:hidden;background:#fff;border:1px solid rgba(232,98,26,0.18);box-shadow:0 8px 40px rgba(232,98,26,0.10)"><tr><td style="background:linear-gradient(135deg,#fff8f0,#ffe8d0);padding:32px 40px;text-align:center;border-bottom:1px solid rgba(232,98,26,0.15)"><h1 style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#1a1008">New Online Booking</h1></td></tr><tr><td style="padding:32px 40px"><table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;border-radius:14px;border:1px solid rgba(232,98,26,0.12)"><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Patient</span><br><span style="font-size:15px;color:#1a1008">${patient?.full_name}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Phone</span><br><span style="font-size:15px;color:#1a1008">${patient?.phone}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Booking ID</span><br><span style="font-size:15px;color:#E8621A;font-weight:600">${booking.booking_id}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Treatment</span><br><span style="font-size:15px;color:#E8621A">${treatmentList}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(232,98,26,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Date & Time</span><br><span style="font-size:15px;color:#1a1008">${formattedDate} · ${booking.preferred_time}</span></td></tr><tr><td style="padding:12px 20px"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Payment</span><br><span style="font-size:15px;color:#16a34a;font-weight:600">Online Paid ✓</span></td></tr></table></td></tr></table></td></tr></table></body></html>`
 }
 
 function buildPaymentConfirmedEmail({ patient, booking, treatmentList, formattedDate, amountLabel }: any) {

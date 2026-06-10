@@ -58,12 +58,12 @@ export default function Navbar() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 px-2 sm:px-4 pt-2 sm:pt-6 pointer-events-none overflow-hidden">
+    <div className="fixed top-0 left-0 right-0 z-50 px-2 sm:px-4 pt-2 sm:pt-6">
       <motion.nav
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="w-full mx-auto rounded-2xl sm:rounded-3xl transition-all duration-300 pointer-events-auto"
+        className="w-full mx-auto rounded-2xl sm:rounded-3xl transition-all duration-300"
         style={{
           background: mounted && theme === 'dark'
             ? 'rgba(15,26,18,0.08)'
@@ -226,6 +226,7 @@ export default function Navbar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
+              className="relative z-50"
               style={{ borderTop: '1px solid rgba(232,98,26,0.2)' }}
             >
               <ul className="px-4 py-4 flex flex-col gap-3">
