@@ -2,7 +2,7 @@
 import { useAuth } from '@/lib/useAuth'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { CalendarPlus, CalendarCheck, Clock, LogOut } from 'lucide-react'
+import { CalendarPlus, CalendarCheck, LogOut } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -56,7 +56,7 @@ export default function PatientDashboard() {
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {/* My Bookings */}
           <div
             onClick={() => {
@@ -85,21 +85,6 @@ export default function PatientDashboard() {
               <h2 className="text-lg font-semibold text-stone-900">Book Appointment</h2>
             </div>
             <p className="text-sm text-stone-600">Schedule a new appointment</p>
-          </div>
-
-          {/* Pending Actions */}
-          <div
-            onClick={() => {
-              console.log('Navigating to pending actions (bookings)')
-              router.push('/patient/bookings')
-            }}
-            className="p-6 bg-white rounded-2xl shadow hover:shadow-lg transition border border-stone-200 hover:border-orange-300 cursor-pointer"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <Clock className="w-6 h-6 text-blue-600" />
-              <h2 className="text-lg font-semibold text-stone-900">Pending Actions</h2>
-            </div>
-            <p className="text-sm text-stone-600">Reschedule or cancel appointments</p>
           </div>
         </div>
 

@@ -101,11 +101,17 @@ export default function BookPage() {
 
   useEffect(() => {
     setMounted(true)
-    supabase.auth.getSession().then(async ({ data }) => {
-      const u = data.session?.user ?? null
+    
+    async function init() {
+      await supabase.auth.refreshSession()
+      const { data: { session } } = await supabase.auth.getSession()
+      const u = session?.user ?? null
       setUser(u)
       if (u) await loadOrCreatePatient(u)
-    })
+    }
+    
+    init()
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
       const u = session?.user ?? null
       setUser(u)
@@ -113,13 +119,21 @@ export default function BookPage() {
       else { setPatient(null) }
     })
 
+    const handleFocus = () => {
+      if (user) loadOrCreatePatient(user)
+    }
+    window.addEventListener('focus', handleFocus)
+
     const params = new URLSearchParams(window.location.search)
     if (params.get('status') === 'failed' || params.get('status') === 'error') {
       window.location.href = '/book/failed'
     }
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [user])
 
   async function loadOrCreatePatient(u: AuthUser) {
     const res = await fetch(`/api/patient?email=${encodeURIComponent(u.email!)}`)
@@ -235,6 +249,11 @@ export default function BookPage() {
         style={{ background: 'radial-gradient(circle,#E8621A 0%,transparent 70%)' }} />
 
       <div className="max-w-lg mx-auto relative">
+        <div className="mb-4">
+          <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/40 hover:bg-white/60 backdrop-blur-md text-stone-600 hover:text-orange-600 transition-colors font-sans text-sm">
+            ← Back to Home
+          </Link>
+        </div>
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16,1,0.3,1] }}
           className="rounded-3xl p-5 sm:p-8 relative overflow-hidden"
           style={{
