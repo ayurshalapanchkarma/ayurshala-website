@@ -7,7 +7,7 @@ import Link from 'next/link'
 import GlassBackground from '@/components/GlassBackground'
 import { AdminGuard } from '@/components/AdminGuard'
 import { useTheme } from 'next-themes'
-import { Home, LogOut, Clock, Moon, Sun } from 'lucide-react'
+import { Home, LogOut, Clock, Moon, Sun, Calendar, Clock as ClockIcon, Wallet, TrendingUp } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -191,18 +191,28 @@ export default function AdminPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           {[
-            { label: "Today's", value: stats.today, color: 'bg-blue-500' },
-            { label: 'Pending', value: stats.pending, color: 'bg-amber-500' },
-            { label: 'Cash Pending', value: stats.cash, color: 'bg-purple-500' },
-            { label: 'Revenue', value: `₹${stats.revenue}`, color: 'bg-green-500' },
-          ].map((stat, i) => (
-            <div key={i} className="rounded-xl p-4" style={cardStyle}>
-              <p className="font-sans text-xs text-stone-600">{stat.label}</p>
-              <p className={`text-2xl font-bold text-white mt-2 ${stat.color} bg-clip-text text-transparent`} style={{ backgroundImage: `linear-gradient(135deg, ${stat.color === 'bg-blue-500' ? '#3b82f6' : stat.color === 'bg-amber-500' ? '#f59e0b' : stat.color === 'bg-purple-500' ? '#a855f7' : '#10b981'}, #e8621a)` }}>
-                {stat.value}
-              </p>
-            </div>
-          ))}
+            { label: "Today's", value: stats.today, icon: Calendar },
+            { label: 'Pending', value: stats.pending, icon: ClockIcon },
+            { label: 'Cash Pending', value: stats.cash, icon: Wallet },
+            { label: 'Revenue', value: `₹${stats.revenue}`, icon: TrendingUp },
+          ].map((stat, i) => {
+            const Icon = stat.icon
+            return (
+              <div key={i} className="rounded-3xl p-6 backdrop-blur-md border transition"
+                style={{
+                  background: dark ? 'rgba(255, 255, 255, 0.07)' : 'rgba(255, 255, 255, 0.55)',
+                  backdropFilter: 'blur(18px)',
+                  border: dark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid rgba(255, 255, 255, 0.35)',
+                  boxShadow: '0 8px 32px rgba(232, 98, 26, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)',
+                }}>
+                <div className="flex items-start justify-between mb-2">
+                  <p className={`font-sans text-sm ${dark ? 'text-stone-400' : 'text-stone-600'}`}>{stat.label}</p>
+                  <Icon className="w-5 h-5" style={{ color: '#E8621A' }} />
+                </div>
+                <p className={`text-4xl font-bold ${dark ? 'text-white' : 'text-stone-900'}`}>{stat.value}</p>
+              </div>
+            )
+          })}
         </div>
 
         {/* Tabs */}

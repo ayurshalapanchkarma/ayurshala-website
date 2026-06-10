@@ -212,8 +212,9 @@ export default function PatientBookingsPage() {
         <div className="space-y-3">
           {bookings.map(b => {
             const hours = hoursUntil(b.preferred_date, b.preferred_time)
+            const isRescheduled = (b as any).rescheduled_at !== null
             const canCancel = (b.status === 'PENDING_CONFIRMATION' || b.status === 'CONFIRMED') && hours >= 24
-            const canReschedule = (b.status === 'PENDING_CONFIRMATION' || (b.status === 'CONFIRMED' && !b.is_rescheduled)) && hours >= 24
+            const canReschedule = (b.status === 'PENDING_CONFIRMATION' || (b.status === 'CONFIRMED' && !isRescheduled)) && hours >= 24
             
             // Badge logic
             let badgeLabel = '', badgeCls = ''
@@ -260,6 +261,12 @@ export default function PatientBookingsPage() {
 
                 {b.concern && <p className="font-sans text-xs text-stone-400 mb-3 line-clamp-2">{b.concern}</p>}
 
+                {b.status === 'CONFIRMED' && hours < 24 && (
+                  <p className="font-sans text-xs text-stone-400 italic">This appointment can no longer be modified online.</p>
+                )}
+                {isRescheduled && b.status === 'CONFIRMED' && (
+                  <p className="font-sans text-xs text-stone-400 italic">This appointment has already been rescheduled.</p>
+                )}
                 {(canReschedule || canCancel) && (
                   <div className="flex gap-2 flex-wrap">
                     {canReschedule && (
