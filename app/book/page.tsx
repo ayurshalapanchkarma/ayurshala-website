@@ -119,11 +119,6 @@ export default function BookPage() {
       else { setPatient(null) }
     })
 
-    const handleFocus = () => {
-      if (user) loadOrCreatePatient(user)
-    }
-    window.addEventListener('focus', handleFocus)
-
     const params = new URLSearchParams(window.location.search)
     if (params.get('status') === 'failed' || params.get('status') === 'error') {
       window.location.href = '/book/failed'
@@ -131,9 +126,8 @@ export default function BookPage() {
 
     return () => {
       subscription.unsubscribe()
-      window.removeEventListener('focus', handleFocus)
     }
-  }, [user])
+  }, [])
 
   async function loadOrCreatePatient(u: AuthUser) {
     const res = await fetch(`/api/patient?email=${encodeURIComponent(u.email!)}`)
