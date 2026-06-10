@@ -7,7 +7,7 @@ import Link from 'next/link'
 import GlassBackground from '@/components/GlassBackground'
 import { AdminGuard } from '@/components/AdminGuard'
 import { useTheme } from 'next-themes'
-import { Home, LogOut, Clock } from 'lucide-react'
+import { Home, LogOut, Clock, Moon, Sun } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -56,7 +56,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>('all')
   const [currentTime, setCurrentTime] = useState('')
   const [stats, setStats] = useState({ today: 0, pending: 0, cash: 0, refunds: 0, completed: 0, revenue: 0 })
-  const { theme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const router = useRouter()
   const dark = mounted && theme === 'dark'
 
@@ -164,6 +164,13 @@ export default function AdminPage() {
                 <Clock className="w-4 h-4" />{currentTime}
               </p>
               <div className="flex gap-2">
+                <button
+                  onClick={() => setTheme(dark ? 'light' : 'dark')}
+                  className="px-3 py-2 rounded-lg bg-white/40 text-stone-700 text-xs hover:bg-white/60 transition border border-white/60"
+                  title="Toggle dark mode"
+                >
+                  {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
                 <Link href="/" className="px-3 py-2 rounded-lg bg-white/40 text-stone-700 text-xs hover:bg-white/60 transition border border-white/60 flex items-center gap-1">
                   <Home className="w-4 h-4" />
                 </Link>

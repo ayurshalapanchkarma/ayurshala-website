@@ -1,7 +1,7 @@
 'use client'
 import { useAuth } from '@/lib/useAuth'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { CalendarPlus, CalendarCheck, LogOut } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 
@@ -13,10 +13,15 @@ const supabase = createClient(
 export default function PatientDashboard() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const [patient, setPatient] = useState<any>(null)
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/admin/login')
+    } else if (user?.id) {
+      supabase.from('patients').select('patient_id').eq('id', user.id).single().then(({ data }) => {
+        setPatient(data)
+      })
     }
   }, [loading, user, router])
 
@@ -91,10 +96,14 @@ export default function PatientDashboard() {
         {/* Quick Info */}
         <div className="mt-12 p-6 bg-white rounded-2xl shadow border border-stone-200">
           <h2 className="text-lg font-semibold text-stone-900 mb-4">Account Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-stone-600">Email:</p>
               <p className="font-medium text-stone-900">{user?.email}</p>
+            </div>
+            <div>
+              <p className="text-stone-600">Patient ID:</p>
+              <p className="font-medium text-stone-900">{patient?.patient_id || '—'}</p>
             </div>
             <div>
               <p className="text-stone-600">Role:</p>
