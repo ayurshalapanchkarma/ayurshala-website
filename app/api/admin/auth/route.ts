@@ -47,7 +47,7 @@ export async function POST(req: Request) {
             <h2 style="color: #E8621A;">Reset Your Admin Password</h2>
             <p>You requested a password reset for your Ayurshala Admin account.</p>
             <p style="margin: 30px 0;">
-              <a href="https://ayurshalapanchakarma.com/admin/reset?token=${token}" 
+              <a href="https://www.ayurshalapanchakarma.com/admin/reset?token=${token}" 
                 style="background-color: #E8621A; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
                 Reset Password
               </a>
