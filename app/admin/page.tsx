@@ -35,11 +35,15 @@ type Booking = {
 
 type Tab = 'all' | 'online' | 'offline' | 'refunds'
 
-const statusConfig: Record<string, { label: string; cls: string }> = {
-  CONFIRMED: { label: 'Confirmed', cls: 'bg-green-100 text-green-700' },
-  PENDING_CONFIRMATION: { label: 'Pending', cls: 'bg-amber-100 text-amber-700' },
-  CANCELLED: { label: 'Cancelled', cls: 'bg-red-100 text-red-600' },
-  COMPLETED: { label: 'Completed', cls: 'bg-blue-100 text-blue-700' },
+const getStatusBadge = (status: string, dark: boolean) => {
+  const badges: Record<string, any> = {
+    CONFIRMED: dark ? { label: 'Confirmed', cls: 'bg-green-900/40 text-green-300' } : { label: 'Confirmed', cls: 'bg-green-100 text-green-800' },
+    PENDING_CONFIRMATION: dark ? { label: 'Pending', cls: 'bg-yellow-900/40 text-yellow-300' } : { label: 'Pending', cls: 'bg-yellow-100 text-yellow-800' },
+    CANCELLED: dark ? { label: 'Cancelled', cls: 'bg-red-900/40 text-red-300' } : { label: 'Cancelled', cls: 'bg-red-100 text-red-800' },
+    COMPLETED: dark ? { label: 'Completed', cls: 'bg-blue-900/40 text-blue-300' } : { label: 'Completed', cls: 'bg-blue-100 text-blue-700' },
+    RESCHEDULED: dark ? { label: 'Rescheduled', cls: 'bg-orange-900/40 text-orange-300' } : { label: 'Rescheduled', cls: 'bg-orange-100 text-orange-800' },
+  }
+  return badges[status] || { label: status, cls: 'bg-gray-100 text-gray-700' }
 }
 
 const paymentStatusConfig: Record<string, { label: string; cls: string }> = {
@@ -200,16 +204,16 @@ export default function AdminPage() {
             return (
               <div key={i} className="rounded-3xl p-6 backdrop-blur-md border transition"
                 style={{
-                  background: dark ? 'rgba(255, 255, 255, 0.07)' : 'rgba(255, 255, 255, 0.55)',
-                  backdropFilter: 'blur(18px)',
-                  border: dark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid rgba(255, 255, 255, 0.35)',
-                  boxShadow: '0 8px 32px rgba(232, 98, 26, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)',
+                  background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.65)',
+                  backdropFilter: 'blur(20px)',
+                  border: dark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.4)',
+                  boxShadow: dark ? '0 8px 32px rgba(232, 98, 26, 0.05)' : '0 8px 32px rgba(232, 98, 26, 0.12)',
                 }}>
-                <div className="flex items-start justify-between mb-2">
-                  <p className={`font-sans text-sm ${dark ? 'text-stone-400' : 'text-stone-600'}`}>{stat.label}</p>
+                <div className="flex items-start justify-between mb-3">
+                  <p className={`font-sans text-sm ${dark ? 'text-gray-300' : 'text-gray-600'}`}>{stat.label}</p>
                   <Icon className="w-5 h-5" style={{ color: '#E8621A' }} />
                 </div>
-                <p className={`text-4xl font-bold ${dark ? 'text-white' : 'text-stone-900'}`}>{stat.value}</p>
+                <p className={`text-4xl font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
               </div>
             )
           })}
@@ -258,7 +262,7 @@ export default function AdminPage() {
                       <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: '#E8621A' }}>{b.booking_id}</td>
                       <td className="px-4 py-3 text-sm text-stone-900"><p>{b.patient_name}</p><p className="text-xs text-stone-600">{b.patient_email}</p></td>
                       <td className="px-4 py-3 text-xs text-stone-700">{b.preferred_date} {b.preferred_time}</td>
-                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs ${statusConfig[b.status]?.cls || 'bg-gray-100'}`}>{statusConfig[b.status]?.label || b.status}</span></td>
+                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs ${getStatusBadge(b.status, dark).cls}`}>{getStatusBadge(b.status, dark).label}</span></td>
                       <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs ${paymentStatusConfig[b.payment_status]?.cls || 'bg-gray-100'}`}>{paymentStatusConfig[b.payment_status]?.label || b.payment_status}</span></td>
                       {activeTab === 'online' && <td className="px-4 py-3 text-xs">₹{b.amount || 0}</td>}
                       <td className="px-4 py-3">
