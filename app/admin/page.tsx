@@ -247,7 +247,7 @@ export default function AdminPage() {
     }
   }
 
-  const bg = dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)'
+  const bg = dark ? 'linear-gradient(135deg,#1a2015,#2a1f10)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)'
   const cardStyle = {
     background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.72)',
     backdropFilter: 'blur(40px)',
@@ -258,45 +258,45 @@ export default function AdminPage() {
   // Dashboard
   return (
     <AdminGuard>
-      <div className="min-h-screen px-4 sm:px-6 py-8 relative overflow-hidden" style={{ background: bg }}>
+      <div className="min-h-screen px-4 sm:px-6 py-6 relative overflow-hidden" style={{ background: bg }}>
         <GlassBackground />
       
       <div className="max-w-7xl mx-auto relative">
         {/* Header */}
-        <div className="rounded-2xl p-6 mb-6" style={cardStyle}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-4">
+        <div className="rounded-2xl p-4 mb-5" style={cardStyle}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
               <Link href="/">
-                <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-12 w-auto" />
+                <Image src="/ayurshala_text.png" alt="Ayurshala" width={168} height={48} className="object-contain h-10 w-auto" />
               </Link>
-              <div>
-                <h1 className="font-serif text-4xl" style={{ color: '#E8621A' }}>Admin</h1>
-                <p className="font-sans text-sm text-stone-600 mt-1">Logged in as: ayurshalapanchkarma@gmail.com</p>
+              <div className="min-w-0">
+                <h1 className="font-serif text-2xl" style={{ color: '#E8621A' }}>Admin</h1>
+                <p className={`font-sans text-xs ${dark ? 'text-gray-400' : 'text-stone-500'} truncate`}>ayurshalapanchkarma@gmail.com</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="font-mono text-xs text-stone-500 flex items-center gap-1 justify-end mb-3">
-                <Clock className="w-4 h-4" />{currentTime}
+            <div className="text-right flex-shrink-0">
+              <p className={`font-mono text-xs ${dark ? 'text-gray-400' : 'text-stone-500'} flex items-center gap-1 justify-end mb-2`}>
+                <Clock className="w-3 h-3" />{currentTime}
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <button
                   onClick={() => setTheme(dark ? 'light' : 'dark')}
-                  className="px-3 py-2 rounded-lg bg-white/40 text-stone-700 text-xs hover:bg-white/60 transition border border-white/60"
+                  className={`p-1.5 rounded-lg text-xs transition border ${dark ? 'bg-gray-800/60 text-gray-300 border-gray-700' : 'bg-white/40 text-stone-700 border-white/60'} hover:opacity-80`}
                   title="Toggle dark mode"
                 >
-                  {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {dark ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
                 </button>
-                <Link href="/" className="px-3 py-2 rounded-lg bg-white/40 text-stone-700 text-xs hover:bg-white/60 transition border border-white/60 flex items-center gap-1">
-                  <Home className="w-4 h-4" />
+                <Link href="/" className={`p-1.5 rounded-lg text-xs transition border flex items-center gap-1 ${dark ? 'bg-gray-800/60 text-gray-300 border-gray-700' : 'bg-white/40 text-stone-700 border-white/60'} hover:opacity-80`}>
+                  <Home className="w-3 h-3" />
                 </Link>
                 <button
                   onClick={async () => {
                     await supabase.auth.signOut()
                     router.push('/')
                   }}
-                  className="px-3 py-2 rounded-lg bg-red-500 text-white text-xs hover:bg-red-600 transition flex items-center gap-1"
+                  className="p-1.5 rounded-lg bg-red-500 text-white text-xs hover:bg-red-600 transition flex items-center gap-1"
                 >
-                  <LogOut className="w-4 h-4" /> Logout
+                  <LogOut className="w-3 h-3" />
                 </button>
               </div>
             </div>
@@ -304,7 +304,7 @@ export default function AdminPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
           {[
             { label: "Today's", value: stats.today, icon: Calendar },
             { label: 'Pending', value: stats.pending, icon: ClockIcon },
@@ -313,33 +313,33 @@ export default function AdminPage() {
           ].map((stat, i) => {
             const Icon = stat.icon
             return (
-              <div key={i} className="rounded-3xl p-6 backdrop-blur-md border transition"
+              <div key={i} className="rounded-2xl p-4 backdrop-blur-md border transition"
                 style={{
                   background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.65)',
                   backdropFilter: 'blur(20px)',
                   border: dark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.4)',
                   boxShadow: dark ? '0 8px 32px rgba(232, 98, 26, 0.05)' : '0 8px 32px rgba(232, 98, 26, 0.12)',
                 }}>
-                <div className="flex items-start justify-between mb-3">
-                  <p className={`font-sans text-sm ${dark ? 'text-gray-300' : 'text-gray-600'}`}>{stat.label}</p>
-                  <Icon className="w-5 h-5" style={{ color: '#E8621A' }} />
+                <div className="flex items-start justify-between mb-2">
+                  <p className={`font-sans text-xs ${dark ? 'text-gray-300' : 'text-gray-600'} uppercase tracking-wider`}>{stat.label}</p>
+                  <Icon className="w-4 h-4" style={{ color: '#E8621A' }} />
                 </div>
-                <p className={`text-4xl font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
+                <p className={`text-2xl font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
               </div>
             )
           })}
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-2">
           {(['all', 'online', 'offline', 'refunds'] as Tab[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-sans transition whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-sans transition whitespace-nowrap ${
                 activeTab === tab
                   ? 'bg-orange-500 text-white'
-                  : 'bg-white/40 text-stone-700 border border-white/60 hover:bg-white/60'
+                  : `${dark ? 'bg-gray-800/60 text-gray-300 border-gray-700' : 'bg-white/40 text-stone-700 border border-white/60'} hover:opacity-80`
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -349,56 +349,56 @@ export default function AdminPage() {
 
         {/* Bookings Table */}
         {loading ? (
-          <div className="text-center py-12 text-stone-400 font-sans">Loading...</div>
+          <div className={`text-center py-8 ${dark ? 'text-gray-400' : 'text-stone-400'} font-sans`}>Loading...</div>
         ) : bookings.length === 0 ? (
-          <div className="text-center py-12 text-stone-400 font-sans">No bookings found</div>
+          <div className={`text-center py-8 ${dark ? 'text-gray-400' : 'text-stone-400'} font-sans`}>No bookings found</div>
         ) : (
           <div className="rounded-2xl overflow-hidden" style={cardStyle}>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead style={{ background: 'rgba(232,98,26,0.08)' }}>
                   <tr className="border-b border-white/30">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Booking ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Patient</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Date & Time</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Payment</th>
-                    {activeTab === 'online' && <th className="px-4 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Amount</th>}
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-stone-700 uppercase">Action</th>
+                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Booking ID</th>
+                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Patient</th>
+                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Date & Time</th>
+                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Status</th>
+                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Payment</th>
+                    {activeTab === 'online' && <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Amount</th>}
+                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {bookings.map((b, i) => {
                     const actions = getAvailableActions(b)
                     return (
-                      <tr key={b.id} className={`rounded-lg transition ${dark ? 'bg-slate-900/50 hover:bg-slate-800/50' : 'bg-white/60 hover:bg-white/80'} backdrop-blur-md border ${dark ? 'border-white/10' : 'border-white/20'}`}
+                      <tr key={b.id} className={`transition ${dark ? 'bg-slate-900/50 hover:bg-slate-800/50' : 'bg-white/60 hover:bg-white/80'} backdrop-blur-md border ${dark ? 'border-white/10' : 'border-white/20'}`}
                         style={{ boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.5)' }}>
-                        <td className="px-4 py-3 font-mono font-semibold tracking-wide" style={{ color: '#E8621A' }}>{b.booking_id}</td>
-                        <td className={`px-4 py-3 text-sm ${dark ? 'text-gray-200' : 'text-stone-900'}`}><p>{b.patient_name}</p><p className={`text-xs ${dark ? 'text-gray-400' : 'text-stone-600'}`}>{b.patient_email}</p></td>
-                        <td className={`px-4 py-3 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>{b.preferred_date} {b.preferred_time}</td>
-                        <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusBadge(b).cls}`}>{getStatusBadge(b).label}</span></td>
-                        <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs font-medium ${getPaymentBadge(b).cls}`}>{getPaymentBadge(b).label}</span></td>
-                        {activeTab === 'online' && <td className={`px-4 py-3 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>₹{b.amount || 0}</td>}
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2 font-mono font-semibold tracking-wide text-sm" style={{ color: '#E8621A' }}>{b.booking_id}</td>
+                        <td className={`px-3 py-2 text-xs ${dark ? 'text-gray-200' : 'text-stone-900'}`}><p>{b.patient_name}</p><p className={`text-xs ${dark ? 'text-gray-400' : 'text-stone-600'}`}>{b.patient_email}</p></td>
+                        <td className={`px-3 py-2 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>{b.preferred_date} {b.preferred_time}</td>
+                        <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadge(b).cls}`}>{getStatusBadge(b).label}</span></td>
+                        <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-xs font-medium ${getPaymentBadge(b).cls}`}>{getPaymentBadge(b).label}</span></td>
+                        {activeTab === 'online' && <td className={`px-3 py-2 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>₹{b.amount || 0}</td>}
+                        <td className="px-3 py-2">
                           {actions.length > 0 && (
-                            <div className="flex gap-2 flex-wrap">
+                            <div className="flex gap-1 flex-wrap">
                               {actions.includes('confirm') && (
-                                <button onClick={() => performAction(b.booking_id, 'confirm')} className="px-2 py-1 rounded bg-green-500 text-white text-xs hover:bg-green-600 transition">Confirm</button>
+                                <button onClick={() => performAction(b.booking_id, 'confirm')} className="px-2 py-0.5 rounded bg-green-500 text-white text-xs hover:bg-green-600 transition">Confirm</button>
                               )}
                               {actions.includes('cancel') && (
-                                <button onClick={() => performAction(b.booking_id, 'cancel')} className="px-2 py-1 rounded bg-red-500 text-white text-xs hover:bg-red-600 transition">Cancel</button>
+                                <button onClick={() => performAction(b.booking_id, 'cancel')} className="px-2 py-0.5 rounded bg-red-500 text-white text-xs hover:bg-red-600 transition">Cancel</button>
                               )}
                               {actions.includes('approve_reschedule') && (
-                                <button onClick={() => performAction(b.booking_id, 'approve_reschedule')} className="px-2 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600 transition">Approve</button>
+                                <button onClick={() => performAction(b.booking_id, 'approve_reschedule')} className="px-2 py-0.5 rounded bg-blue-500 text-white text-xs hover:bg-blue-600 transition">Approve</button>
                               )}
                               {actions.includes('reject_reschedule') && (
-                                <button onClick={() => performAction(b.booking_id, 'reject_reschedule')} className="px-2 py-1 rounded bg-orange-500 text-white text-xs hover:bg-orange-600 transition">Reject</button>
+                                <button onClick={() => performAction(b.booking_id, 'reject_reschedule')} className="px-2 py-0.5 rounded bg-orange-500 text-white text-xs hover:bg-orange-600 transition">Reject</button>
                               )}
                               {actions.includes('mark_completed') && (
-                                <button onClick={() => performAction(b.booking_id, 'mark_completed')} className="px-2 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600 transition">Completed</button>
+                                <button onClick={() => performAction(b.booking_id, 'mark_completed')} className="px-2 py-0.5 rounded bg-blue-500 text-white text-xs hover:bg-blue-600 transition">Completed</button>
                               )}
                               {actions.includes('mark_no_show') && (
-                                <button onClick={() => performAction(b.booking_id, 'mark_no_show')} className="px-2 py-1 rounded bg-slate-500 text-white text-xs hover:bg-slate-600 transition">No Show</button>
+                                <button onClick={() => performAction(b.booking_id, 'mark_no_show')} className="px-2 py-0.5 rounded bg-slate-500 text-white text-xs hover:bg-slate-600 transition">No Show</button>
                               )}
                             </div>
                           )}
