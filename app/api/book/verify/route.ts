@@ -3,13 +3,24 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!
-)
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function GET(req: NextRequest) {
+  console.log('[PAYMENT_VERIFY] Handler entered')
+  
+  // Debug endpoint
+  if (req.nextUrl.searchParams.get('debug') === 'true') {
+    return NextResponse.json({ ok: true })
+  }
+
+  // Initialize clients on every request (cold start safe)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  console.log('[PAYMENT_VERIFY] Supabase initialized')
+
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  console.log('[PAYMENT_VERIFY] Resend initialized')
+
   const orderId = req.nextUrl.searchParams.get('order_id')
   const originalBookingId = req.nextUrl.searchParams.get('original_booking_id')
   
@@ -21,7 +32,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Validate env vars exist
+    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
+      console.error('[PAYMENT_VERIFY] Missing Cashfree credentials')
+      return NextResponse.redirect(new URL(`/book/payment-failed?order_id=${orderId}`, req.url))
+    }
+
     const cashfree = new Cashfree(CFEnvironment.PRODUCTION, process.env.CASHFREE_APP_ID, process.env.CASHFREE_SECRET_KEY)
+    console.log('[PAYMENT_VERIFY] Cashfree initialized')
     const response = await cashfree.PGOrderFetchPayments(orderId)
     const payment = response.data?.[0]
     const success = payment?.payment_status === 'SUCCESS'
