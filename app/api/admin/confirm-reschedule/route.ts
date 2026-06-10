@@ -74,3 +74,42 @@ export async function GET(req: NextRequest) {
 function buildPatientRescheduleApprovedEmail({ patient, booking, treatmentList, oldDate, newDateFmt }: any) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#FFF3E0;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF3E0;padding:32px 16px"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:24px;overflow:hidden;background:#fff;border:1px solid rgba(16,185,129,0.18);box-shadow:0 8px 40px rgba(16,185,129,0.10)"><tr><td style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);padding:32px 40px;text-align:center;border-bottom:1px solid rgba(16,185,129,0.15)"><h1 style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#166534">Reschedule Approved</h1></td></tr><tr><td style="padding:32px 40px"><p style="font-size:13px;color:#78716c;margin:0 0 20px">Your reschedule request has been approved! Your appointment is now confirmed for the new date and time.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border-radius:14px;border:1px solid rgba(16,185,129,0.12);margin-bottom:20px"><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(16,185,129,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Booking ID</span><br><span style="font-size:15px;color:#E8621A;font-weight:600">${booking.booking_id}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(16,185,129,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Treatment</span><br><span style="font-size:15px;color:#E8621A">${treatmentList}</span></td></tr><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(16,185,129,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Previous Appointment</span><br><span style="font-size:15px;color:#9ca3af;text-decoration:line-through">${oldDate} · ${booking.old_time}</span></td></tr><tr><td style="padding:12px 20px"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">New Appointment</span><br><span style="font-size:15px;color:#16a34a;font-weight:600">${newDateFmt} · ${booking.new_time}</span></td></tr></table><p style="text-align:center;font-size:12px;color:#c4bdb5;margin:0">Questions? Call +91-9821224767</p></td></tr><tr style="background:#fffaf5"><td style="padding:16px 40px;text-align:center"><p style="margin:0;font-size:11px;color:#c4bdb5">© 2026 Ayurshala Panchakarma Center</p></td></tr></table></td></tr></table></body></html>`
 }
+
+export async function POST(req: NextRequest) {
+  const { booking_id } = await req.json()
+  if (!booking_id) return NextResponse.json({ error: 'booking_id required' }, { status: 400 })
+
+  const { data: booking } = await supabase.from('bookings_new').select('*').eq('booking_id', booking_id).single()
+  if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+  if (booking.status !== 'RESCHEDULED') return NextResponse.json({ error: 'No pending reschedule' }, { status: 400 })
+
+  await supabase.from('bookings_new').update({
+    status: 'RESCHEDULED',
+    preferred_date: booking.new_date,
+    preferred_time: booking.new_time,
+    is_rescheduled: true,
+    rescheduled_at: new Date().toISOString(),
+    old_date: null,
+    old_time: null,
+    new_date: null,
+    new_time: null,
+    updated_at: new Date().toISOString()
+  }).eq('booking_id', booking_id)
+
+  const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
+  const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
+  const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
+  const oldDate = new Date(booking.old_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long' })
+  const newDateFmt = new Date(booking.new_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+  const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
+
+  if (patient?.email) {
+    await resend.emails.send({
+      from, to: patient.email,
+      subject: `Reschedule Approved — ${booking_id}`,
+      html: buildPatientRescheduleApprovedEmail({ patient, booking, treatmentList, oldDate, newDateFmt }),
+    })
+  }
+
+  return NextResponse.json({ success: true })
+}

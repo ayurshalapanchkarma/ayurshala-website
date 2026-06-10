@@ -52,3 +52,33 @@ export async function GET(req: NextRequest) {
 function buildCancelRescheduleEmail({ patient, booking, formattedDate }: any) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#FFF3E0;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF3E0;padding:32px 16px"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:24px;overflow:hidden;background:#fff;border:1px solid rgba(220,38,38,0.18);box-shadow:0 8px 40px rgba(220,38,38,0.10)"><tr><td style="background:linear-gradient(135deg,#fee2e2,#fecaca);padding:32px 40px;text-align:center;border-bottom:1px solid rgba(220,38,38,0.15)"><h1 style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#991b1b">Reschedule Request Declined</h1></td></tr><tr><td style="padding:32px 40px"><p style="font-size:13px;color:#78716c;margin:0 0 20px">Your reschedule request has been declined. Your original appointment remains valid. If you are unable to attend, please cancel this booking and create a new appointment.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border-radius:14px;border:1px solid rgba(220,38,38,0.12)"><tr><td style="padding:12px 20px;border-bottom:1px solid rgba(220,38,38,0.08)"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Booking ID</span><br><span style="font-size:15px;color:#1a1008">${booking.booking_id}</span></td></tr><tr><td style="padding:12px 20px"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#a8a29e">Original Appointment</span><br><span style="font-size:15px;color:#1a1008;font-weight:600">${formattedDate} · ${booking.preferred_time}</span></td></tr></table><p style="text-align:center;font-size:13px;color:#78716c;margin-top:20px">For questions, contact Ayurshala: <a href="tel:+919821224767" style="color:#E8621A">+91-9821224767</a></p></td></tr><tr style="background:#fffaf5"><td style="padding:16px 40px;text-align:center"><p style="margin:0;font-size:11px;color:#c4bdb5">© 2026 Ayurshala Panchakarma Center</p></td></tr></table></td></tr></table></body></html>`
 }
+
+export async function POST(req: NextRequest) {
+  const { booking_id } = await req.json()
+  if (!booking_id) return NextResponse.json({ error: 'booking_id required' }, { status: 400 })
+
+  const { data: booking } = await supabase.from('bookings_new').select('*').eq('booking_id', booking_id).single()
+  if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+  if (booking.status !== 'RESCHEDULED') return NextResponse.json({ error: 'No pending reschedule' }, { status: 400 })
+
+  await supabase.from('bookings_new').update({
+    status: 'RESCHEDULE_REJECTED',
+    is_rescheduled: true,
+    old_date: null,
+    old_time: null,
+    new_date: null,
+    new_time: null,
+    rescheduled_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }).eq('booking_id', booking_id)
+
+  const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
+  const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+  const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
+
+  if (patient?.email) {
+    await resend.emails.send({ from, to: patient.email, subject: `Reschedule Request Declined — ${booking_id}`, html: buildCancelRescheduleEmail({ patient, booking, formattedDate }) })
+  }
+
+  return NextResponse.json({ success: true })
+}

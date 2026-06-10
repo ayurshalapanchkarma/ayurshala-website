@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
-import { Menu, X, ShieldCheck, LogOut, LayoutDashboard, CalendarPlus, ChevronDown } from 'lucide-react'
+import { Menu, X, ShieldCheck, LogOut, LayoutDashboard, CalendarPlus, ChevronDown, Moon, Sun } from 'lucide-react'
 
 const publicLinks = [
   { label: 'Home', href: '/#home' },
@@ -21,7 +21,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
-  const { theme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -102,6 +102,13 @@ export default function Navbar() {
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="btn-glass text-xs py-2 px-4 flex items-center gap-2"
+              title="Toggle dark mode"
+            >
+              {mounted && theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             {!loading && mounted && (
               <>
                 {!user ? (
