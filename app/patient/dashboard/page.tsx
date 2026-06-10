@@ -2,6 +2,8 @@
 import { useAuth } from '@/lib/useAuth'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { CalendarPlus, CalendarCheck, LogOut } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 
@@ -45,9 +47,14 @@ export default function PatientDashboard() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-stone-200">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-serif text-orange-600">My Dashboard</h1>
-            <p className="text-sm text-stone-600">{user?.email}</p>
+          <div className="flex items-center gap-4 flex-1">
+            <Link href="/">
+              <Image src="/ayurshala_text.png" alt="Ayurshala" width={160} height={48} className="object-contain h-10 sm:h-12 w-auto" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-serif text-orange-600">My Dashboard</h1>
+              <p className="text-sm text-stone-600">{user?.email}</p>
+            </div>
           </div>
           <button
             onClick={() => supabase.auth.signOut().then(() => router.push('/'))}

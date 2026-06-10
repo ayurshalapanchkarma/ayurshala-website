@@ -2,6 +2,7 @@
 import { useAuth } from '@/lib/useAuth'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 
 export default function Dashboard() {
@@ -28,6 +29,9 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-8">
       <div className="max-w-4xl mx-auto">
+        <Link href="/">
+          <Image src="/ayurshala_text.png" alt="Ayurshala" width={160} height={48} className="object-contain h-10 w-auto mb-6" />
+        </Link>
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <h1 className="text-3xl font-serif text-orange-600 mb-2">Patient Dashboard</h1>
           <p className="text-stone-600 mb-6">Welcome, {user?.email}</p>

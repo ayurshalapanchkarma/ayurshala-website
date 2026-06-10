@@ -265,9 +265,14 @@ export default function AdminPage() {
         {/* Header */}
         <div className="rounded-2xl p-6 mb-6" style={cardStyle}>
           <div className="flex items-center justify-between mb-2">
-            <div>
-              <h1 className="font-serif text-4xl" style={{ color: '#E8621A' }}>Ayurshala Admin</h1>
-              <p className="font-sans text-sm text-stone-600 mt-1">Logged in as: ayurshalapanchkarma@gmail.com</p>
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-12 w-auto" />
+              </Link>
+              <div>
+                <h1 className="font-serif text-4xl" style={{ color: '#E8621A' }}>Admin</h1>
+                <p className="font-sans text-sm text-stone-600 mt-1">Logged in as: ayurshalapanchkarma@gmail.com</p>
+              </div>
             </div>
             <div className="text-right">
               <p className="font-mono text-xs text-stone-500 flex items-center gap-1 justify-end mb-3">

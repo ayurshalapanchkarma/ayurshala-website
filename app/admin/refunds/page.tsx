@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { CheckCircle, XCircle, Clock, Home } from 'lucide-react'
@@ -62,9 +63,12 @@ export default function RefundsPage() {
       <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none animate-blob1" style={{ background: 'radial-gradient(circle,#E8621A 0%,transparent 70%)' }} />
       
       <div className="max-w-5xl mx-auto relative">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4 mb-8">
+          <Link href="/">
+            <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-12 w-auto" />
+          </Link>
           <h1 className="font-serif text-3xl sm:text-4xl" style={{ color: '#E8621A' }}>Refund Requests</h1>
-          <div className="flex gap-2">
+          <div className="ml-auto flex gap-2">
             <Link href="/admin" className="btn-glass text-sm py-2 px-4">
               Admin
             </Link>
