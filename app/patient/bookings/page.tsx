@@ -217,7 +217,7 @@ export default function PatientBookingsPage() {
             
             // Badge logic
             let badgeLabel = '', badgeCls = ''
-            if (b.status === 'CONFIRMED' && b.is_rescheduled) {
+            if (b.status === 'CONFIRMED' && (b as any).rescheduled_at) {
               badgeLabel = 'Rescheduled Confirmed'
               badgeCls = 'bg-emerald-100 text-emerald-700'
             } else if (b.status === 'RESCHEDULED') {
