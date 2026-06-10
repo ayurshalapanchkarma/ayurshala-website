@@ -1,12 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-)
+import { supabase } from '@/lib/supabase'
 
 export default function AuthCallback() {
   const router = useRouter()
@@ -14,34 +9,20 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleAuth = async () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          // Check if user is admin
-          const { data: admin } = await supabase
-            .from('admins')
-            .select('id')
-            .eq('id', session.user.id)
-            .single()
+      console.log('OAuth callback started')
 
-          let redirectTarget = '/patient/dashboard'
-          if (admin) {
-            redirectTarget = '/admin'
-          }
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession()
 
-          console.log({
-            email: session.user.email,
-            isAdmin: !!admin,
-            redirectTarget
-          })
+      console.log('Session:', session)
+      console.log('Error:', error)
 
-          subscription.unsubscribe()
-          router.replace(redirectTarget)
-        }
-      })
+      if (session?.user) {
+        console.log('User authenticated:', session.user.email)
 
-      // Also check immediately
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+        // Check if user is admin
         const { data: admin } = await supabase
           .from('admins')
           .select('id')
@@ -50,24 +31,30 @@ export default function AuthCallback() {
 
         let redirectTarget = '/patient/dashboard'
         if (admin) {
+          console.log('User is admin, redirecting to /admin')
           redirectTarget = '/admin'
+        } else {
+          console.log('User is patient, redirecting to /patient/dashboard')
         }
 
-        console.log({
-          email: session.user.email,
-          isAdmin: !!admin,
-          redirectTarget
-        })
+        // Get next parameter from URL
+        const params = new URLSearchParams(window.location.search)
+        const next = params.get('next')
+        if (next && ['/book', '/my-bookings'].includes(next)) {
+          redirectTarget = next
+          console.log('Using next parameter:', redirectTarget)
+        }
 
-        subscription.unsubscribe()
+        console.log('Final redirect:', redirectTarget)
         router.replace(redirectTarget)
+      } else {
+        console.log('No session found, redirecting to login')
+        router.replace('/admin/login')
       }
 
-      // Timeout
       setTimeout(() => {
         setChecking(false)
-        subscription.unsubscribe()
-      }, 8000)
+      }, 2000)
     }
 
     handleAuth()
