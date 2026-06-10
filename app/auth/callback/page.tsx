@@ -20,33 +20,44 @@ export default function AuthCallback() {
       console.log('Error:', error)
 
       if (session?.user) {
-        console.log('User authenticated:', session.user.email)
+        const userEmail = session.user.email
+        console.log('User authenticated:', userEmail)
 
-        // Check if user is admin
-        const { data: admin } = await supabase
-          .from('admins')
-          .select('id')
-          .eq('id', session.user.id)
-          .single()
-
-        let redirectTarget = '/patient/dashboard'
-        if (admin) {
-          console.log('User is admin, redirecting to /admin')
-          redirectTarget = '/admin'
-        } else {
-          console.log('User is patient, redirecting to /patient/dashboard')
-        }
-
-        // Get next parameter from URL
+        // Check URL for admin flag
         const params = new URLSearchParams(window.location.search)
-        const next = params.get('next')
-        if (next && ['/book', '/my-bookings'].includes(next)) {
-          redirectTarget = next
-          console.log('Using next parameter:', redirectTarget)
-        }
+        const isAdminFlow = params.get('admin') === 'true'
 
-        console.log('Final redirect:', redirectTarget)
-        router.replace(redirectTarget)
+        if (isAdminFlow) {
+          // Check if user is in admins table by email
+          const { data: admin } = await supabase
+            .from('admins')
+            .select('id')
+            .eq('email', userEmail)
+            .single()
+
+          if (admin) {
+            console.log('User is admin, redirecting to /admin')
+            router.replace('/admin')
+          } else {
+            console.log('User is not admin, redirecting to /unauthorized')
+            router.replace('/unauthorized')
+          }
+        } else {
+          // Patient flow - check if user is admin, else go to patient dashboard
+          const { data: admin } = await supabase
+            .from('admins')
+            .select('id')
+            .eq('email', userEmail)
+            .single()
+
+          if (admin) {
+            console.log('User is admin, redirecting to /admin')
+            router.replace('/admin')
+          } else {
+            console.log('User is patient, redirecting to /patient/dashboard')
+            router.replace('/patient/dashboard')
+          }
+        }
       } else {
         console.log('No session found, redirecting to login')
         router.replace('/admin/login')

@@ -19,20 +19,21 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        // Check by email since OAuth doesn't create users in auth.users with the same id
         const { data: admin } = await supabase
           .from('admins')
           .select('id')
-          .eq('id', user.id)
+          .eq('email', user.email)
           .single()
 
         if (!admin) {
-          router.push('/patient/dashboard')
+          router.push('/unauthorized')
           return
         }
 
         setIsAdmin(true)
       } catch {
-        router.push('/patient/dashboard')
+        router.push('/unauthorized')
       } finally {
         setChecking(false)
       }
