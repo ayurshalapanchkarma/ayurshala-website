@@ -315,6 +315,9 @@ export async function POST(req: NextRequest) {
       .eq('booking_id', booking_id).eq('patient_uuid', patient_uuid).single()
     if (!booking) return NextResponse.json({ error: 'Booking not found.' }, { status: 404 })
 
+    // Task 1: Transition guards
+    if (booking.status === 'CANCELLED') return NextResponse.json({ error: 'Cancelled appointments cannot be rescheduled.' }, { status: 409 })
+    if (booking.status === 'RESCHEDULED') return NextResponse.json({ error: 'This booking already has a pending reschedule request.' }, { status: 409 })
     if (!['CONFIRMED', 'PENDING_CONFIRMATION'].includes(booking.status))
       return NextResponse.json({ error: 'This booking cannot be rescheduled.' }, { status: 400 })
 

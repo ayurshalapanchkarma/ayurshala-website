@@ -24,6 +24,7 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
   CONFIRMED:            { label: 'Confirmed',             cls: 'bg-green-100 text-green-700' },
   PENDING_CONFIRMATION: { label: 'Awaiting Confirmation', cls: 'bg-amber-100 text-amber-700' },
   PAYMENT_PENDING:      { label: 'Payment Pending',       cls: 'bg-amber-100 text-amber-700' },
+  RESCHEDULED:          { label: 'Rescheduled',           cls: 'bg-orange-100 text-orange-700' },
   CANCELLED:            { label: 'Cancelled',             cls: 'bg-red-100 text-red-700' },
   COMPLETED:            { label: 'Completed',             cls: 'bg-blue-100 text-blue-700' },
   IN_PROGRESS:          { label: 'In Progress',           cls: 'bg-purple-100 text-purple-700' },
@@ -238,7 +239,7 @@ export default function MyBookingsPage() {
 
         <div className="space-y-3">
           {bookings.map(b => {
-            const canModify = ['CONFIRMED', 'PENDING_CONFIRMATION'].includes(b.status) && hoursUntil(b.preferred_date, b.preferred_time) >= 24
+            const canModify = ['CONFIRMED', 'PENDING_CONFIRMATION', 'RESCHEDULED'].includes(b.status) && hoursUntil(b.preferred_date, b.preferred_time) >= 24
             const cfg = statusConfig[b.status] || { label: b.status, cls: 'bg-stone-100 text-stone-600' }
             const pCfg = paymentConfig[b.payment_status] || { label: b.payment_status, cls: 'text-stone-400' }
             const wasPaid = b.payment_status === 'SUCCESS'
@@ -254,6 +255,8 @@ export default function MyBookingsPage() {
                   </div>
                   <span className={`text-xs px-2.5 py-1 rounded-full font-sans shrink-0 ${cfg.cls}`}>{cfg.label}</span>
                 </div>
+
+                {b.status === 'RESCHEDULED' && <p className="font-sans text-xs text-orange-600 mb-2">Your appointment has been rescheduled and is awaiting review.</p>}
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-sans text-stone-400 mb-3">
                   {b.preferred_date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(b.preferred_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
