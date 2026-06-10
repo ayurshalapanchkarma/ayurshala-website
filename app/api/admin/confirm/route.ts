@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
   const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
   const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
-  const { data: paymentData } = await supabase.from('payments').select('amount').eq('booking_uuid', booking.id).single()
+  const { data: paymentData } = await supabase.from('payments').select('amount').eq('booking_id', booking.booking_id).single()
   const actualAmount = paymentData?.amount || (booking.booking_type === 'consultation' ? 500 : 1000)
   const amountLabel = `₹${actualAmount} — Cash on Arrival`
   const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })

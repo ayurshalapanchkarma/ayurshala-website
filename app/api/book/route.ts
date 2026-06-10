@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
     })
 
     const { error: paymentError } = await supabase.from('payments').insert({
-      booking_uuid: booking.id,
+      booking_id: booking.booking_id,
       patient_uuid,
       cashfree_order_id: booking.booking_id,
       amount,
