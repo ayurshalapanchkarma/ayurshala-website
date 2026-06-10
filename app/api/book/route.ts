@@ -171,23 +171,7 @@ export async function POST(req: NextRequest) {
     const paymentStatusVal = isCod ? 'PENDING' : 'SUCCESS'
     const bookingStatusVal = isCod ? 'PENDING_CONFIRMATION' : 'CONFIRMED'
 
-    await supabase.from('bookings_new').update({ status: bookingStatusVal, payment_status: paymentStatusVal }).eq('booking_id', booking_id)
-    await supabase.from('payments').update({
-      status: paymentStatusVal,
-      transaction_id: transaction_id || '',
-      paid_at: isCod ? null : new Date().toISOString(),
-    }).eq('cashfree_order_id', cashfree_order_id)
-
-    if (!isCod) {
-      await supabase.from('invoices').insert({ booking_uuid: booking.id, amount: booking.booking_type === 'consultation' ? 500 : 1000 })
-    }
-
-    await auditLog(booking.id, booking.patient_uuid, isCod ? 'COD_BOOKING_RECEIVED' : 'PAYMENT_SUCCESS', null, { bookingStatusVal, paymentStatusVal })
-
-    const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
-    const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
-    
-    // Recalculate amount same as in create-order
+    // Calculate amount (before any updates)
     const consultationFee = parseInt(await getSetting('consultation_fee', '500'))
     const therapyAdvanceFee = parseInt(await getSetting('therapy_advance_fee', '500'))
     let amount = 0
@@ -198,6 +182,23 @@ export async function POST(req: NextRequest) {
     } else if (booking.booking_type === 'consultation_and_therapy') {
       amount = consultationFee + therapyAdvanceFee
     }
+
+    await supabase.from('bookings_new').update({ status: bookingStatusVal, payment_status: paymentStatusVal }).eq('booking_id', booking_id)
+    await supabase.from('payments').update({
+      status: paymentStatusVal,
+      transaction_id: transaction_id || '',
+      paid_at: isCod ? null : new Date().toISOString(),
+      amount: amount || undefined, // Update amount if calculated
+    }).eq('cashfree_order_id', cashfree_order_id)
+
+    if (!isCod) {
+      await supabase.from('invoices').insert({ booking_uuid: booking.id, amount: booking.booking_type === 'consultation' ? 500 : 1000 })
+    }
+
+    await auditLog(booking.id, booking.patient_uuid, isCod ? 'COD_BOOKING_RECEIVED' : 'PAYMENT_SUCCESS', null, { bookingStatusVal, paymentStatusVal })
+
+    const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
+    const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
     
     // Check for TEST therapy (₹1)
     const testTreatments = treatmentRows?.filter((t: any) => t.treatment_name.includes('TEST')) || []

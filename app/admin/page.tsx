@@ -106,7 +106,7 @@ export default function AdminPage() {
       cash: data?.filter((b: Booking) => b.payment_method === 'CASH_ON_ARRIVAL').length || 0,
       refunds: data?.filter((b: Booking) => b.payment_status === 'REFUNDED').length || 0,
       completed: data?.filter((b: Booking) => b.status === 'COMPLETED').length || 0,
-      revenue: data?.reduce((sum: number, b: Booking) => sum + (b.amount || 0), 0) || 0,
+      revenue: data?.filter((b: Booking) => b.payment_status === 'SUCCESS').reduce((sum: number, b: Booking) => sum + (b.amount || 0), 0) || 0,
     })
     
     setBookings(data || [])
