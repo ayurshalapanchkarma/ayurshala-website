@@ -111,12 +111,34 @@ export async function POST(req: NextRequest) {
     )
 
     // Payment record
-    await supabase.from('payments').insert({
-      booking_uuid: booking.id, patient_uuid,
+    console.log('[BOOKING] Creating payment record', {
+      booking_uuid: booking.id,
+      patient_uuid,
+      booking_id: booking.booking_id,
+      amount,
+    })
+
+    const { error: paymentError } = await supabase.from('payments').insert({
+      booking_uuid: booking.id,
+      patient_uuid,
       cashfree_order_id: booking.booking_id,
-      amount, status: 'PENDING',
+      amount,
+      status: 'PENDING',
       payment_method: isCod ? 'CASH_ON_ARRIVAL' : 'ONLINE',
     })
+
+    if (paymentError) {
+      console.error('[BOOKING] Payment insert failed:', paymentError)
+      return NextResponse.json(
+        {
+          error: 'Failed to create payment record',
+          details: paymentError.message,
+        },
+        { status: 500 }
+      )
+    }
+
+    console.log('[BOOKING] Payment record created successfully')
 
     await auditLog(booking.id, patient_uuid, 'BOOKING_CREATED', null, { booking_type, preferred_date, preferred_time, payment_method })
 
