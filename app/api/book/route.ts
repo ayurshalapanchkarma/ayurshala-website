@@ -318,6 +318,7 @@ export async function POST(req: NextRequest) {
     // Task 1: Transition guards
     if (booking.status === 'CANCELLED') return NextResponse.json({ error: 'Cancelled appointments cannot be rescheduled.' }, { status: 409 })
     if (booking.status === 'RESCHEDULED') return NextResponse.json({ error: 'This booking already has a pending reschedule request.' }, { status: 409 })
+    if (booking.is_rescheduled) return NextResponse.json({ error: 'This appointment has already been rescheduled once and cannot be rescheduled again.' }, { status: 409 })
     if (!['CONFIRMED', 'PENDING_CONFIRMATION'].includes(booking.status))
       return NextResponse.json({ error: 'This booking cannot be rescheduled.' }, { status: 400 })
 

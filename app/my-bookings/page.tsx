@@ -239,8 +239,24 @@ export default function MyBookingsPage() {
 
         <div className="space-y-3">
           {bookings.map(b => {
-            const canModify = ['CONFIRMED', 'PENDING_CONFIRMATION', 'RESCHEDULED'].includes(b.status) && hoursUntil(b.preferred_date, b.preferred_time) >= 24
-            const cfg = statusConfig[b.status] || { label: b.status, cls: 'bg-stone-100 text-stone-600' }
+            const hours = hoursUntil(b.preferred_date, b.preferred_time)
+            const canCancel = (b.status === 'PENDING_CONFIRMATION' || b.status === 'CONFIRMED') && hours >= 24
+            const canReschedule = (b.status === 'PENDING_CONFIRMATION' || (b.status === 'CONFIRMED' && !b.is_rescheduled)) && hours >= 24
+            
+            // Badge logic
+            let badgeLabel = '', badgeCls = ''
+            if (b.status === 'CONFIRMED' && b.is_rescheduled) {
+              badgeLabel = 'Rescheduled Confirmed'
+              badgeCls = 'bg-emerald-100 text-emerald-700'
+            } else if (b.status === 'RESCHEDULED') {
+              badgeLabel = 'Rescheduled'
+              badgeCls = 'bg-orange-100 text-orange-700'
+            } else {
+              const cfg = statusConfig[b.status] || { label: b.status, cls: 'bg-stone-100 text-stone-600' }
+              badgeLabel = cfg.label
+              badgeCls = cfg.cls
+            }
+            
             const pCfg = paymentConfig[b.payment_status] || { label: b.payment_status, cls: 'text-stone-400' }
             const wasPaid = b.payment_status === 'SUCCESS'
 
@@ -253,10 +269,11 @@ export default function MyBookingsPage() {
                       {(b.booking_treatments_v2 as any)?.map((t: any) => t.treatment_name).join(', ') || '—'}
                     </p>
                   </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-sans shrink-0 ${cfg.cls}`}>{cfg.label}</span>
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-sans shrink-0 ${badgeCls}`}>{badgeLabel}</span>
                 </div>
 
-                {b.status === 'RESCHEDULED' && <p className="font-sans text-xs text-orange-600 mb-2">Your appointment has been rescheduled and is awaiting review.</p>}
+                {b.status === 'RESCHEDULED' && <p className="font-sans text-xs text-orange-600 mb-2">Your reschedule request is awaiting clinic approval.</p>}
+                {b.status === 'CONFIRMED' && b.is_rescheduled && <p className="font-sans text-xs text-emerald-600 mb-2">Your rescheduled appointment has been approved by the clinic.</p>}
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-sans text-stone-400 mb-3">
                   {b.preferred_date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(b.preferred_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
@@ -270,12 +287,16 @@ export default function MyBookingsPage() {
 
                 {b.concern && <p className="font-sans text-xs text-stone-400 mb-3 line-clamp-2">{b.concern}</p>}
 
-                {canModify && (
+                {(canReschedule || canCancel) && (
                   <div className="flex gap-2 flex-wrap">
-                    <button onClick={() => { setRescheduleBooking(b); setNewDate(''); setNewTime(''); setRescheduleReason(''); setRescheduleError('') }}
-                      className="btn-glass text-xs py-1.5 px-3 flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Reschedule</button>
-                    <button onClick={() => setCancelId(b.booking_id)}
-                      className="text-xs py-1.5 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors flex items-center gap-1"><Trash2 className="w-3 h-3" /> Cancel</button>
+                    {canReschedule && (
+                      <button onClick={() => { setRescheduleBooking(b); setNewDate(''); setNewTime(''); setRescheduleReason(''); setRescheduleError('') }}
+                        className="btn-glass text-xs py-1.5 px-3 flex items-center gap-1"><RotateCcw className="w-3 h-3" /> Reschedule</button>
+                    )}
+                    {canCancel && (
+                      <button onClick={() => setCancelId(b.booking_id)}
+                        className="text-xs py-1.5 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors flex items-center gap-1"><Trash2 className="w-3 h-3" /> Cancel</button>
+                    )}
                   </div>
                 )}
                 {b.status === 'PENDING_CONFIRMATION' && b.payment_method === 'CASH_ON_ARRIVAL' && (
