@@ -25,6 +25,7 @@ const statusConfig: Record<string, { label: string; cls: string }> = {
   PENDING_CONFIRMATION: { label: 'Awaiting Confirmation', cls: 'bg-amber-100 text-amber-700' },
   PAYMENT_PENDING:      { label: 'Payment Pending',       cls: 'bg-amber-100 text-amber-700' },
   RESCHEDULED:          { label: 'Rescheduled',           cls: 'bg-orange-100 text-orange-700' },
+  RESCHEDULE_REJECTED:  { label: 'Reschedule Declined',   cls: 'bg-red-100 text-red-700' },
   CANCELLED:            { label: 'Cancelled',             cls: 'bg-red-100 text-red-700' },
   COMPLETED:            { label: 'Completed',             cls: 'bg-blue-100 text-blue-700' },
   IN_PROGRESS:          { label: 'In Progress',           cls: 'bg-purple-100 text-purple-700' },
@@ -214,7 +215,7 @@ export default function PatientBookingsPage() {
             const hours = hoursUntil(b.preferred_date, b.preferred_time)
             const isRescheduled = (b as any).rescheduled_at !== null
             const canCancel = (b.status === 'PENDING_CONFIRMATION' || b.status === 'CONFIRMED') && hours >= 24
-            const canReschedule = (b.status === 'PENDING_CONFIRMATION' || (b.status === 'CONFIRMED' && !isRescheduled)) && hours >= 24
+            const canReschedule = (b.status === 'PENDING_CONFIRMATION' || (b.status === 'CONFIRMED' && !b.is_rescheduled)) && hours >= 24
             
             // Badge logic
             let badgeLabel = '', badgeCls = ''
@@ -246,8 +247,7 @@ export default function PatientBookingsPage() {
 
                 {b.status === 'RESCHEDULED' && <p className="font-sans text-xs text-orange-600 mb-2">Your reschedule request is awaiting clinic approval.</p>}
                 {b.status === 'CONFIRMED' && b.is_rescheduled && <p className="font-sans text-xs text-emerald-600 mb-2">Your rescheduled appointment has been approved by the clinic.</p>}
-
-                {b.status === 'RESCHEDULED' && <p className="font-sans text-xs text-orange-600 mb-2">Your appointment has been rescheduled and is awaiting review.</p>}
+                {b.status === 'RESCHEDULE_REJECTED' && <p className="font-sans text-xs text-red-600 mb-2">Your reschedule request was declined. Your original appointment remains valid.</p>}
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-sans text-stone-400 mb-3">
                   {b.preferred_date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(b.preferred_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
