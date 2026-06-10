@@ -31,30 +31,140 @@ type Booking = {
   patient_email: string
   treatments: string
   amount?: number
+  rescheduled_at?: string
 }
 
 type Tab = 'all' | 'online' | 'offline' | 'refunds'
 
-const getStatusBadge = (status: string, dark: boolean) => {
-  const badges: Record<string, any> = {
-    CONFIRMED: dark ? { label: 'Confirmed', cls: 'bg-green-900/40 text-green-300' } : { label: 'Confirmed', cls: 'bg-green-100 text-green-800' },
-    PENDING_CONFIRMATION: dark ? { label: 'Pending', cls: 'bg-yellow-900/40 text-yellow-300' } : { label: 'Pending', cls: 'bg-yellow-100 text-yellow-800' },
-    CANCELLED: dark ? { label: 'Cancelled', cls: 'bg-red-900/40 text-red-300' } : { label: 'Cancelled', cls: 'bg-red-100 text-red-800' },
-    COMPLETED: dark ? { label: 'Completed', cls: 'bg-blue-900/40 text-blue-300' } : { label: 'Completed', cls: 'bg-blue-100 text-blue-700' },
-    RESCHEDULED: dark ? { label: 'Rescheduled', cls: 'bg-orange-900/40 text-orange-300' } : { label: 'Rescheduled', cls: 'bg-orange-100 text-orange-800' },
+const getStatusBadge = (booking: Booking) => {
+  const { status, rescheduled_at, payment_method, payment_status } = booking
+
+  // State: PAYMENT_PENDING
+  if (status === 'PAYMENT_PENDING') {
+    return { label: 'Payment Pending', cls: 'bg-amber-100/80 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200' }
   }
-  return badges[status] || { label: status, cls: 'bg-gray-100 text-gray-700' }
+
+  // State: PENDING_CONFIRMATION
+  if (status === 'PENDING_CONFIRMATION') {
+    return { label: 'Awaiting Confirmation', cls: 'bg-yellow-100/80 text-yellow-900 dark:bg-yellow-950/50 dark:text-yellow-200' }
+  }
+
+  // State: CONFIRMED + rescheduled_at NOT NULL
+  if (status === 'CONFIRMED' && rescheduled_at) {
+    return { label: 'Rescheduled Confirmed', cls: 'bg-emerald-100/80 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200' }
+  }
+
+  // State: CONFIRMED
+  if (status === 'CONFIRMED') {
+    return { label: 'Confirmed', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
+  }
+
+  // State: RESCHEDULED
+  if (status === 'RESCHEDULED') {
+    return { label: 'Reschedule Requested', cls: 'bg-orange-100/80 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200' }
+  }
+
+  // State: CANCELLED
+  if (status === 'CANCELLED') {
+    return { label: 'Cancelled', cls: 'bg-red-100/80 text-red-900 dark:bg-red-950/50 dark:text-red-200' }
+  }
+
+  // State: COMPLETED
+  if (status === 'COMPLETED') {
+    return { label: 'Completed', cls: 'bg-blue-100/80 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200' }
+  }
+
+  // State: NO_SHOW
+  if (status === 'NO_SHOW') {
+    return { label: 'No Show', cls: 'bg-slate-100/80 text-slate-900 dark:bg-slate-950/50 dark:text-slate-200' }
+  }
+
+  // State: IN_PROGRESS
+  if (status === 'IN_PROGRESS') {
+    return { label: 'In Progress', cls: 'bg-indigo-100/80 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200' }
+  }
+
+  return { label: status, cls: 'bg-gray-100/80 text-gray-900 dark:bg-gray-950/50 dark:text-gray-200' }
 }
 
-const getPaymentBadge = (status: string, dark: boolean) => {
-  const badges: Record<string, any> = {
-    SUCCESS: dark ? { label: 'Paid', cls: 'bg-emerald-900/40 text-emerald-300' } : { label: 'Paid', cls: 'bg-green-100 text-green-800' },
-    PENDING: dark ? { label: 'Pending', cls: 'bg-amber-900/40 text-amber-300' } : { label: 'Pending', cls: 'bg-amber-100 text-amber-800' },
-    FAILED: dark ? { label: 'Failed', cls: 'bg-red-900/40 text-red-300' } : { label: 'Failed', cls: 'bg-red-100 text-red-800' },
-    REFUNDED: dark ? { label: 'Refunded', cls: 'bg-blue-900/40 text-blue-300' } : { label: 'Refunded', cls: 'bg-blue-100 text-blue-700' },
-    COD_PENDING: dark ? { label: 'Cash Pending', cls: 'bg-amber-900/40 text-amber-300' } : { label: 'Cash Pending', cls: 'bg-amber-100 text-amber-800' },
+const getPaymentBadge = (booking: Booking) => {
+  const { status, payment_method, payment_status } = booking
+
+  // State: PAYMENT_PENDING
+  if (status === 'PAYMENT_PENDING') {
+    return { label: 'Pending', cls: 'bg-gray-100/80 text-gray-900 dark:bg-gray-950/50 dark:text-gray-200' }
   }
-  return badges[status] || { label: status, cls: 'bg-gray-100 text-gray-700' }
+
+  // State: PENDING_CONFIRMATION + ONLINE + PAID
+  if (status === 'PENDING_CONFIRMATION' && payment_method === 'ONLINE' && payment_status === 'PAID') {
+    return { label: 'Paid', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
+  }
+
+  // State: PENDING_CONFIRMATION + CASH_ON_ARRIVAL + PENDING
+  if (status === 'PENDING_CONFIRMATION' && payment_method === 'CASH_ON_ARRIVAL' && payment_status === 'PENDING') {
+    return { label: 'Cash Pending', cls: 'bg-orange-100/80 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200' }
+  }
+
+  // State: CONFIRMED + ONLINE + PAID
+  if (status === 'CONFIRMED' && payment_method === 'ONLINE' && payment_status === 'PAID') {
+    return { label: 'Paid', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
+  }
+
+  // State: CONFIRMED + CASH_ON_ARRIVAL + PENDING
+  if (status === 'CONFIRMED' && payment_method === 'CASH_ON_ARRIVAL' && payment_status === 'PENDING') {
+    return { label: 'Cash Pending', cls: 'bg-orange-100/80 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200' }
+  }
+
+  // State: CONFIRMED + CASH_ON_ARRIVAL + PAID
+  if (status === 'CONFIRMED' && payment_method === 'CASH_ON_ARRIVAL' && payment_status === 'PAID') {
+    return { label: 'Paid', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
+  }
+
+  // Preserve existing payment state for other statuses
+  if (payment_status === 'PAID' || payment_status === 'SUCCESS') {
+    return { label: 'Paid', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
+  }
+
+  if (payment_status === 'PENDING' || payment_status === 'COD_PENDING') {
+    return { label: 'Cash Pending', cls: 'bg-orange-100/80 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200' }
+  }
+
+  if (payment_status === 'REFUNDED') {
+    return { label: 'Refunded', cls: 'bg-blue-100/80 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200' }
+  }
+
+  if (payment_status === 'FAILED') {
+    return { label: 'Failed', cls: 'bg-red-100/80 text-red-900 dark:bg-red-950/50 dark:text-red-200' }
+  }
+
+  return { label: payment_status || 'Unknown', cls: 'bg-gray-100/80 text-gray-900 dark:bg-gray-950/50 dark:text-gray-200' }
+}
+
+const getAvailableActions = (booking: Booking) => {
+  const { status } = booking
+
+  // PAYMENT_PENDING: No actions
+  if (status === 'PAYMENT_PENDING') return []
+
+  // PENDING_CONFIRMATION: Confirm, Cancel
+  if (status === 'PENDING_CONFIRMATION') return ['confirm', 'cancel']
+
+  // CONFIRMED (not rescheduled): Cancel only
+  if (status === 'CONFIRMED' && !booking.rescheduled_at) return ['cancel']
+
+  // CONFIRMED + rescheduled: Cancel only (no Reschedule button)
+  if (status === 'CONFIRMED' && booking.rescheduled_at) return ['cancel']
+
+  // RESCHEDULED: Approve Reschedule, Reject Reschedule
+  if (status === 'RESCHEDULED') return ['approve_reschedule', 'reject_reschedule']
+
+  // CANCELLED, COMPLETED, NO_SHOW: No actions
+  if (['CANCELLED', 'COMPLETED', 'NO_SHOW'].includes(status)) return []
+
+  // IN_PROGRESS: Mark Completed, Mark No Show
+  if (status === 'IN_PROGRESS') return ['mark_completed', 'mark_no_show']
+
+  return []
 }
 
 export default function AdminPage() {
@@ -117,30 +227,22 @@ export default function AdminPage() {
     setLoading(false)
   }
 
-  async function confirm(booking_id: string) {
-    const res = await fetch('/api/admin/bookings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'confirm', booking_id }),
-    })
-    if (res.ok) {
-      setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, status: 'CONFIRMED' } : b))
-      // Show success toast
-      const evt = new CustomEvent('bookingUpdated', { detail: { booking_id, action: 'confirmed' } })
-      window.dispatchEvent(evt)
-    }
-  }
+  async function performAction(booking_id: string, action: string) {
+    const endpoint = action === 'confirm' ? '/api/admin/confirm' : 
+                     action === 'cancel' ? '/api/admin/cancel' :
+                     action === 'approve_reschedule' ? '/api/admin/confirm-reschedule' :
+                     action === 'reject_reschedule' ? '/api/admin/cancel-reschedule' :
+                     '/api/admin/bookings'
 
-  async function cancel(booking_id: string) {
-    const res = await fetch('/api/admin/bookings', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'cancel', booking_id }),
+      body: JSON.stringify({ action, booking_id }),
     })
+
     if (res.ok) {
-      setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, status: 'CANCELLED' } : b))
-      // Show success toast
-      const evt = new CustomEvent('bookingUpdated', { detail: { booking_id, action: 'cancelled' } })
+      await fetchBookings()
+      const evt = new CustomEvent('bookingUpdated', { detail: { booking_id, action } })
       window.dispatchEvent(evt)
     }
   }
@@ -261,25 +363,44 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map((b, i) => (
-                    <tr key={b.id} className={`rounded-lg transition ${dark ? 'bg-slate-900/50 hover:bg-slate-800/50' : 'bg-white/60 hover:bg-white/80'} backdrop-blur-md border ${dark ? 'border-white/10' : 'border-white/20'}`}
-                      style={{ boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.5)' }}>
-                      <td className="px-4 py-3 font-mono font-semibold tracking-wide" style={{ color: '#E8621A' }}>{b.booking_id}</td>
-                      <td className={`px-4 py-3 text-sm ${dark ? 'text-gray-200' : 'text-stone-900'}`}><p>{b.patient_name}</p><p className={`text-xs ${dark ? 'text-gray-400' : 'text-stone-600'}`}>{b.patient_email}</p></td>
-                      <td className={`px-4 py-3 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>{b.preferred_date} {b.preferred_time}</td>
-                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs ${getStatusBadge(b.status, dark).cls}`}>{getStatusBadge(b.status, dark).label}</span></td>
-                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs ${getPaymentBadge(b.payment_status, dark).cls}`}>{getPaymentBadge(b.payment_status, dark).label}</span></td>
-                      {activeTab === 'online' && <td className={`px-4 py-3 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>₹{b.amount || 0}</td>}
-                      <td className="px-4 py-3">
-                        {b.status === 'PENDING_CONFIRMATION' && (
-                          <div className="flex gap-2">
-                            <button onClick={() => confirm(b.booking_id)} className="px-2 py-1 rounded bg-green-500 text-white text-xs hover:bg-green-600 transition">Confirm</button>
-                            <button onClick={() => cancel(b.booking_id)} className="px-2 py-1 rounded bg-red-500 text-white text-xs hover:bg-red-600 transition">Cancel</button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {bookings.map((b, i) => {
+                    const actions = getAvailableActions(b)
+                    return (
+                      <tr key={b.id} className={`rounded-lg transition ${dark ? 'bg-slate-900/50 hover:bg-slate-800/50' : 'bg-white/60 hover:bg-white/80'} backdrop-blur-md border ${dark ? 'border-white/10' : 'border-white/20'}`}
+                        style={{ boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.5)' }}>
+                        <td className="px-4 py-3 font-mono font-semibold tracking-wide" style={{ color: '#E8621A' }}>{b.booking_id}</td>
+                        <td className={`px-4 py-3 text-sm ${dark ? 'text-gray-200' : 'text-stone-900'}`}><p>{b.patient_name}</p><p className={`text-xs ${dark ? 'text-gray-400' : 'text-stone-600'}`}>{b.patient_email}</p></td>
+                        <td className={`px-4 py-3 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>{b.preferred_date} {b.preferred_time}</td>
+                        <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusBadge(b).cls}`}>{getStatusBadge(b).label}</span></td>
+                        <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs font-medium ${getPaymentBadge(b).cls}`}>{getPaymentBadge(b).label}</span></td>
+                        {activeTab === 'online' && <td className={`px-4 py-3 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>₹{b.amount || 0}</td>}
+                        <td className="px-4 py-3">
+                          {actions.length > 0 && (
+                            <div className="flex gap-2 flex-wrap">
+                              {actions.includes('confirm') && (
+                                <button onClick={() => performAction(b.booking_id, 'confirm')} className="px-2 py-1 rounded bg-green-500 text-white text-xs hover:bg-green-600 transition">Confirm</button>
+                              )}
+                              {actions.includes('cancel') && (
+                                <button onClick={() => performAction(b.booking_id, 'cancel')} className="px-2 py-1 rounded bg-red-500 text-white text-xs hover:bg-red-600 transition">Cancel</button>
+                              )}
+                              {actions.includes('approve_reschedule') && (
+                                <button onClick={() => performAction(b.booking_id, 'approve_reschedule')} className="px-2 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600 transition">Approve</button>
+                              )}
+                              {actions.includes('reject_reschedule') && (
+                                <button onClick={() => performAction(b.booking_id, 'reject_reschedule')} className="px-2 py-1 rounded bg-orange-500 text-white text-xs hover:bg-orange-600 transition">Reject</button>
+                              )}
+                              {actions.includes('mark_completed') && (
+                                <button onClick={() => performAction(b.booking_id, 'mark_completed')} className="px-2 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600 transition">Completed</button>
+                              )}
+                              {actions.includes('mark_no_show') && (
+                                <button onClick={() => performAction(b.booking_id, 'mark_no_show')} className="px-2 py-1 rounded bg-slate-500 text-white text-xs hover:bg-slate-600 transition">No Show</button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
