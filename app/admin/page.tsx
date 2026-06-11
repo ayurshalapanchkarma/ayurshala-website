@@ -24,6 +24,7 @@ type Booking = {
   status: string
   payment_status: string
   payment_method: string
+  refund_status?: string
   created_at: string
   patient_name: string
   patient_id: string
@@ -133,6 +134,10 @@ const getPaymentBadge = (booking: Booking) => {
     return { label: 'Refunded', cls: 'bg-blue-100/80 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200' }
   }
 
+  if (payment_status === 'REFUND_PENDING') {
+    return { label: 'Refund Pending', cls: 'bg-indigo-100/80 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200' }
+  }
+
   if (payment_status === 'FAILED') {
     return { label: 'Failed', cls: 'bg-red-100/80 text-red-900 dark:bg-red-950/50 dark:text-red-200' }
   }
@@ -141,7 +146,7 @@ const getPaymentBadge = (booking: Booking) => {
 }
 
 const getAvailableActions = (booking: Booking) => {
-  const { status } = booking
+  const { status, refund_status } = booking
 
   // PAYMENT_PENDING: No actions
   if (status === 'PAYMENT_PENDING') return []
@@ -157,6 +162,9 @@ const getAvailableActions = (booking: Booking) => {
 
   // RESCHEDULED: Approve Reschedule, Reject Reschedule
   if (status === 'RESCHEDULED') return ['approve_reschedule', 'reject_reschedule']
+
+  // CANCELLED + REFUND_PENDING: Show Mark as Refunded
+  if (status === 'CANCELLED' && refund_status === 'REFUND_PENDING') return ['mark_refunded']
 
   // CANCELLED, COMPLETED, NO_SHOW: No actions
   if (['CANCELLED', 'COMPLETED', 'NO_SHOW'].includes(status)) return []
@@ -243,6 +251,7 @@ export default function AdminPage() {
                      action === 'cancel' ? '/api/admin/cancel' :
                      action === 'approve_reschedule' ? '/api/admin/confirm-reschedule' :
                      action === 'reject_reschedule' ? '/api/admin/cancel-reschedule' :
+                     action === 'mark_refunded' ? '/api/admin/refund' :
                      '/api/admin/bookings'
 
     const res = await fetch(endpoint, {
@@ -413,6 +422,9 @@ export default function AdminPage() {
                               )}
                               {actions.includes('mark_no_show') && (
                                 <button onClick={() => performAction(b.booking_id, 'mark_no_show')} className="px-2 py-0.5 rounded bg-slate-500 text-white text-xs hover:bg-slate-600 transition">No Show</button>
+                              )}
+                              {actions.includes('mark_refunded') && (
+                                <button onClick={() => performAction(b.booking_id, 'mark_refunded')} className="px-2 py-0.5 rounded bg-indigo-500 text-white text-xs hover:bg-indigo-600 transition">Mark as Refunded</button>
                               )}
                             </div>
                           )}
