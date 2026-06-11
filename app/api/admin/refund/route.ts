@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     // Get booking to validate refund amount
     const { data: booking } = await supabase.from('bookings_new').select('*').eq('booking_id', booking_id).single()
     if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
-    if (refund_amount > (booking.amount || 0)) return NextResponse.json({ error: 'Refund amount exceeds paid amount' }, { status: 400 })
+    if (refund_amount > (booking.amount_paid || 0)) return NextResponse.json({ error: 'Refund amount exceeds paid amount' }, { status: 400 })
 
     // Update booking with refund details
     const { error } = await supabase
