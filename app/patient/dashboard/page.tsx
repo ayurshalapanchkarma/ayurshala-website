@@ -21,7 +21,7 @@ export default function PatientDashboard() {
     if (!loading && !user) {
       router.push('/admin/login')
     } else if (user?.id) {
-      supabase.from('patients').select('patient_id').eq('id', user.id).single().then(({ data }) => {
+      supabase.from('patients').select('patient_id').eq('google_user_id', user.id).single().then(({ data }) => {
         setPatient(data)
       })
     }
