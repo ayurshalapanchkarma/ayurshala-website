@@ -72,7 +72,7 @@ export default function Contact() {
 
   return (
     <>
-      <section id="contact" className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden">
+      <section id="contact" className="py-12 sm:py-16 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute bottom-0 right-0 w-56 sm:w-96 md:w-[500px] h-56 sm:h-96 md:h-[500px] rounded-full opacity-10 pointer-events-none hidden sm:block"
           style={{ background: 'radial-gradient(circle, #E8621A 0%, transparent 70%)', transform: 'translate(30%, 30%)' }} />
         <div className="absolute top-0 left-0 w-48 sm:w-80 md:w-[400px] h-48 sm:h-80 md:h-[400px] rounded-full opacity-10 pointer-events-none hidden sm:block"
@@ -83,7 +83,7 @@ export default function Contact() {
             initial={{ opacity: 0, y: 30 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-center mb-8 sm:mb-12"
           >
             <p className="font-sans text-xs tracking-[0.4em] uppercase text-brand/60 mb-3">Get In Touch</p>
             <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light leading-tight mb-4" style={{ color: '#1a1008' }}>Begin Your Healing Journey</h2>
@@ -263,8 +263,8 @@ export default function Contact() {
             initial={{ opacity: 0, y: 30 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-8 glass rounded-3xl overflow-hidden"
-            style={{ height: '340px' }}
+            className="mt-6 glass rounded-3xl overflow-hidden"
+            style={{ height: '280px' }}
           >
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3506.4935002688903!2d77.38978277553757!3d28.494796475740262!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce9ab24cb9bab%3A0x52d2fbabe991d5fd!2sAyurshala%20Ayurveda%20and%20Panchakarma%20Center!5e0!3m2!1sen!2sin!4v1780323078912!5m2!1sen!2sin"
@@ -280,8 +280,8 @@ export default function Contact() {
         </div>
       </section>
 
-      <footer className="px-6 pb-6 pt-2">
-        <div className="max-w-6xl mx-auto rounded-3xl px-8 py-5"
+      <footer className="px-6 pb-3 pt-1">
+        <div className="max-w-6xl mx-auto rounded-3xl px-8 py-3"
           style={{
             background: 'rgba(255,255,255,0.08)',
             backdropFilter: 'blur(12px) saturate(180%) contrast(1.05) brightness(1.08)',
@@ -290,8 +290,8 @@ export default function Contact() {
             boxShadow: '0 8px 32px rgba(232,98,26,0.06), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(255,255,255,0.1)',
           }}
         >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-2 mb-2">
-            <Image src="/ayurshala_text.png" alt="Ayurshala" width={280} height={80} className="object-contain h-16 w-auto" />
+          <div className="flex flex-col md:flex-row items-center justify-between gap-2 mb-1">
+            <Image src="/ayurshala_text.png" alt="Ayurshala" width={280} height={80} className="object-contain h-12 w-auto" />
 
             <div className="flex items-center gap-4">
               <a href="https://www.youtube.com/@AyurshalaPanchkarma-bm6cq" target="_blank" rel="noopener noreferrer"
@@ -330,7 +330,7 @@ export default function Contact() {
               <a href="/book" className="font-sans text-xs text-stone-900 hover:text-brand transition-colors">Book</a>
             </div>
           </div>
-          <div className="border-t border-stone-200/50 pt-2 text-center">
+          <div className="border-t border-stone-200/50 pt-1.5 text-center">
             <p className="font-sans text-xs text-stone-900">
               © {new Date().getFullYear()} Ayurshala Panchakarma Center. All Rights Reserved. · SP-28, Wajidpur, Sector-130, Noida — 201301
             </p>
