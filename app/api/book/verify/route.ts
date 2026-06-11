@@ -2,6 +2,7 @@ import { Cashfree, CFEnvironment } from 'cashfree-pg'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
+import { PaymentSuccessful, PaymentFailed } from '@/lib/email-template'
 
 export async function GET(req: NextRequest) {
   console.log('[PAYMENT_VERIFY] Handler entered')
@@ -86,21 +87,22 @@ export async function GET(req: NextRequest) {
         const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
         const { data: paymentData } = await supabase.from('payments').select('amount').eq('booking_id', booking.booking_id).single()
         const actualAmount = paymentData?.amount || (booking.booking_type === 'consultation' ? 500 : 1000)
-        const amountLabel = `₹${actualAmount} — Paid Online`
         const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
 
         if (patient?.email) {
+          const html = PaymentSuccessful({ patientName: patient.full_name, bookingId: originalBookingId, amount: `₹${booking.amount_paid}`, date: formattedDate, time: booking.preferred_time })
           await resend.emails.send({
             from, to: patient.email,
             subject: `Payment Received & Booking Confirmed — ${originalBookingId}`,
-            html: buildPaymentConfirmedEmail({ patient, booking, treatmentList, formattedDate, amountLabel }),
+            html,
           })
         }
 
+        const adminHtml = PaymentSuccessful({ patientName: patient?.full_name || 'Patient', bookingId: originalBookingId, amount: `₹${booking.amount_paid}`, date: formattedDate, time: booking.preferred_time })
         await resend.emails.send({
           from, to: 'ayurshalapanchkarma@gmail.com',
           subject: `${originalBookingId} — ${patient?.full_name} — Online Payment`,
-          html: buildPaymentConfirmedEmail({ patient, booking, treatmentList, formattedDate, amountLabel }),
+          html: adminHtml,
         })
 
         console.log(`[PAYMENT_VERIFY] Confirmation emails sent`)

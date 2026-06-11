@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
+import { AppointmentCancelled } from '@/lib/email-template'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,8 +28,10 @@ export async function GET(req: NextRequest) {
 
     const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
     if (patient?.email) {
+      const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+      const html = AppointmentCancelled({ patientName: patient.full_name, bookingId: booking_id, date: formattedDate, time: booking.preferred_time })
       const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
-      resend.emails.send({ from, to: patient.email, subject: `Booking Cancelled — ${booking_id}`, html: '<p>Booking cancelled</p>' }).catch(() => {})
+      resend.emails.send({ from, to: patient.email, subject: `Booking Cancelled — ${booking_id}`, html }).catch(() => {})
     }
 
     return NextResponse.redirect(new URL(`/status/cancel?type=success&booking_id=${booking_id}`, req.url))

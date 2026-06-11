@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { Resend } from 'resend'
+import { RefundCompleted } from '@/lib/email-template'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,6 +34,15 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error('Refund error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Send refund confirmation email to patient
+    const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
+    if (patient?.email) {
+      const resend = new Resend(process.env.RESEND_API_KEY)
+      const html = RefundCompleted({ patientName: patient.full_name, bookingId: booking_id, amount: `₹${refund_amount}` })
+      const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
+      resend.emails.send({ from, to: patient.email, subject: `Refund Completed — ${booking_id}`, html }).catch(() => {})
     }
 
     return NextResponse.json({ success: true, message: `Refund of ₹${refund_amount} recorded` })

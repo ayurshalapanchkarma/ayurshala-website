@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
+import { RescheduleRejected } from '@/lib/email-template'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest) {
   const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
   if (patient?.email) {
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
-    resend.emails.send({ from, to: patient.email, subject: `Reschedule Rejected — ${booking_id}`, html: '<p>Reschedule rejected</p>' }).catch(() => {})
+    const html = RescheduleRejected({ patientName: patient.full_name, bookingId: booking_id })
+    resend.emails.send({ from, to: patient.email, subject: `Reschedule Rejected — ${booking_id}`, html }).catch(() => {})
   }
 
   return NextResponse.redirect(new URL(`/status/reschedule?type=rejected&booking_id=${booking_id}`, req.url))

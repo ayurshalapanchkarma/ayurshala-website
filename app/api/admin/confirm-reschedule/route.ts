@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
+import { RescheduleApproved } from '@/lib/email-template'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,7 +31,9 @@ export async function GET(req: NextRequest) {
   const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
   if (patient?.email) {
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
-    resend.emails.send({ from, to: patient.email, subject: `Reschedule Approved — ${booking_id}`, html: '<p>Reschedule approved</p>' }).catch(() => {})
+    const newDateFmt = new Date(booking.new_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    const html = RescheduleApproved({ patientName: patient.full_name, bookingId: booking_id, newDate: newDateFmt, newTime: booking.new_time })
+    resend.emails.send({ from, to: patient.email, subject: `Reschedule Approved — ${booking_id}`, html }).catch(() => {})
   }
 
   return NextResponse.redirect(new URL(`/status/reschedule?type=approved&booking_id=${booking_id}`, req.url))
