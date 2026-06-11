@@ -27,7 +27,7 @@ function BookingDetailRow({ label, value, icon, isLast, isPayment, isBookingId, 
   const IconComponent = iconMap[icon]
   return (
     <div className={`flex items-center gap-3 px-4 py-3 ${isLast ? '' : (dark ? 'border-b border-white/06' : 'border-b border-white/15')}`}
-      style={{ background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.3)' }}>
+      style={{ background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.08)' }}>
       <IconComponent className="w-4 h-4 flex-shrink-0" style={{ color: isPayment ? paymentColor : '#E8621A' }} />
       <div className="flex-1 flex flex-col">
         <span className="font-sans text-xs text-stone-400 uppercase tracking-wider">{label}</span>
@@ -99,11 +99,11 @@ function ConfirmedContent() {
 
       <div className="max-w-md w-full relative">
         <motion.div initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.16,1,0.3,1] }}
-          className={`rounded-3xl p-8 relative overflow-hidden backdrop-blur-2xl ${dark ? 'bg-white/5 border-white/10' : 'bg-white/20 border-white/30'} border`}
+          className={`rounded-3xl p-8 relative overflow-hidden backdrop-blur-2xl ${dark ? 'bg-white/5 border-white/10' : 'bg-white/12 border-white/25'} border`}
           style={{
             backdropFilter: 'blur(40px) saturate(1.8)',
             WebkitBackdropFilter: 'blur(40px) saturate(1.8)',
-            boxShadow: '0 8px 32px rgba(255,165,0,0.08)',
+            boxShadow: '0 12px 40px rgba(255,165,0,0.08)',
           }}>
           {/* Glows */}
           <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% -10%,rgba(22,163,74,0.15) 0%,transparent 60%)' }} />
@@ -126,9 +126,9 @@ function ConfirmedContent() {
           </div>
 
           {booking ? (
-            <div className={`rounded-2xl overflow-hidden mb-6 backdrop-blur-2xl border ${dark ? 'border-white/10 bg-white/5' : 'border-white/30 bg-white/20'}`}
+            <div className={`rounded-2xl overflow-hidden mb-6 backdrop-blur-2xl border ${dark ? 'border-white/10 bg-white/5' : 'border-white/15 bg-white/10'}`}
               style={{ 
-                boxShadow: '0 8px 32px rgba(255,165,0,0.08)',
+                boxShadow: '0 12px 40px rgba(255,165,0,0.08)',
                 WebkitBackdropFilter: 'blur(50px) saturate(1.8)',
                 backdropFilter: 'blur(50px) saturate(1.8)',
               }}>
@@ -148,8 +148,8 @@ function ConfirmedContent() {
               ))}
             </div>
           ) : (
-            <div className={`rounded-2xl p-6 mb-6 text-center backdrop-blur-2xl border ${dark ? 'border-white/10 bg-white/5' : 'border-white/30 bg-white/20'}`}
-              style={{ boxShadow: '0 8px 32px rgba(255,165,0,0.08)' }}>
+            <div className={`rounded-2xl p-6 mb-6 text-center backdrop-blur-2xl border ${dark ? 'border-white/10 bg-white/5' : 'border-white/15 bg-white/10'}`}
+              style={{ boxShadow: '0 12px 40px rgba(255,165,0,0.08)' }}>
               <p className="font-sans text-sm text-stone-400">Loading booking details…</p>
             </div>
           )}
