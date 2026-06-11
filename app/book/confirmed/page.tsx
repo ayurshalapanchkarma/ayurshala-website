@@ -99,17 +99,11 @@ function ConfirmedContent() {
 
       <div className="max-w-md w-full relative">
         <motion.div initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.16,1,0.3,1] }}
-          className="rounded-3xl p-8 relative overflow-hidden"
+          className={`rounded-3xl p-8 relative overflow-hidden backdrop-blur-2xl ${dark ? 'bg-white/5 border-white/10' : 'bg-white/20 border-white/30'} border`}
           style={{
-            background: dark
-              ? 'linear-gradient(135deg,rgba(255,255,255,0.07) 0%,rgba(255,248,240,0.05) 50%,rgba(255,235,210,0.04) 100%)'
-              : 'linear-gradient(135deg,rgba(255,255,255,0.75) 0%,rgba(255,248,240,0.55) 50%,rgba(255,235,210,0.45) 100%)',
             backdropFilter: 'blur(40px) saturate(1.8)',
             WebkitBackdropFilter: 'blur(40px) saturate(1.8)',
-            border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(255,255,255,0.85)',
-            boxShadow: dark
-              ? '0 20px 80px rgba(232,98,26,0.08),0 4px 24px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1)'
-              : '0 20px 80px rgba(232,98,26,0.12),0 4px 24px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,1)',
+            boxShadow: '0 8px 32px rgba(255,165,0,0.08)',
           }}>
           {/* Glows */}
           <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% -10%,rgba(22,163,74,0.15) 0%,transparent 60%)' }} />
@@ -132,9 +126,9 @@ function ConfirmedContent() {
           </div>
 
           {booking ? (
-            <div className={`rounded-2xl overflow-hidden mb-6 border backdrop-filter backdrop-blur-2xl ${dark ? 'border-white/15 bg-white/8' : 'border-white/40 bg-white/30'}`}
+            <div className={`rounded-2xl overflow-hidden mb-6 backdrop-blur-2xl border ${dark ? 'border-white/10 bg-white/5' : 'border-white/30 bg-white/20'}`}
               style={{ 
-                boxShadow: dark ? '0 12px 48px rgba(232,98,26,0.15), inset 0 1px 0 rgba(255,255,255,0.2)' : '0 12px 48px rgba(232,98,26,0.18), inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.08)',
+                boxShadow: '0 8px 32px rgba(255,165,0,0.08)',
                 WebkitBackdropFilter: 'blur(50px) saturate(1.8)',
                 backdropFilter: 'blur(50px) saturate(1.8)',
               }}>
@@ -154,7 +148,8 @@ function ConfirmedContent() {
               ))}
             </div>
           ) : (
-            <div className={`rounded-2xl p-6 mb-6 text-center border backdrop-filter backdrop-blur-2xl ${dark ? 'border-white/15 bg-white/8' : 'border-white/40 bg-white/30'}`}>
+            <div className={`rounded-2xl p-6 mb-6 text-center backdrop-blur-2xl border ${dark ? 'border-white/10 bg-white/5' : 'border-white/30 bg-white/20'}`}
+              style={{ boxShadow: '0 8px 32px rgba(255,165,0,0.08)' }}>
               <p className="font-sans text-sm text-stone-400">Loading booking details…</p>
             </div>
           )}
