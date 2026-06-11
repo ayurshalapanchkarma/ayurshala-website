@@ -67,19 +67,26 @@ function ConfirmedContent() {
     : '—'
 
   const paymentStatus = booking?.payment_status
-  const isCod = booking?.payment_method === 'CASH_ON_ARRIVAL' || paymentStatus === 'PENDING'
+  const paymentMethod = booking?.payment_method
   
-  // Get actual payment amount from payments array
-  const paymentAmount = booking?.payments?.[0]?.amount || (booking?.booking_type === 'consultation' ? 500 : 1000)
-  const paymentLabel = paymentStatus === 'SUCCESS'
-    ? `✓ ₹${paymentAmount} Paid Online`
-    : isCod
-    ? '⏳ Cash on Arrival — Payment Pending'
-    : paymentStatus === 'THERAPY_LATER'
-    ? 'ℹ Payment decided after doctor consultation'
-    : '—'
+  // Determine payment label based on status and method
+  let paymentLabel = '—'
+  if (paymentStatus === 'PAID' && paymentMethod === 'ONLINE') {
+    paymentLabel = `✓ ₹${booking?.payments?.[0]?.amount || (booking?.booking_type === 'consultation' ? 500 : 1000)} Paid Online`
+  } else if (paymentStatus === 'PENDING' && paymentMethod === 'ONLINE') {
+    paymentLabel = `⏳ ₹${booking?.payments?.[0]?.amount || (booking?.booking_type === 'consultation' ? 500 : 1000)} Payment Pending`
+  } else if (paymentMethod === 'CASH_ON_ARRIVAL') {
+    paymentLabel = '⏳ Cash on Arrival'
+  } else if (paymentMethod === 'CASH') {
+    paymentLabel = '⏳ Cash'
+  } else if (paymentStatus === 'THERAPY_LATER') {
+    paymentLabel = 'ℹ Payment decided after doctor consultation'
+  } else {
+    paymentLabel = `Payment: ${paymentStatus || 'Unknown'}`
+  }
 
-  const paymentColor = paymentStatus === 'SUCCESS' ? '#16a34a' : isCod ? '#d97706' : '#6b7280'
+  const isCod = paymentMethod === 'CASH_ON_ARRIVAL' || paymentMethod === 'CASH' || paymentStatus === 'PENDING'
+  const paymentColor = paymentStatus === 'PAID' ? '#16a34a' : isCod ? '#d97706' : '#6b7280'
 
   const titleText = isCod ? 'Booking Received' : 'Booking Confirmed'
   const subtitleText = isCod
