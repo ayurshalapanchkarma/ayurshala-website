@@ -205,7 +205,7 @@ export default function AdminPage() {
   const [stats, setStats] = useState({ today: 0, pending: 0, cash: 0, refunds: 0, completed: 0, grossRevenue: 0, totalRefunds: 0, netRevenue: 0 })
   const [refundModal, setRefundModal] = useState<{ booking_id: string; amount: number; reason: string } | null>(null)
   const [refundLoading, setRefundLoading] = useState(false)
-  const [cashModal, setCashModal] = useState<{ booking_id: string; amount_paid: number } | null>(null)
+  const [cashModal, setCashModal] = useState<{ booking_id: string; amount_paid: number; note: string } | null>(null)
   const [cashLoading, setCashLoading] = useState(false)
   const [sortField, setSortField] = useState<'booking' | 'patient' | 'date' | 'status' | 'payment' | 'action'>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
@@ -285,7 +285,7 @@ export default function AdminPage() {
     if (action === 'collect_cash') {
       const booking = bookings.find(b => b.booking_id === booking_id)
       if (booking) {
-        setCashModal({ booking_id, amount_paid: booking.amount_paid || booking.amount || 0 })
+        setCashModal({ booking_id, amount_paid: booking.amount_paid || booking.amount || 0, note: '' })
       }
       return
     }
@@ -367,14 +367,14 @@ export default function AdminPage() {
 
   async function submitCash() {
     if (!cashModal || cashLoading) return
-    const { booking_id, amount_paid } = cashModal
+    const { booking_id, amount_paid, note } = cashModal
     if (amount_paid <= 0) return
 
     setCashLoading(true)
     const res = await fetch('/api/admin/cash-collection', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ booking_id, action: 'collect_cash', amount_paid }),
+      body: JSON.stringify({ booking_id, amount_paid, note }),
     })
 
     if (res.ok) {
@@ -645,6 +645,10 @@ export default function AdminPage() {
                     <div>
                       <label className="block font-medium mb-1">Amount Collected (₹)</label>
                       <input type="text" inputMode="numeric" min="0" value={cashModal.amount_paid} onChange={(e) => setCashModal({ ...cashModal, amount_paid: parseFloat(e.target.value) || 0 })} className={`w-full px-3 py-2 border rounded-lg ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-stone-300 text-stone-900'}`} />
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Notes (optional)</label>
+                      <textarea value={cashModal.note} onChange={(e) => setCashModal({ ...cashModal, note: e.target.value })} className={`w-full px-3 py-2 border rounded-lg text-sm ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-stone-300 text-stone-900'}`} rows={2} placeholder="e.g., Discount, partial payment, outstanding balance" />
                     </div>
                     <div className="flex gap-2 pt-2">
                       <button onClick={submitCash} disabled={cashLoading} className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition disabled:opacity-50">{cashLoading ? 'Processing...' : 'Confirm Cash'}</button>

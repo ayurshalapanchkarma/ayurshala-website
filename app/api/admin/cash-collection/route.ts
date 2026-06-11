@@ -8,17 +8,22 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { booking_id, action, amount_paid } = await req.json()
+    const { booking_id, action, amount_paid, note } = await req.json()
     if (!booking_id || !action) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
 
     if (action === 'collect_cash') {
       if (amount_paid <= 0) return NextResponse.json({ error: 'Amount must be greater than 0' }, { status: 400 })
 
-      await supabase.from('bookings_new').update({
+      const updateData: any = {
         payment_status: 'PAID',
         amount_paid: amount_paid,
         updated_at: new Date().toISOString(),
-      }).eq('booking_id', booking_id)
+      }
+      if (note) {
+        updateData.cash_collection_note = note
+      }
+
+      await supabase.from('bookings_new').update(updateData).eq('booking_id', booking_id)
 
       return NextResponse.json({ success: true, message: `Cash collected: ₹${amount_paid}` })
     }
