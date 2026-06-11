@@ -2,106 +2,103 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import GlassBackground from '@/components/GlassBackground'
-import { useTheme } from 'next-themes'
-import { useState, useEffect } from 'react'
-import { CircleCheck, CircleX, AlertCircle } from 'lucide-react'
+import { CheckCircle2, XCircle, AlertCircle, Info } from 'lucide-react'
+import GlassBackground from './GlassBackground'
 
-interface ActionButton {
-  label: string
-  href: string
-  icon?: any
-  variant?: 'primary' | 'secondary'
+type StatusType = 'success' | 'error' | 'warning' | 'info' | 'cancelled'
+
+const statusConfig = {
+  success: { icon: CheckCircle2, color: '#16a34a', bg: '#f0fdf4', gradStart: '#f0fdf4', gradEnd: '#dcfce7' },
+  error: { icon: XCircle, color: '#dc2626', bg: '#fee2e2', gradStart: '#fee2e2', gradEnd: '#fecaca' },
+  warning: { icon: AlertCircle, color: '#ea580c', bg: '#fff7ed', gradStart: '#fff7ed', gradEnd: '#fed7aa' },
+  info: { icon: Info, color: '#2563eb', bg: '#eff6ff', gradStart: '#eff6ff', gradEnd: '#dbeafe' },
+  cancelled: { icon: XCircle, color: '#991b1b', bg: '#fee2e2', gradStart: '#fee2e2', gradEnd: '#fecaca' },
 }
 
-interface StatusPageProps {
+export default function StatusPage({
+  statusType,
+  title,
+  description,
+  bookingId,
+  patientName,
+  primaryAction,
+  secondaryAction,
+}: {
+  statusType: StatusType
   title: string
   description: string
-  status: 'success' | 'error' | 'warning'
-  actionButtons: ActionButton[]
-  children?: React.ReactNode
-}
-
-const iconMap = {
-  success: CircleCheck,
-  error: CircleX,
-  warning: AlertCircle,
-}
-
-const colorMap = {
-  success: { bg: 'rgba(22, 163, 74, 0.15)', border: 'rgba(22, 163, 74, 0.3)', icon: '#16a34a' },
-  error: { bg: 'rgba(220, 38, 38, 0.15)', border: 'rgba(220, 38, 38, 0.3)', icon: '#dc2626' },
-  warning: { bg: 'rgba(217, 119, 6, 0.15)', border: 'rgba(217, 119, 6, 0.3)', icon: '#d97706' },
-}
-
-export default function StatusPage({ title, description, status, actionButtons, children }: StatusPageProps) {
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  const dark = mounted && theme === 'dark'
-
-  const Icon = iconMap[status]
-  const colors = colorMap[status]
+  bookingId?: string
+  patientName?: string
+  primaryAction?: { label: string; href: string }
+  secondaryAction?: { label: string; href: string }
+}) {
+  const config = statusConfig[statusType]
+  const Icon = config.icon
 
   return (
     <div className="min-h-screen px-4 sm:px-6 py-16 sm:py-20 relative overflow-hidden flex items-center justify-center"
-      style={{ background: dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)' }}>
+      style={{ background: `linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)` }}>
       <GlassBackground />
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full opacity-40 pointer-events-none animate-blob1"
+          style={{ background: 'radial-gradient(circle,#4a7c59 0%,transparent 70%)' }} />
+        <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] rounded-full opacity-35 pointer-events-none animate-blob2"
+          style={{ background: 'radial-gradient(circle,#E8621A 0%,transparent 70%)' }} />
+      </div>
 
       <div className="max-w-md w-full relative">
-        <motion.div initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.6 }}
-          className="rounded-3xl p-8 backdrop-blur-md border"
-          style={{
-            background: dark ? 'rgba(255, 255, 255, 0.07)' : 'rgba(255, 255, 255, 0.55)',
-            backdropFilter: 'blur(18px)',
-            border: dark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid rgba(255, 255, 255, 0.35)',
-            boxShadow: '0 8px 32px rgba(232, 98, 26, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)',
-          }}>
-
-          <div className="text-center mb-6">
-            <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-14 w-auto mx-auto mb-4" />
-            
+        <motion.div initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.7 }}
+          className="rounded-3xl p-8 relative overflow-hidden backdrop-blur-2xl bg-white/12 border-white/25 border"
+          style={{ boxShadow: '0 12px 40px rgba(255,165,0,0.08)' }}>
+          <div className="flex justify-center mb-5">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
-              style={{ background: colors.bg, border: `1.5px solid ${colors.border}` }}>
-              <Icon className="w-8 h-8" style={{ color: colors.icon }} />
+              className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{
+                background: `linear-gradient(135deg,rgba(${parseInt(config.color.slice(1, 3), 16)},${parseInt(config.color.slice(3, 5), 16)},${parseInt(config.color.slice(5, 7), 16)},0.15),rgba(${parseInt(config.color.slice(1, 3), 16)},${parseInt(config.color.slice(3, 5), 16)},${parseInt(config.color.slice(5, 7), 16)},0.25))`,
+                border: `1.5px solid rgba(${parseInt(config.color.slice(1, 3), 16)},${parseInt(config.color.slice(3, 5), 16)},${parseInt(config.color.slice(5, 7), 16)},0.3)`
+              }}>
+              <Icon className="w-8 h-8" style={{ color: config.color }} />
             </motion.div>
-
-            <h1 className="font-serif text-3xl mb-2" style={{ color: '#E8621A' }}>{title}</h1>
-            <p className={`font-sans text-sm ${dark ? 'text-stone-400' : 'text-stone-500'}`}>{description}</p>
           </div>
 
-          {children && (
-            <div className="mb-6 p-4 rounded-2xl backdrop-blur-md border"
-              style={{
-                background: dark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.7)',
-                border: dark ? '1px solid rgba(255, 255, 255, 0.10)' : '1px solid rgba(255, 255, 255, 0.35)',
-              }}>
-              {children}
+          <div className="text-center mb-6">
+            <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-14 w-auto mx-auto mb-3" />
+            <h1 className="font-serif text-3xl mb-1" style={{ color: config.color }}>{title}</h1>
+            <p className="font-sans text-sm text-stone-400">{description}</p>
+          </div>
+
+          {(bookingId || patientName) && (
+            <div className="rounded-2xl overflow-hidden mb-6 backdrop-blur-2xl border border-white/15 bg-white/5"
+              style={{ boxShadow: '0 12px 48px rgba(255,165,0,0.08)' }}>
+              {bookingId && (
+                <div className="px-4 py-3 border-b border-white/10">
+                  <p className="text-xs text-stone-400 uppercase">Booking ID</p>
+                  <p className="text-sm font-mono font-semibold text-orange-600 mt-1">{bookingId}</p>
+                </div>
+              )}
+              {patientName && (
+                <div className="px-4 py-3">
+                  <p className="text-xs text-stone-400 uppercase">Patient</p>
+                  <p className="text-sm font-medium text-stone-900 dark:text-stone-200 mt-1">{patientName}</p>
+                </div>
+              )}
             </div>
           )}
 
-          <div className="flex flex-col gap-3">
-            {actionButtons.map((btn, i) => {
-              const BtnIcon = btn.icon
-              return (
-                <Link
-                  key={i}
-                  href={btn.href}
-                  className="px-4 py-3 rounded-xl text-sm font-sans transition flex items-center justify-center gap-2"
-                  style={btn.variant === 'primary' ? {
-                    background: '#E8621A',
-                    color: '#fff',
-                  } : {
-                    background: dark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.4)',
-                    color: dark ? '#e7e5e4' : '#1a1008',
-                    border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(255, 255, 255, 0.5)',
-                  }}>
-                  {BtnIcon && <BtnIcon className="w-4 h-4" />}
-                  {btn.label}
-                </Link>
-              )
-            })}
+          <div className="flex flex-col gap-2">
+            {primaryAction && (
+              <Link href={primaryAction.href} className="w-full px-4 py-3 rounded-lg text-center font-medium transition"
+                style={{ background: config.color, color: 'white' }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
+                {primaryAction.label}
+              </Link>
+            )}
+            {secondaryAction && (
+              <Link href={secondaryAction.href} className="w-full px-4 py-3 rounded-lg text-center font-medium border transition border-stone-300 text-stone-700 hover:bg-stone-100">
+                {secondaryAction.label}
+              </Link>
+            )}
           </div>
         </motion.div>
       </div>
