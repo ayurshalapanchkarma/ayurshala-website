@@ -191,3 +191,46 @@ export function RefundCompleted(data: { patientName: string; bookingId: string; 
     body,
   })
 }
+
+// ADMIN EMAIL BUILDERS
+export function AdminNewOnlineBooking(data: { patientName: string; bookingId: string; treatment: string; date: string; time: string; amount: string }) {
+  const body = `<p><strong>${data.patientName}</strong> has booked an online appointment.</p><p>Payment received: <strong>${data.amount}</strong></p><p><strong>When:</strong> ${data.date} at ${data.time}</p><p><strong>Treatment:</strong> ${data.treatment}</p>`
+  return EmailLayout({
+    title: 'New Online Booking',
+    subtitle: 'Payment confirmed',
+    body,
+    primaryAction: { label: 'View Dashboard', href: 'https://ayurshala.com/admin' },
+  })
+}
+
+export function AdminNewOfflineBooking(data: { patientName: string; bookingId: string; treatment: string; date: string; time: string }) {
+  const body = `<p><strong>${data.patientName}</strong> has booked a cash-on-arrival appointment.</p><p><strong>When:</strong> ${data.date} at ${data.time}</p><p><strong>Treatment:</strong> ${data.treatment}</p><p>Payment will be collected at the clinic.</p>`
+  return EmailLayout({
+    title: 'New Offline Booking',
+    subtitle: 'Awaiting confirmation',
+    body,
+    primaryAction: { label: 'View Dashboard', href: 'https://ayurshala.com/admin' },
+  })
+}
+
+export function AdminCancellationAlert(data: { patientName: string; bookingId: string; wasOnline: boolean; refundAmount?: string }) {
+  const body = data.wasOnline
+    ? `<p><strong>${data.patientName}</strong> cancelled their online booking.</p><p><strong>Refund Required:</strong> ₹${data.refundAmount}</p>`
+    : `<p><strong>${data.patientName}</strong> cancelled their cash-on-arrival booking.</p><p>No refund needed.</p>`
+  return EmailLayout({
+    title: 'Booking Cancelled',
+    subtitle: data.wasOnline ? 'Refund pending' : 'No refund',
+    body,
+    primaryAction: { label: 'View Dashboard', href: 'https://ayurshala.com/admin' },
+  })
+}
+
+export function AdminRescheduleRequest(data: { patientName: string; bookingId: string; oldDate: string; newDate: string }) {
+  const body = `<p><strong>${data.patientName}</strong> requested to reschedule their appointment.</p><p><strong>Current:</strong> ${data.oldDate}</p><p><strong>Requested:</strong> ${data.newDate}</p>`
+  return EmailLayout({
+    title: 'Reschedule Request',
+    subtitle: 'Awaiting your approval',
+    body,
+    primaryAction: { label: 'View Dashboard', href: 'https://ayurshala.com/admin' },
+  })
+}
