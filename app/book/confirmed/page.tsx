@@ -132,7 +132,7 @@ function ConfirmedContent() {
           </div>
 
           {booking ? (
-            <div className={`rounded-2xl overflow-hidden mb-6 border backdrop-filter backdrop-blur-2xl ${dark ? 'border-white/15 bg-white/12' : 'border-white/90 bg-gradient-to-br from-white/85 via-white/75 to-white/65'}`}
+            <div className={`rounded-2xl overflow-hidden mb-6 border backdrop-filter backdrop-blur-2xl ${dark ? 'border-white/15 bg-white/8' : 'border-white/40 bg-white/30'}`}
               style={{ 
                 boxShadow: dark ? '0 12px 48px rgba(232,98,26,0.15), inset 0 1px 0 rgba(255,255,255,0.2)' : '0 12px 48px rgba(232,98,26,0.18), inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.08)',
                 WebkitBackdropFilter: 'blur(50px) saturate(1.8)',
@@ -154,7 +154,7 @@ function ConfirmedContent() {
               ))}
             </div>
           ) : (
-            <div className={`rounded-2xl p-6 mb-6 text-center border backdrop-filter backdrop-blur-2xl ${dark ? 'border-white/15 bg-white/12' : 'border-white/90 bg-white/75'}`}>
+            <div className={`rounded-2xl p-6 mb-6 text-center border backdrop-filter backdrop-blur-2xl ${dark ? 'border-white/15 bg-white/8' : 'border-white/40 bg-white/30'}`}>
               <p className="font-sans text-sm text-stone-400">Loading booking details…</p>
             </div>
           )}
