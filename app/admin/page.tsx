@@ -214,13 +214,24 @@ export default function AdminPage() {
       return bDate.toDateString() === now.toDateString()
     }) || []
     
+    // Fetch revenue from payments table
+    let revenue = 0
+    try {
+      const pRes = await fetch('/api/admin/revenue')
+      const pData = await pRes.json()
+      revenue = pData.revenue || 0
+    } catch (e) {
+      console.error('Failed to fetch revenue:', e)
+      revenue = 0
+    }
+    
     setStats({
       today: today.length,
       pending: data?.filter((b: Booking) => b.status === 'PENDING_CONFIRMATION').length || 0,
       cash: data?.filter((b: Booking) => b.payment_method === 'CASH_ON_ARRIVAL').length || 0,
       refunds: data?.filter((b: Booking) => b.payment_status === 'REFUNDED').length || 0,
       completed: data?.filter((b: Booking) => b.status === 'COMPLETED').length || 0,
-      revenue: data?.filter((b: Booking) => b.payment_status === 'SUCCESS').reduce((sum: number, b: Booking) => sum + (b.amount || 0), 0) || 0,
+      revenue,
     })
     
     setBookings(data || [])

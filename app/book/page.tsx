@@ -271,7 +271,7 @@ export default function BookPage() {
               <Link href="/"><Image src="/ayurshala_text.png" alt="Ayurshala" width={260} height={72} className="object-contain h-14 sm:h-20 w-auto mx-auto mb-3 sm:mb-4 drop-shadow-lg hover:drop-shadow-2xl transition-all" /></Link>
             </motion.div>
             <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="font-serif text-2xl sm:text-3xl mb-1 font-light" style={{ color: '#E8621A' }}>Book an Appointment</motion.h1>
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="font-sans text-stone-500 text-sm">✨ We'll confirm within a few hours.</motion.p>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="font-sans text-stone-500 text-sm">We'll confirm within a few hours.</motion.p>
           </motion.div>
 
           {/* Auth / Patient Info */}

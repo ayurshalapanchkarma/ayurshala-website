@@ -90,10 +90,12 @@ function ConfirmedContent() {
     <div className="min-h-screen px-4 sm:px-6 py-16 sm:py-20 relative overflow-hidden flex items-center justify-center"
       style={{ background: dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)' }}>
       <GlassBackground />
-      <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full opacity-40 pointer-events-none animate-blob1"
-        style={{ background: 'radial-gradient(circle,#4a7c59 0%,transparent 70%)' }} />
-      <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] rounded-full opacity-35 pointer-events-none animate-blob2"
-        style={{ background: 'radial-gradient(circle,#E8621A 0%,transparent 70%)' }} />
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full opacity-40 pointer-events-none animate-blob1"
+          style={{ background: 'radial-gradient(circle,#4a7c59 0%,transparent 70%)' }} />
+        <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] rounded-full opacity-35 pointer-events-none animate-blob2"
+          style={{ background: 'radial-gradient(circle,#E8621A 0%,transparent 70%)' }} />
+      </div>
 
       <div className="max-w-md w-full relative">
         <motion.div initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.16,1,0.3,1] }}

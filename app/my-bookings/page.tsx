@@ -246,10 +246,10 @@ export default function MyBookingsPage() {
             // Badge logic
             let badgeLabel = '', badgeCls = ''
             if (b.status === 'CONFIRMED' && (b as any).rescheduled_at) {
-              badgeLabel = 'Rescheduled Confirmed'
+              badgeLabel = 'Reschedule Confirmed'
               badgeCls = 'bg-emerald-100 text-emerald-700'
             } else if (b.status === 'RESCHEDULED') {
-              badgeLabel = 'Rescheduled'
+              badgeLabel = 'Awaiting Reschedule Approval'
               badgeCls = 'bg-orange-100 text-orange-700'
             } else {
               const cfg = statusConfig[b.status] || { label: b.status, cls: 'bg-stone-100 text-stone-600' }

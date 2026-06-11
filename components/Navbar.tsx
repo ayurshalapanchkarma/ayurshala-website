@@ -241,7 +241,15 @@ export default function Navbar() {
                   <li key={l.href}>
                     <a
                       href={l.href}
-                      onClick={() => setOpen(false)}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        const targetId = l.href.split('#')[1]
+                        const element = document.getElementById(targetId)
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth' })
+                        }
+                        setOpen(false)
+                      }}
                       className="font-sans text-sm text-stone-900 hover:text-orange-600"
                     >
                       {l.label}
