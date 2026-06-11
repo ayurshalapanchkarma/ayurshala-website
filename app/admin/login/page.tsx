@@ -31,10 +31,11 @@ export default function AdminLogin() {
 
   const bg = dark ? 'linear-gradient(135deg,#0a0f0a,#1a1008)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)'
   const cardStyle = {
-    background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.72)',
-    backdropFilter: 'blur(40px)',
-    border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(255,255,255,0.85)',
-    boxShadow: '0 20px 80px rgba(232,98,26,0.12), 0 4px 24px rgba(0,0,0,0.08)',
+    background: dark ? 'rgba(30, 27, 25, 0.45)' : 'rgba(255, 255, 255, 0.45)',
+    backdropFilter: 'blur(32px) saturate(1.8)',
+    WebkitBackdropFilter: 'blur(32px) saturate(1.8)',
+    border: dark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.4)',
+    boxShadow: '0 20px 80px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
   }
 
   return (
@@ -44,7 +45,7 @@ export default function AdminLogin() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-md rounded-3xl p-8 relative overflow-hidden"
+        className="w-full max-w-md rounded-3xl p-8 relative overflow-hidden before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-br before:from-white/25 before:via-transparent before:to-orange-200/10 dark:before:from-white/10 dark:before:to-orange-500/5 before:pointer-events-none"
         style={cardStyle}
       >
         <div className="text-center mb-8">
@@ -52,13 +53,13 @@ export default function AdminLogin() {
             <ShieldCheck className="w-8 h-8" style={{ color: '#E8621A' }} />
           </div>
           <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-14 w-auto mx-auto mb-4" />
-          <h1 className="font-serif text-2xl mb-1" style={{ color: '#E8621A' }}>Administrator Access</h1>
-          <p className="font-sans text-xs text-stone-400">Continue with your authorized Google account.</p>
+          <h1 className="font-serif text-2xl mb-1 text-orange-700 dark:text-orange-400">Administrator Access</h1>
+          <p className="font-sans text-xs text-stone-600 dark:text-stone-400">Continue with your authorized Google account.</p>
         </div>
 
         <button
           onClick={handleGoogleLogin}
-          className="w-full py-2.5 rounded-xl bg-white text-stone-700 font-sans text-sm hover:bg-stone-100 transition border border-stone-300 flex items-center justify-center gap-2 mb-3"
+          className="w-full py-2.5 rounded-xl bg-white/70 dark:bg-stone-800/70 backdrop-blur-xl text-stone-700 dark:text-stone-100 font-sans text-sm hover:bg-white/90 dark:hover:bg-stone-800/90 transition-all duration-300 hover:scale-[1.01] border border-white/50 dark:border-stone-700/50 flex items-center justify-center gap-2 mb-3"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -71,12 +72,12 @@ export default function AdminLogin() {
 
         <button
           onClick={() => router.push('/')}
-          className="w-full py-2.5 rounded-xl bg-white/40 text-stone-700 font-sans text-sm hover:bg-white/60 transition border border-white/60"
+          className="w-full py-2.5 rounded-xl bg-white/50 dark:bg-stone-800/40 hover:bg-white/70 dark:hover:bg-stone-800/60 border border-white/40 dark:border-stone-700/40 text-stone-700 dark:text-stone-200 font-sans text-sm transition-all duration-300"
         >
           Back to Home
         </button>
 
-        <p className="text-center text-xs text-stone-500 mt-6">
+        <p className="text-center text-xs text-stone-600 dark:text-stone-500 mt-6">
           Only authorized admin accounts can access
         </p>
       </motion.div>
