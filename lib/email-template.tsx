@@ -70,3 +70,124 @@ export function BookingCard(booking: {
     <tr><td style="padding:12px 16px;display:flex;justify-content:space-between;font-size:13px"><span style="color:#6b7280">Status</span><span style="color:#111827;font-weight:600">${booking.status}</span></td></tr>
   </table>`
 }
+// EMAIL BUILDERS FOR ALL 13 TEMPLATES
+export function BookingConfirmationOnline(data: {
+  patientName: string
+  bookingId: string
+  treatment: string
+  date: string
+  time: string
+  amount: string
+}) {
+  const body = `<p>Your online booking is confirmed! A payment receipt has been sent to your registered email.</p><p>Please arrive 5-10 minutes early for your appointment.</p>`
+  return EmailLayout({
+    title: 'Booking Confirmed',
+    subtitle: 'Your appointment is all set',
+    body,
+    primaryAction: { label: 'View My Bookings', href: 'https://ayurshala.com/my-bookings' },
+    secondaryAction: { label: 'Contact Clinic', href: 'tel:+919821224767' },
+  })
+}
+
+export function BookingConfirmationCash(data: {
+  patientName: string
+  bookingId: string
+  treatment: string
+  date: string
+  time: string
+}) {
+  const body = `<p>Your booking is confirmed! Payment is due at the clinic on the day of appointment.</p><p>Please arrive 5-10 minutes early.</p>`
+  return EmailLayout({
+    title: 'Booking Confirmed',
+    subtitle: 'Your appointment is all set',
+    body,
+    primaryAction: { label: 'View My Bookings', href: 'https://ayurshala.com/my-bookings' },
+    secondaryAction: { label: 'Contact Clinic', href: 'tel:+919821224767' },
+  })
+}
+
+export function PaymentSuccessful(data: {
+  patientName: string
+  bookingId: string
+  amount: string
+  date: string
+  time: string
+}) {
+  const body = `<p>Your payment of <strong>${data.amount}</strong> has been received successfully.</p><p>Your appointment is confirmed for <strong>${data.date} at ${data.time}</strong>.</p>`
+  return EmailLayout({
+    title: 'Payment Confirmed',
+    subtitle: 'Your booking is confirmed',
+    body,
+    primaryAction: { label: 'View Booking', href: 'https://ayurshala.com/my-bookings' },
+  })
+}
+
+export function PaymentFailed(data: { patientName: string; bookingId: string; amount: string }) {
+  const body = `<p>Your payment of <strong>${data.amount}</strong> could not be processed.</p><p>Your booking has been cancelled. Please try again or contact our clinic.</p>`
+  return EmailLayout({
+    title: 'Payment Failed',
+    subtitle: 'Your payment could not be processed',
+    body,
+    primaryAction: { label: 'Try Again', href: 'https://ayurshala.com/book' },
+    secondaryAction: { label: 'Contact Clinic', href: 'tel:+919821224767' },
+  })
+}
+
+export function AppointmentCancelled(data: { patientName: string; bookingId: string; date: string; time: string }) {
+  const body = `<p>Your appointment scheduled for <strong>${data.date} at ${data.time}</strong> has been cancelled.</p><p>If you need to reschedule, please contact our clinic.</p>`
+  return EmailLayout({
+    title: 'Appointment Cancelled',
+    subtitle: 'Your appointment was cancelled',
+    body,
+    primaryAction: { label: 'Contact Clinic', href: 'tel:+919821224767' },
+    secondaryAction: { label: 'Book Again', href: 'https://ayurshala.com/book' },
+  })
+}
+
+export function RescheduleRequestReceived(data: { patientName: string; bookingId: string }) {
+  const body = `<p>We received your reschedule request.</p><p>Our team will review it and notify you within 24 hours.</p>`
+  return EmailLayout({
+    title: 'Reschedule Request Received',
+    subtitle: 'We will review your request',
+    body,
+    primaryAction: { label: 'View Booking', href: 'https://ayurshala.com/my-bookings' },
+  })
+}
+
+export function RescheduleApproved(data: { patientName: string; bookingId: string; newDate: string; newTime: string }) {
+  const body = `<p>Your reschedule request has been approved!</p><p>Your new appointment is <strong>${data.newDate} at ${data.newTime}</strong>.</p>`
+  return EmailLayout({
+    title: 'Reschedule Approved',
+    subtitle: 'Your new appointment is confirmed',
+    body,
+    primaryAction: { label: 'View Booking', href: 'https://ayurshala.com/my-bookings' },
+  })
+}
+
+export function RescheduleRejected(data: { patientName: string; bookingId: string }) {
+  const body = `<p>Unfortunately, your reschedule request could not be approved.</p><p>Your original appointment remains active. Contact us to discuss alternatives.</p>`
+  return EmailLayout({
+    title: 'Reschedule Unavailable',
+    subtitle: 'Request could not be approved',
+    body,
+    primaryAction: { label: 'Contact Clinic', href: 'tel:+919821224767' },
+  })
+}
+
+export function RefundInitiated(data: { patientName: string; bookingId: string; amount: string }) {
+  const body = `<p>Your refund of <strong>${data.amount}</strong> has been initiated.</p><p>The amount will be credited to your original payment method within 3-5 business days.</p>`
+  return EmailLayout({
+    title: 'Refund Initiated',
+    subtitle: 'Your refund is being processed',
+    body,
+  })
+}
+
+export function RefundCompleted(data: { patientName: string; bookingId: string; amount: string }) {
+  const body = `<p>Your refund of <strong>${data.amount}</strong> has been completed successfully.</p><p>Check your bank account for the credit.</p>`
+  return EmailLayout({
+    title: 'Refund Completed',
+    subtitle: 'Your refund has been processed',
+    body,
+  })
+}
