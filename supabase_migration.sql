@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS bookings_new (
   clinic_id           UUID REFERENCES clinics(id),
   patient_uuid        UUID NOT NULL,
   doctor_uuid         UUID,
-  booking_type        TEXT NOT NULL CHECK (booking_type IN ('consultation','therapy')),
+  booking_type        TEXT NOT NULL CHECK (booking_type IN ('consultation','therapy','consultation_and_therapy')),
   booking_source      booking_source_enum DEFAULT 'DIRECT',
   consultation_mode   consultation_mode DEFAULT 'IN_CLINIC',
   preferred_date      DATE NOT NULL,
