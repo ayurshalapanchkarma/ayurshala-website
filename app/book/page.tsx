@@ -191,15 +191,6 @@ export default function BookPage() {
         ...(isConsultation ? ['Consultation'] : []),
         ...selectedTreatments,
       ]
-      const calculatedBookingType = isConsultation && selectedTreatments.length > 0 ? 'consultation_and_therapy' : isConsultation ? 'consultation' : 'therapy'
-      
-      // TEMPORARY LOGGING - Investigation
-      console.log({
-        consultationSelected: isConsultation,
-        selectedTherapies: selectedTreatments,
-        calculatedBookingType,
-      })
-      
       const orderRes = await fetch('/api/book', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -210,7 +201,7 @@ export default function BookPage() {
           preferred_date: date,
           preferred_time: time,
           concern: concern.trim(),
-          booking_type: calculatedBookingType,
+          booking_type: isConsultation && selectedTreatments.length > 0 ? 'consultation_and_therapy' : isConsultation ? 'consultation' : 'therapy',
           payment_method: paymentMethod,
         }),
       })
