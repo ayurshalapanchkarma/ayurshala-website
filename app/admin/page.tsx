@@ -25,6 +25,8 @@ type Booking = {
   payment_status: string
   payment_method: string
   refund_status?: string
+  refund_amount?: number
+  refund_reason?: string
   created_at: string
   patient_name: string
   patient_id: string
@@ -89,7 +91,7 @@ const getStatusBadge = (booking: Booking) => {
 }
 
 const getPaymentBadge = (booking: Booking) => {
-  const { status, payment_method, payment_status } = booking
+  const { status, payment_method, payment_status, amount, refund_amount } = booking
 
   // State: PAYMENT_PENDING
   if (status === 'PAYMENT_PENDING') {
@@ -121,6 +123,15 @@ const getPaymentBadge = (booking: Booking) => {
     return { label: 'Paid', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
   }
 
+  // Refund states - check if refund exists
+  if (refund_amount && refund_amount > 0) {
+    if (refund_amount === amount) {
+      return { label: `Fully Refunded ₹${refund_amount}`, cls: 'bg-blue-100/80 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200' }
+    } else {
+      return { label: `Partially Refunded ₹${refund_amount}`, cls: 'bg-indigo-100/80 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200' }
+    }
+  }
+
   // Preserve existing payment state for other statuses
   if (payment_status === 'PAID' || payment_status === 'SUCCESS') {
     return { label: 'Paid', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
@@ -128,10 +139,6 @@ const getPaymentBadge = (booking: Booking) => {
 
   if (payment_status === 'PENDING' || payment_status === 'COD_PENDING') {
     return { label: 'Cash Pending', cls: 'bg-orange-100/80 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200' }
-  }
-
-  if (payment_status === 'REFUNDED') {
-    return { label: 'Refunded', cls: 'bg-blue-100/80 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200' }
   }
 
   if (payment_status === 'REFUND_PENDING') {
@@ -163,8 +170,8 @@ const getAvailableActions = (booking: Booking) => {
   // RESCHEDULED: Approve Reschedule, Reject Reschedule
   if (status === 'RESCHEDULED') return ['approve_reschedule', 'reject_reschedule']
 
-  // CANCELLED + REFUND_PENDING: Show Mark as Refunded
-  if (status === 'CANCELLED' && refund_status === 'REFUND_PENDING') return ['mark_refunded']
+  // CANCELLED + REFUND_PENDING: Show Record Refund
+  if (status === 'CANCELLED' && refund_status === 'REFUND_PENDING') return ['record_refund']
 
   // CANCELLED, COMPLETED, NO_SHOW: No actions
   if (['CANCELLED', 'COMPLETED', 'NO_SHOW'].includes(status)) return []
@@ -181,7 +188,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>('all')
   const [currentTime, setCurrentTime] = useState('')
-  const [stats, setStats] = useState({ today: 0, pending: 0, cash: 0, refunds: 0, completed: 0, revenue: 0 })
+  const [stats, setStats] = useState({ today: 0, pending: 0, cash: 0, refunds: 0, completed: 0, grossRevenue: 0, totalRefunds: 0, netRevenue: 0 })
+  const [refundModal, setRefundModal] = useState<{ booking_id: string; amount: number; reason: string } | null>(null)
+  const [refundLoading, setRefundLoading] = useState(false)
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const dark = mounted && theme === 'dark'
@@ -223,14 +232,15 @@ export default function AdminPage() {
     }) || []
     
     // Fetch revenue from payments table
-    let revenue = 0
+    let grossRevenue = 0, totalRefunds = 0, netRevenue = 0
     try {
       const pRes = await fetch('/api/admin/revenue')
       const pData = await pRes.json()
-      revenue = pData.revenue || 0
+      grossRevenue = pData.grossRevenue || 0
+      totalRefunds = pData.totalRefunds || 0
+      netRevenue = pData.netRevenue || 0
     } catch (e) {
       console.error('Failed to fetch revenue:', e)
-      revenue = 0
     }
     
     setStats({
@@ -239,7 +249,9 @@ export default function AdminPage() {
       cash: data?.filter((b: Booking) => b.payment_method === 'CASH_ON_ARRIVAL').length || 0,
       refunds: data?.filter((b: Booking) => b.payment_status === 'REFUNDED').length || 0,
       completed: data?.filter((b: Booking) => b.status === 'COMPLETED').length || 0,
-      revenue,
+      grossRevenue,
+      totalRefunds,
+      netRevenue,
     })
     
     setBookings(data || [])
@@ -247,11 +259,15 @@ export default function AdminPage() {
   }
 
   async function performAction(booking_id: string, action: string) {
+    if (action === 'record_refund') {
+      setRefundModal({ booking_id, amount: 0, reason: '' })
+      return
+    }
+
     const endpoint = action === 'confirm' ? '/api/admin/confirm' : 
                      action === 'cancel' ? '/api/admin/cancel' :
                      action === 'approve_reschedule' ? '/api/admin/confirm-reschedule' :
                      action === 'reject_reschedule' ? '/api/admin/cancel-reschedule' :
-                     action === 'mark_refunded' ? '/api/admin/refund' :
                      '/api/admin/bookings'
 
     const res = await fetch(endpoint, {
@@ -265,6 +281,26 @@ export default function AdminPage() {
       const evt = new CustomEvent('bookingUpdated', { detail: { booking_id, action } })
       window.dispatchEvent(evt)
     }
+  }
+
+  async function submitRefund() {
+    if (!refundModal || refundLoading) return
+    const { booking_id, amount, reason } = refundModal
+    const booking = bookings.find(b => b.booking_id === booking_id)
+    if (!booking || amount < 0 || amount > (booking.amount || 0)) return
+
+    setRefundLoading(true)
+    const res = await fetch('/api/admin/refund', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ booking_id, refund_amount: amount, refund_reason: reason }),
+    })
+
+    if (res.ok) {
+      setRefundModal(null)
+      await fetchBookings()
+    }
+    setRefundLoading(false)
   }
 
   const bg = dark ? 'linear-gradient(135deg,#1a2015,#2a1f10)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)'
@@ -324,12 +360,13 @@ export default function AdminPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
           {[
             { label: "Today's", value: stats.today, icon: Calendar },
             { label: 'Pending', value: stats.pending, icon: ClockIcon },
             { label: 'Cash Pending', value: stats.cash, icon: Wallet },
-            { label: 'Revenue', value: `₹${stats.revenue}`, icon: TrendingUp },
+            { label: 'Gross Revenue', value: `₹${stats.grossRevenue}`, icon: TrendingUp },
+            { label: 'Total Refunds', value: `₹${stats.totalRefunds}`, icon: TrendingUp },
           ].map((stat, i) => {
             const Icon = stat.icon
             return (
@@ -423,8 +460,8 @@ export default function AdminPage() {
                               {actions.includes('mark_no_show') && (
                                 <button onClick={() => performAction(b.booking_id, 'mark_no_show')} className="px-2 py-0.5 rounded bg-slate-500 text-white text-xs hover:bg-slate-600 transition">No Show</button>
                               )}
-                              {actions.includes('mark_refunded') && (
-                                <button onClick={() => performAction(b.booking_id, 'mark_refunded')} className="px-2 py-0.5 rounded bg-indigo-500 text-white text-xs hover:bg-indigo-600 transition">Mark as Refunded</button>
+                              {actions.includes('record_refund') && (
+                                <button onClick={() => performAction(b.booking_id, 'record_refund')} className="px-2 py-0.5 rounded bg-indigo-500 text-white text-xs hover:bg-indigo-600 transition">Record Refund</button>
                               )}
                             </div>
                           )}
@@ -435,6 +472,61 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Net Revenue Card */}
+        <div className="mt-5 rounded-2xl p-6" style={cardStyle}>
+          <h3 className={`text-lg font-semibold mb-4 ${dark ? 'text-white' : 'text-stone-900'}`}>Revenue Summary</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className={`p-4 rounded-lg ${dark ? 'bg-slate-800/50' : 'bg-orange-50'}`}>
+              <p className={`text-xs uppercase tracking-wider ${dark ? 'text-gray-400' : 'text-stone-500'}`}>Gross Revenue</p>
+              <p className="text-2xl font-bold mt-2" style={{ color: '#E8621A' }}>₹{stats.grossRevenue}</p>
+            </div>
+            <div className={`p-4 rounded-lg ${dark ? 'bg-slate-800/50' : 'bg-red-50'}`}>
+              <p className={`text-xs uppercase tracking-wider ${dark ? 'text-gray-400' : 'text-stone-500'}`}>Total Refunds</p>
+              <p className="text-2xl font-bold mt-2 text-red-600">₹{stats.totalRefunds}</p>
+            </div>
+            <div className={`p-4 rounded-lg ${dark ? 'bg-slate-800/50' : 'bg-green-50'}`}>
+              <p className={`text-xs uppercase tracking-wider ${dark ? 'text-gray-400' : 'text-stone-500'}`}>Net Revenue</p>
+              <p className="text-2xl font-bold mt-2 text-green-600">₹{stats.netRevenue}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Refund Modal */}
+        {refundModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+              <h2 className={`text-lg font-semibold mb-4 ${dark ? 'text-white' : 'text-stone-900'}`}>Record Refund</h2>
+              {(() => {
+                const booking = bookings.find(b => b.booking_id === refundModal.booking_id)
+                return booking ? (
+                  <div className={`text-sm space-y-4 ${dark ? 'text-gray-300' : 'text-stone-600'}`}>
+                    <div>
+                      <p className="font-medium">Booking ID</p>
+                      <p>{booking.booking_id}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Paid Amount</p>
+                      <p>₹{booking.amount || 0}</p>
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Refund Amount (₹)</label>
+                      <input type="number" min="0" max={booking.amount || 0} value={refundModal.amount} onChange={(e) => setRefundModal({ ...refundModal, amount: parseFloat(e.target.value) || 0 })} className={`w-full px-3 py-2 border rounded-lg ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-stone-300 text-stone-900'}`} />
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Reason</label>
+                      <textarea value={refundModal.reason} onChange={(e) => setRefundModal({ ...refundModal, reason: e.target.value })} className={`w-full px-3 py-2 border rounded-lg text-sm ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-stone-300 text-stone-900'}`} rows={3} placeholder="e.g., Patient cancelled, duplicate booking" />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button onClick={submitRefund} disabled={refundLoading} className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition disabled:opacity-50">{refundLoading ? 'Processing...' : 'Confirm Refund'}</button>
+                      <button onClick={() => setRefundModal(null)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition">Cancel</button>
+                    </div>
+                  </div>
+                ) : null
+              })()}
+            </motion.div>
           </div>
         )}
       </div>
