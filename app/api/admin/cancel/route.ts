@@ -52,7 +52,14 @@ export async function POST(req: NextRequest) {
     const { data: patient } = await supabase.from('patients').select('*').eq('id', booking.patient_uuid).single()
     if (!patient) return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
 
-    await supabase.from('bookings_new').update({ status: 'CANCELLED', updated_at: new Date().toISOString() }).eq('booking_id', booking_id)
+    // For cash bookings, set payment_status to NO_CASH_COLLECTED
+    const isCashBooking = booking.payment_method === 'CASH_ON_ARRIVAL' || booking.payment_method === 'CASH'
+    const updateData: any = { status: 'CANCELLED', updated_at: new Date().toISOString() }
+    if (isCashBooking && booking.payment_status === 'PENDING') {
+      updateData.payment_status = 'NO_CASH_COLLECTED'
+    }
+
+    await supabase.from('bookings_new').update(updateData).eq('booking_id', booking_id)
 
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
     const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })

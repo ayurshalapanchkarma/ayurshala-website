@@ -145,6 +145,10 @@ const getPaymentBadge = (booking: Booking) => {
     return { label: 'Refund Pending', cls: 'bg-indigo-100/80 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200' }
   }
 
+  if (payment_status === 'NO_CASH_COLLECTED') {
+    return { label: 'No Cash Collected', cls: 'bg-slate-100/80 text-slate-700 dark:bg-slate-800/80 dark:text-slate-200' }
+  }
+
   if (payment_status === 'FAILED') {
     return { label: 'Failed', cls: 'bg-red-100/80 text-red-900 dark:bg-red-950/50 dark:text-red-200' }
   }
