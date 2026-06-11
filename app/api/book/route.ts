@@ -39,6 +39,14 @@ export async function POST(req: NextRequest) {
   if (action === 'create-order') {
     const { patient_uuid, patient_id, treatments, preferred_date, preferred_time, concern, booking_type, payment_method } = body
 
+    // STEP 2: API request logging
+    console.log('[API CREATE-ORDER REQUEST]', {
+      requestBookingType: booking_type,
+      treatmentsReceived: treatments,
+      consultationInTreatments: treatments?.includes('Consultation'),
+      therapyCount: treatments?.filter((t: string) => t !== 'Consultation').length ?? 0,
+    })
+
     if (!patient_uuid || !treatments?.length || !preferred_date || !preferred_time || !booking_type)
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
 
@@ -98,6 +106,15 @@ export async function POST(req: NextRequest) {
       amountPaid = amount
     }
 
+    // STEP 3: Before insert logging
+    console.log('[API BEFORE INSERT]', {
+      bookingTypeBeingInserted: booking_type,
+      amount,
+      amountPaid,
+      bookingStatus,
+      paymentMethod: isCod ? 'CASH_ON_ARRIVAL' : 'ONLINE',
+    })
+
     const { data: booking, error: bookingErr } = await supabase.from('bookings_new').insert({
       clinic_id: clinic?.id ?? null,
       patient_uuid, booking_type,
@@ -109,6 +126,13 @@ export async function POST(req: NextRequest) {
       amount_paid: amountPaid,
     }).select().single()
     if (bookingErr) return NextResponse.json({ error: bookingErr.message }, { status: 500 })
+
+    // STEP 4: After insert logging - confirm what was stored
+    console.log('[API AFTER INSERT]', {
+      bookingId: booking.booking_id,
+      storedBookingType: booking.booking_type,
+      matchesExpected: booking.booking_type === booking_type,
+    })
 
     // Insert treatments (resolve UUIDs from treatments table)
     const { data: treatmentRows } = await supabase.from('treatments')

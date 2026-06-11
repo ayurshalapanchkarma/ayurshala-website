@@ -191,6 +191,16 @@ export default function BookPage() {
         ...(isConsultation ? ['Consultation'] : []),
         ...selectedTreatments,
       ]
+      const frontendBookingType = isConsultation && selectedTreatments.length > 0 ? 'consultation_and_therapy' : isConsultation ? 'consultation' : 'therapy'
+      
+      // STEP 1: Frontend logging
+      console.log('[BOOKING FORM]', {
+        consultationSelected: isConsultation,
+        selectedTherapies: selectedTreatments,
+        frontendBookingType,
+        treatmentsArray: treatments,
+      })
+      
       const orderRes = await fetch('/api/book', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -201,7 +211,7 @@ export default function BookPage() {
           preferred_date: date,
           preferred_time: time,
           concern: concern.trim(),
-          booking_type: isConsultation && selectedTreatments.length > 0 ? 'consultation_and_therapy' : isConsultation ? 'consultation' : 'therapy',
+          booking_type: frontendBookingType,
           payment_method: paymentMethod,
         }),
       })
