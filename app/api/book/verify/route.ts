@@ -64,9 +64,15 @@ export async function GET(req: NextRequest) {
       if (booking) {
         console.log(`[PAYMENT_VERIFY] Updating existing booking: ${originalBookingId}`)
         
-        await supabase.from('bookings_new').update({
+        const paymentAmount = parseFloat(String(payment?.order_amount) || '0')
+        const updateData: any = {
           status: 'CONFIRMED', payment_status: 'SUCCESS', payment_method: 'ONLINE', updated_at: new Date().toISOString(),
-        }).eq('booking_id', originalBookingId)
+        }
+        if (!booking.amount_paid || booking.amount_paid === 0) {
+          updateData.amount_paid = paymentAmount
+        }
+
+        await supabase.from('bookings_new').update(updateData).eq('booking_id', originalBookingId)
 
         await supabase.from('payments').update({
           status: 'SUCCESS', transaction_id: payment?.cf_payment_id || '', paid_at: new Date().toISOString(),
@@ -108,11 +114,17 @@ export async function GET(req: NextRequest) {
     const { data: booking } = await supabase.from('bookings_new').select('*').eq('booking_id', orderId).single()
     if (booking) {
       // Update booking status directly (bypass /api/book to avoid double emails)
-      await supabase.from('bookings_new').update({
+      const paymentAmount = parseFloat(String(payment?.order_amount) || '0')
+      const updateData: any = {
         status: 'CONFIRMED',
         payment_status: 'PAID',
         updated_at: new Date().toISOString(),
-      }).eq('booking_id', orderId)
+      }
+      if (!booking.amount_paid || booking.amount_paid === 0) {
+        updateData.amount_paid = paymentAmount
+      }
+
+      await supabase.from('bookings_new').update(updateData).eq('booking_id', orderId)
 
       await supabase.from('payments').update({
         status: 'PAID',

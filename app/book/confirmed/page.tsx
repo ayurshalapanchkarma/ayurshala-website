@@ -13,6 +13,7 @@ import { Suspense } from 'react'
 type BookingData = {
   booking_id: string; preferred_date: string; preferred_time: string
   booking_type: string; payment_status: string; payment_method: string
+  amount_paid?: number
   patients: { full_name: string; patient_id: string; email: string }
   booking_treatments_v2: { treatment_name: string }[]
   payments?: { amount: number; status: string }[]
@@ -72,9 +73,15 @@ function ConfirmedContent() {
   // Determine payment label based on status and method
   let paymentLabel = '—'
   if (paymentStatus === 'PAID' && paymentMethod === 'ONLINE') {
-    paymentLabel = `✓ ₹${booking?.payments?.[0]?.amount || (booking?.booking_type === 'consultation' ? 500 : 1000)} Paid Online`
+    const amount = booking?.amount_paid || booking?.payments?.[0]?.amount || (booking?.booking_type === 'consultation' ? 500 : 1000)
+    if (amount > 0) {
+      paymentLabel = `✓ ₹${amount} Paid Online`
+    } else {
+      paymentLabel = '✓ Payment Confirmed'
+    }
   } else if (paymentStatus === 'PENDING' && paymentMethod === 'ONLINE') {
-    paymentLabel = `⏳ ₹${booking?.payments?.[0]?.amount || (booking?.booking_type === 'consultation' ? 500 : 1000)} Payment Pending`
+    const amount = booking?.amount_paid || booking?.payments?.[0]?.amount || (booking?.booking_type === 'consultation' ? 500 : 1000)
+    paymentLabel = `⏳ ₹${amount} Payment Pending`
   } else if (paymentMethod === 'CASH_ON_ARRIVAL') {
     paymentLabel = '⏳ Cash on Arrival'
   } else if (paymentMethod === 'CASH') {
