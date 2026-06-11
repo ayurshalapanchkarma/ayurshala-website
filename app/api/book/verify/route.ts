@@ -2,7 +2,7 @@ import { Cashfree, CFEnvironment } from 'cashfree-pg'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
-import { PaymentSuccessful, PaymentFailed } from '@/lib/email-template'
+import { PaymentSuccessful, PaymentFailed, BookingConfirmationOnline, AdminNewOnlineBooking } from '@/lib/email-template'
 
 export async function GET(req: NextRequest) {
   console.log('[PAYMENT_VERIFY] Handler entered')
@@ -145,11 +145,12 @@ export async function GET(req: NextRequest) {
       // Send patient email
       if (patient?.email) {
         try {
+          const html = BookingConfirmationOnline({ patientName: patient.full_name, bookingId: orderId, treatment: treatmentList, date: formattedDate, time: booking.preferred_time, amount: `₹${booking.amount_paid}` })
           await resend.emails.send({
             from,
             to: patient.email,
             subject: `✓ Booking Confirmed — ${orderId}`,
-            html: buildBookingConfirmedEmail({ patient, booking, treatmentList, formattedDate }),
+            html,
           })
           console.log(`[PAYMENT_VERIFY] Patient email sent to ${patient.email}`)
         } catch (err) {
@@ -159,11 +160,12 @@ export async function GET(req: NextRequest) {
 
       // Send admin email
       try {
+        const html = AdminNewOnlineBooking({ patientName: patient?.full_name || 'Patient', bookingId: orderId, treatment: treatmentList, date: formattedDate, time: booking.preferred_time, amount: `₹${booking.amount_paid}` })
         await resend.emails.send({
           from,
           to: 'ayurshalapanchkarma@gmail.com',
           subject: `New Online Booking — ${orderId} — ${patient?.full_name}`,
-          html: buildAdminBookingEmail({ patient, booking, treatmentList, formattedDate }),
+          html,
         })
         console.log(`[PAYMENT_VERIFY] Admin email sent`)
       } catch (err) {
