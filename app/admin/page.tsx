@@ -272,6 +272,14 @@ export default function AdminPage() {
                      action === 'reject_reschedule' ? '/api/admin/cancel-reschedule' :
                      '/api/admin/bookings'
 
+    // Optimistic update for confirm/cancel
+    const isOptimistic = action === 'confirm' || action === 'cancel'
+    const newStatus = action === 'confirm' ? 'CONFIRMED' : action === 'cancel' ? 'CANCELLED' : null
+    
+    if (isOptimistic && newStatus) {
+      setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, status: newStatus } : b))
+    }
+
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -279,9 +287,16 @@ export default function AdminPage() {
     })
 
     if (res.ok) {
-      await fetchBookings()
+      if (!isOptimistic) {
+        await fetchBookings()
+      }
       const evt = new CustomEvent('bookingUpdated', { detail: { booking_id, action } })
       window.dispatchEvent(evt)
+    } else {
+      // Revert optimistic update on error
+      if (isOptimistic) {
+        await fetchBookings()
+      }
     }
   }
 
