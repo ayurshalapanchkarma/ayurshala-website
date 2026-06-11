@@ -39,6 +39,13 @@ export async function POST(req: NextRequest) {
   if (action === 'create-order') {
     const { patient_uuid, patient_id, treatments, preferred_date, preferred_time, concern, booking_type, payment_method } = body
 
+    // TEMPORARY LOGGING - Investigation
+    console.log({
+      receivedBookingType: booking_type,
+      treatments,
+      paymentMethod: payment_method,
+    })
+
     if (!patient_uuid || !treatments?.length || !preferred_date || !preferred_time || !booking_type)
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
 
@@ -97,6 +104,14 @@ export async function POST(req: NextRequest) {
     if (isCod) {
       amountPaid = amount
     }
+
+    // TEMPORARY LOGGING - Investigation (before insert)
+    console.log({
+      bookingTypeBeforeInsert: booking_type,
+      amountPaid,
+      bookingStatus,
+      isCod,
+    })
 
     const { data: booking, error: bookingErr } = await supabase.from('bookings_new').insert({
       clinic_id: clinic?.id ?? null,
