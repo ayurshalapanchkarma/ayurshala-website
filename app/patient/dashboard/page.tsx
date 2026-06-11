@@ -20,8 +20,8 @@ export default function PatientDashboard() {
   useEffect(() => {
     if (!loading && !user) {
       router.push('/admin/login')
-    } else if (user?.id) {
-      supabase.from('patients').select('patient_id').eq('google_user_id', user.id).single().then(({ data }) => {
+    } else if (user?.email) {
+      supabase.from('patients').select('patient_id').eq('email', user.email).single().then(({ data }) => {
         setPatient(data)
       })
     }
