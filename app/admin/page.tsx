@@ -191,6 +191,8 @@ export default function AdminPage() {
   const [stats, setStats] = useState({ today: 0, pending: 0, cash: 0, refunds: 0, completed: 0, grossRevenue: 0, totalRefunds: 0, netRevenue: 0 })
   const [refundModal, setRefundModal] = useState<{ booking_id: string; amount: number; reason: string } | null>(null)
   const [refundLoading, setRefundLoading] = useState(false)
+  const [sortField, setSortField] = useState<'booking' | 'patient' | 'date' | 'status' | 'payment' | 'action'>('date')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const dark = mounted && theme === 'dark'
@@ -302,6 +304,49 @@ export default function AdminPage() {
     }
     setRefundLoading(false)
   }
+
+  function handleSort(field: typeof sortField) {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      // Default direction based on field
+      setSortDirection(field === 'date' ? 'desc' : field === 'status' || field === 'payment' ? 'asc' : 'asc')
+    }
+  }
+
+  const statusOrder = { PENDING_CONFIRMATION: 0, PAYMENT_PENDING: 1, CONFIRMED: 2, RESCHEDULED: 3, RESCHEDULE_CONFIRMED: 4, RESCHEDULE_REJECTED: 5, CANCELLED: 6, COMPLETED: 7, NO_SHOW: 8, IN_PROGRESS: 9 }
+  const paymentOrder = { PAID: 0, REFUND_PENDING: 1, REFUNDED: 2, PENDING: 3, COD_PENDING: 4, SUCCESS: 0, FAILED: 5 }
+  const actionPriority = (b: Booking) => {
+    const actions = getAvailableActions(b)
+    if (actions.includes('confirm')) return 0
+    if (actions.includes('approve_reschedule')) return 1
+    if (actions.includes('record_refund')) return 2
+    if (actions.includes('cancel')) return 3
+    return 4
+  }
+
+  const sortedBookings = [...bookings].sort((a, b) => {
+    let compareResult = 0
+    
+    if (sortField === 'booking') {
+      compareResult = a.booking_id.localeCompare(b.booking_id)
+    } else if (sortField === 'patient') {
+      compareResult = a.patient_name.localeCompare(b.patient_name)
+    } else if (sortField === 'date') {
+      const dateA = new Date(a.preferred_date + ' ' + a.preferred_time).getTime()
+      const dateB = new Date(b.preferred_date + ' ' + b.preferred_time).getTime()
+      compareResult = dateA - dateB
+    } else if (sortField === 'status') {
+      compareResult = (statusOrder[a.status as keyof typeof statusOrder] || 10) - (statusOrder[b.status as keyof typeof statusOrder] || 10)
+    } else if (sortField === 'payment') {
+      compareResult = (paymentOrder[a.payment_status as keyof typeof paymentOrder] || 10) - (paymentOrder[b.payment_status as keyof typeof paymentOrder] || 10)
+    } else if (sortField === 'action') {
+      compareResult = actionPriority(a) - actionPriority(b)
+    }
+
+    return sortDirection === 'desc' ? -compareResult : compareResult
+  })
 
   const bg = dark ? 'linear-gradient(135deg,#1a2015,#2a1f10)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)'
   const cardStyle = {
@@ -415,17 +460,17 @@ export default function AdminPage() {
               <table className="w-full text-xs">
                 <thead style={{ background: 'rgba(232,98,26,0.08)' }}>
                   <tr className="border-b border-white/30">
-                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Booking ID</th>
-                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Patient</th>
-                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Date & Time</th>
-                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Status</th>
-                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Payment</th>
+                    <th onClick={() => handleSort('booking')} className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer select-none transition-colors hover:text-orange-600 ${dark ? 'text-gray-300' : 'text-stone-700'}`} title="Click to sort">Booking ID {sortField === 'booking' && (sortDirection === 'asc' ? '↑' : '↓')}</th>
+                    <th onClick={() => handleSort('patient')} className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer select-none transition-colors hover:text-orange-600 ${dark ? 'text-gray-300' : 'text-stone-700'}`} title="Click to sort">Patient {sortField === 'patient' && (sortDirection === 'asc' ? '↑' : '↓')}</th>
+                    <th onClick={() => handleSort('date')} className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer select-none transition-colors hover:text-orange-600 ${dark ? 'text-gray-300' : 'text-stone-700'}`} title="Click to sort">Date & Time {sortField === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}</th>
+                    <th onClick={() => handleSort('status')} className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer select-none transition-colors hover:text-orange-600 ${dark ? 'text-gray-300' : 'text-stone-700'}`} title="Click to sort">Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}</th>
+                    <th onClick={() => handleSort('payment')} className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer select-none transition-colors hover:text-orange-600 ${dark ? 'text-gray-300' : 'text-stone-700'}`} title="Click to sort">Payment {sortField === 'payment' && (sortDirection === 'asc' ? '↑' : '↓')}</th>
                     {activeTab === 'online' && <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Amount</th>}
-                    <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${dark ? 'text-gray-300' : 'text-stone-700'}`}>Action</th>
+                    <th onClick={() => handleSort('action')} className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer select-none transition-colors hover:text-orange-600 ${dark ? 'text-gray-300' : 'text-stone-700'}`} title="Click to sort">Action {sortField === 'action' && (sortDirection === 'asc' ? '↑' : '↓')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map((b, i) => {
+                  {sortedBookings.map((b, i) => {
                     const actions = getAvailableActions(b)
                     return (
                       <tr key={b.id} className={`transition ${dark ? 'bg-slate-900/50 hover:bg-slate-800/50' : 'bg-white/60 hover:bg-white/80'} backdrop-blur-md border ${dark ? 'border-white/10' : 'border-white/20'}`}
