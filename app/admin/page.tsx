@@ -92,7 +92,7 @@ const getStatusBadge = (booking: Booking) => {
 }
 
 const getPaymentBadge = (booking: Booking) => {
-  const { status, payment_method, payment_status, amount, refund_amount } = booking
+  const { status, payment_method, payment_status, amount, amount_paid, refund_amount } = booking
 
   // State: PAYMENT_PENDING
   if (status === 'PAYMENT_PENDING') {
@@ -135,6 +135,10 @@ const getPaymentBadge = (booking: Booking) => {
 
   // Preserve existing payment state for other statuses
   if (payment_status === 'PAID' || payment_status === 'SUCCESS') {
+    // For cash payments, show amount collected
+    if (payment_method === 'CASH' || payment_method === 'CASH_ON_ARRIVAL') {
+      return { label: `Cash Received ₹${amount_paid || 0}`, cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
+    }
     return { label: 'Paid', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
   }
 
@@ -158,13 +162,18 @@ const getPaymentBadge = (booking: Booking) => {
 }
 
 const getAvailableActions = (booking: Booking) => {
-  const { status, refund_status } = booking
+  const { status, refund_status, payment_status, payment_method } = booking
 
   // PAYMENT_PENDING: No actions
   if (status === 'PAYMENT_PENDING') return []
 
   // PENDING_CONFIRMATION: Confirm, Cancel
   if (status === 'PENDING_CONFIRMATION') return ['confirm', 'cancel']
+
+  // CONFIRMED + cash payment + pending: Collect Cash, Mark No Cash
+  if (status === 'CONFIRMED' && (payment_method === 'CASH' || payment_method === 'CASH_ON_ARRIVAL') && payment_status === 'PENDING') {
+    return ['collect_cash', 'mark_no_cash', 'cancel']
+  }
 
   // CONFIRMED (not rescheduled): Cancel only
   if (status === 'CONFIRMED' && !booking.rescheduled_at) return ['cancel']
@@ -196,6 +205,8 @@ export default function AdminPage() {
   const [stats, setStats] = useState({ today: 0, pending: 0, cash: 0, refunds: 0, completed: 0, grossRevenue: 0, totalRefunds: 0, netRevenue: 0 })
   const [refundModal, setRefundModal] = useState<{ booking_id: string; amount: number; reason: string } | null>(null)
   const [refundLoading, setRefundLoading] = useState(false)
+  const [cashModal, setCashModal] = useState<{ booking_id: string; amount_paid: number } | null>(null)
+  const [cashLoading, setCashLoading] = useState(false)
   const [sortField, setSortField] = useState<'booking' | 'patient' | 'date' | 'status' | 'payment' | 'action'>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const { theme, setTheme } = useTheme()
@@ -271,6 +282,35 @@ export default function AdminPage() {
       return
     }
 
+    if (action === 'collect_cash') {
+      const booking = bookings.find(b => b.booking_id === booking_id)
+      if (booking) {
+        setCashModal({ booking_id, amount_paid: booking.amount_paid || booking.amount || 0 })
+      }
+      return
+    }
+
+    if (action === 'mark_no_cash') {
+      setCashLoading(true)
+      const res = await fetch('/api/admin/cash-collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id, action: 'mark_no_cash', amount_paid: 0 }),
+      })
+
+      if (res.ok) {
+        setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, payment_status: 'NO_CASH_COLLECTED' } : b))
+        await fetchBookings()
+      }
+      setCashLoading(false)
+      return
+    }
+
+    if (action === 'record_refund') {
+      setRefundModal({ booking_id, amount: 0, reason: '' })
+      return
+    }
+
     const endpoint = action === 'confirm' ? '/api/admin/confirm' : 
                      action === 'cancel' ? '/api/admin/cancel' :
                      action === 'approve_reschedule' ? '/api/admin/confirm-reschedule' :
@@ -323,6 +363,26 @@ export default function AdminPage() {
       await fetchBookings()
     }
     setRefundLoading(false)
+  }
+
+  async function submitCash() {
+    if (!cashModal || cashLoading) return
+    const { booking_id, amount_paid } = cashModal
+    if (amount_paid <= 0) return
+
+    setCashLoading(true)
+    const res = await fetch('/api/admin/cash-collection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ booking_id, action: 'collect_cash', amount_paid }),
+    })
+
+    if (res.ok) {
+      setCashModal(null)
+      setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, payment_status: 'PAID', amount_paid } : b))
+      await fetchBookings()
+    }
+    setCashLoading(false)
   }
 
   function handleSort(field: typeof sortField) {
@@ -525,6 +585,12 @@ export default function AdminPage() {
                               {actions.includes('mark_no_show') && (
                                 <button onClick={() => performAction(b.booking_id, 'mark_no_show')} className="px-2 py-0.5 rounded bg-slate-500 text-white text-xs hover:bg-slate-600 transition">No Show</button>
                               )}
+                              {actions.includes('collect_cash') && (
+                                <button onClick={() => performAction(b.booking_id, 'collect_cash')} className="px-2 py-0.5 rounded bg-emerald-500 text-white text-xs hover:bg-emerald-600 transition">Collect Cash</button>
+                              )}
+                              {actions.includes('mark_no_cash') && (
+                                <button onClick={() => performAction(b.booking_id, 'mark_no_cash')} className="px-2 py-0.5 rounded bg-slate-500 text-white text-xs hover:bg-slate-600 transition">Mark No Cash</button>
+                              )}
                               {actions.includes('record_refund') && (
                                 <button onClick={() => performAction(b.booking_id, 'record_refund')} className="px-2 py-0.5 rounded bg-indigo-500 text-white text-xs hover:bg-indigo-600 transition">Record Refund</button>
                               )}
@@ -558,6 +624,38 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+
+        {/* Cash Collection Modal */}
+        {cashModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+              <h2 className={`text-lg font-semibold mb-4 ${dark ? 'text-white' : 'text-stone-900'}`}>Collect Cash Payment</h2>
+              {(() => {
+                const booking = bookings.find(b => b.booking_id === cashModal.booking_id)
+                return booking ? (
+                  <div className={`text-sm space-y-4 ${dark ? 'text-gray-300' : 'text-stone-600'}`}>
+                    <div>
+                      <p className="font-medium">Booking ID</p>
+                      <p>{booking.booking_id}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Expected Amount</p>
+                      <p>₹{booking.amount_paid || booking.amount || 0}</p>
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Amount Collected (₹)</label>
+                      <input type="text" inputMode="numeric" min="0" value={cashModal.amount_paid} onChange={(e) => setCashModal({ ...cashModal, amount_paid: parseFloat(e.target.value) || 0 })} className={`w-full px-3 py-2 border rounded-lg ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-stone-300 text-stone-900'}`} />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button onClick={submitCash} disabled={cashLoading} className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition disabled:opacity-50">{cashLoading ? 'Processing...' : 'Confirm Cash'}</button>
+                      <button onClick={() => setCashModal(null)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition">Cancel</button>
+                    </div>
+                  </div>
+                ) : null
+              })()}
+            </motion.div>
+          </div>
+        )}
 
         {/* Refund Modal */}
         {refundModal && (
