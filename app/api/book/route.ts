@@ -88,6 +88,12 @@ export async function POST(req: NextRequest) {
 
     const bookingStatus = isCod ? 'PENDING_CONFIRMATION' : 'PAYMENT_PENDING'
 
+    // For CASH_ON_ARRIVAL/CASH: store expected amount. For THERAPY_LATER: 0
+    let amountPaid = 0
+    if (payment_method !== 'THERAPY_LATER') {
+      amountPaid = amount
+    }
+
     const { data: booking, error: bookingErr } = await supabase.from('bookings_new').insert({
       clinic_id: clinic?.id ?? null,
       patient_uuid, booking_type,
@@ -96,6 +102,7 @@ export async function POST(req: NextRequest) {
       status: bookingStatus,
       payment_status: 'PENDING',
       payment_method: isCod ? 'CASH_ON_ARRIVAL' : 'ONLINE',
+      amount_paid: amountPaid,
     }).select().single()
     if (bookingErr) return NextResponse.json({ error: bookingErr.message }, { status: 500 })
 

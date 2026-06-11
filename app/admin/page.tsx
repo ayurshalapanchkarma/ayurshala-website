@@ -27,13 +27,14 @@ type Booking = {
   refund_status?: string
   refund_amount?: number
   refund_reason?: string
+  amount?: number
+  amount_paid?: number
   created_at: string
   patient_name: string
   patient_id: string
   patient_phone: string
   patient_email: string
   treatments: string
-  amount?: number
   rescheduled_at?: string
 }
 
@@ -573,11 +574,11 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <p className="font-medium">Paid Amount</p>
-                      <p>₹{booking.amount || 0}</p>
+                      <p>₹{booking.amount_paid || booking.amount || 0}</p>
                     </div>
                     <div>
                       <label className="block font-medium mb-1">Refund Amount (₹)</label>
-                      <input type="number" min="0" max={booking.amount || 0} value={refundModal.amount} onChange={(e) => setRefundModal({ ...refundModal, amount: parseFloat(e.target.value) || 0 })} className={`w-full px-3 py-2 border rounded-lg ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-stone-300 text-stone-900'}`} />
+                      <input type="text" inputMode="numeric" min="0" max={booking.amount_paid || booking.amount || 0} value={refundModal.amount} onChange={(e) => setRefundModal({ ...refundModal, amount: parseFloat(e.target.value) || 0 })} className={`w-full px-3 py-2 border rounded-lg ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-stone-300 text-stone-900'}`} />
                     </div>
                     <div>
                       <label className="block font-medium mb-1">Reason</label>

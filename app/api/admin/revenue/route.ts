@@ -8,18 +8,18 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    // Get gross revenue from payments
-    const { data: paidPayments } = await supabase
-      .from('payments')
-      .select('amount')
-      .eq('status', 'PAID')
+    // Get gross revenue from bookings_new amount_paid where payment_status = PAID
+    const { data: paidBookings } = await supabase
+      .from('bookings_new')
+      .select('amount_paid')
+      .eq('payment_status', 'PAID')
 
-    const grossRevenue = paidPayments?.reduce(
-      (sum, payment) => sum + Number(payment.amount || 0),
+    const grossRevenue = paidBookings?.reduce(
+      (sum, booking) => sum + Number(booking.amount_paid || 0),
       0
     ) || 0
 
-    // Get total refunds from bookings
+    // Get total refunds from bookings_new
     const { data: refundsData } = await supabase
       .from('bookings_new')
       .select('refund_amount')
@@ -37,7 +37,7 @@ export async function GET() {
       grossRevenue,
       totalRefunds,
       netRevenue,
-      revenue: netRevenue // For backward compatibility
+      revenue: netRevenue
     })
   } catch (error) {
     console.error('Revenue fetch error:', error)
