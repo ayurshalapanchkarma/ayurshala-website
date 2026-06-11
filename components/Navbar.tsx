@@ -147,17 +147,25 @@ export default function Navbar() {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute right-0 mt-2 w-48 rounded-xl bg-white shadow-lg border border-stone-200 overflow-hidden z-50"
+                            className={`absolute right-0 mt-2 w-48 rounded-xl overflow-hidden z-50 border shadow-lg ${
+                              mounted && theme === 'dark' ? 'bg-stone-900 border-stone-700' : 'bg-white border-stone-200'
+                            }`}
                           >
-                            <Link href="/admin" className="block px-4 py-2 hover:bg-orange-50 text-sm text-stone-900">
+                            <Link href="/admin" className={`block px-4 py-2 text-sm transition-colors ${
+                              mounted && theme === 'dark' ? 'text-stone-100 hover:bg-stone-800' : 'text-stone-900 hover:bg-orange-50'
+                            }`}>
                               Dashboard
                             </Link>
-                            <Link href="/admin" className="block px-4 py-2 hover:bg-orange-50 text-sm text-stone-900">
+                            <Link href="/admin" className={`block px-4 py-2 text-sm transition-colors ${
+                              mounted && theme === 'dark' ? 'text-stone-100 hover:bg-stone-800' : 'text-stone-900 hover:bg-orange-50'
+                            }`}>
                               Refunds
                             </Link>
                             <button
                               onClick={handleSignOut}
-                              className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600 flex items-center gap-2"
+                              className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${
+                                mounted && theme === 'dark' ? 'text-red-400 hover:bg-red-950/30' : 'text-red-600 hover:bg-red-50'
+                              }`}
                             >
                               <LogOut className="w-4 h-4" />
                               Logout
@@ -192,17 +200,25 @@ export default function Navbar() {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute right-0 mt-2 w-48 rounded-xl bg-white shadow-lg border border-stone-200 overflow-hidden z-50"
+                            className={`absolute right-0 mt-2 w-48 rounded-xl overflow-hidden z-50 border shadow-lg ${
+                              mounted && theme === 'dark' ? 'bg-stone-900 border-stone-700' : 'bg-white border-stone-200'
+                            }`}
                           >
-                            <Link href="/patient/bookings" className="block px-4 py-2 hover:bg-orange-50 text-sm text-stone-900">
+                            <Link href="/patient/bookings" className={`block px-4 py-2 text-sm transition-colors ${
+                              mounted && theme === 'dark' ? 'text-stone-100 hover:bg-stone-800' : 'text-stone-900 hover:bg-orange-50'
+                            }`}>
                               My Bookings
                             </Link>
-                            <Link href="/patient/dashboard" className="block px-4 py-2 hover:bg-orange-50 text-sm text-stone-900">
+                            <Link href="/patient/dashboard" className={`block px-4 py-2 text-sm transition-colors ${
+                              mounted && theme === 'dark' ? 'text-stone-100 hover:bg-stone-800' : 'text-stone-900 hover:bg-orange-50'
+                            }`}>
                               Profile
                             </Link>
                             <button
                               onClick={handleSignOut}
-                              className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600 flex items-center gap-2"
+                              className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${
+                                mounted && theme === 'dark' ? 'text-red-400 hover:bg-red-950/30' : 'text-red-600 hover:bg-red-50'
+                              }`}
                             >
                               <LogOut className="w-4 h-4" />
                               Logout
