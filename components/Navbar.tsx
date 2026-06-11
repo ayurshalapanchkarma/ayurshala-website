@@ -244,11 +244,18 @@ export default function Navbar() {
                       onClick={(e) => {
                         e.preventDefault()
                         const targetId = l.href.split('#')[1]
-                        const element = document.getElementById(targetId)
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth' })
-                        }
                         setOpen(false)
+                        
+                        if (window.location.pathname === '/') {
+                          setTimeout(() => {
+                            const element = document.getElementById(targetId)
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                            }
+                          }, 150)
+                        } else {
+                          router.push(`/#${targetId}`)
+                        }
                       }}
                       className="font-sans text-sm text-stone-900 hover:text-orange-600"
                     >
