@@ -89,9 +89,12 @@ export async function POST(req: NextRequest) {
 
     const bookingStatus = isCod ? 'PENDING_CONFIRMATION' : 'PAYMENT_PENDING'
 
-    // For CASH_ON_ARRIVAL/CASH: store expected amount. For THERAPY_LATER: 0
+    // amount_paid logic:
+    // CASH_ON_ARRIVAL (PENDING_CONFIRMATION) → store expected amount
+    // ONLINE (PAYMENT_PENDING) → 0 (set after Cashfree verification)
+    // THERAPY_LATER → 0
     let amountPaid = 0
-    if (payment_method !== 'THERAPY_LATER') {
+    if (isCod) {
       amountPaid = amount
     }
 
