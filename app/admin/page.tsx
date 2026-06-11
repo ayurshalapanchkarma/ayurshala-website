@@ -281,8 +281,8 @@ export default function AdminPage() {
                 <Image src="/ayurshala_text.png" alt="Ayurshala" width={168} height={48} className="object-contain h-10 w-auto" />
               </Link>
               <div className="min-w-0">
-                <h1 className="font-serif text-2xl" style={{ color: '#E8621A' }}>Admin</h1>
-                <p className={`font-sans text-xs ${dark ? 'text-gray-400' : 'text-stone-500'} truncate`}>ayurshalapanchkarma@gmail.com</p>
+                <h1 className="font-serif text-2xl" style={{ color: '#E8621A' }}>Admin Dashboard</h1>
+                <p className={`font-sans text-xs ${dark ? 'text-gray-400' : 'text-stone-500'} truncate`}>Logged in as: ayurshalapanchkarma@gmail.com</p>
               </div>
             </div>
             <div className="text-right flex-shrink-0">
@@ -386,7 +386,10 @@ export default function AdminPage() {
                         style={{ boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.5)' }}>
                         <td className="px-3 py-2 font-mono font-semibold tracking-wide text-sm" style={{ color: '#E8621A' }}>{b.booking_id}</td>
                         <td className={`px-3 py-2 text-xs ${dark ? 'text-gray-200' : 'text-stone-900'}`}><p>{b.patient_name}</p><p className={`text-xs ${dark ? 'text-gray-400' : 'text-stone-600'}`}>{b.patient_email}</p></td>
-                        <td className={`px-3 py-2 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>{b.preferred_date} {b.preferred_time}</td>
+                        <td className={`px-3 py-2 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>
+                          <p className="font-medium">{new Date(b.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                          <p className={`${dark ? 'text-gray-400' : 'text-stone-500'}`}>{b.preferred_time}</p>
+                        </td>
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadge(b).cls}`}>{getStatusBadge(b).label}</span></td>
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-xs font-medium ${getPaymentBadge(b).cls}`}>{getPaymentBadge(b).label}</span></td>
                         {activeTab === 'online' && <td className={`px-3 py-2 text-xs ${dark ? 'text-gray-300' : 'text-stone-700'}`}>₹{b.amount || 0}</td>}
