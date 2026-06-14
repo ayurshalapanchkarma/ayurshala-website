@@ -3,9 +3,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import React from 'react'
 import { pdf } from '@react-pdf/renderer'
 import { CertificatePDF } from '@/components/CertificatePDF'
-import { generateCertificatePDF } from '@/lib/certificates/generatePDF'
 import fs from 'fs'
 import path from 'path'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 // Use service role key for server-side operations
 const supabase = createClient(
@@ -82,12 +84,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     let pdfBuffer
     try {
-      const element = React.createElement(CertificatePDF, {
+      console.log('[PDF] Creating element')
+      const element = React.createElement(CertificatePDF as any, {
         certificate,
         logoUrl: logoBase64,
       })
 
-      const pdfInstance = pdf(element as any)
+      console.log('[PDF] Creating pdf instance')
+      const pdfInstance = pdf()
+
+      console.log('[PDF] Updating container')
+      pdfInstance.updateContainer(element)
+
+      console.log('[PDF] Generating buffer')
       const buffer = await pdfInstance.toBuffer()
 
       console.log('[PDF] Render success')
