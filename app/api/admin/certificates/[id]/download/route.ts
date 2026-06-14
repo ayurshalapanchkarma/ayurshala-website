@@ -1,8 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { renderToBuffer } from '@react-pdf/renderer'
-import React from 'react'
-import { CertificatePDF } from '@/components/CertificatePDF'
+import { generateCertificatePDF } from '@/lib/certificates/generatePDF'
 import fs from 'fs'
 import path from 'path'
 
@@ -81,12 +79,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     let pdfBuffer
     try {
-      pdfBuffer = await renderToBuffer(
-        React.createElement(CertificatePDF, {
-          certificate: certificate as any,
-          logoUrl: logoBase64,
-        }) as any
-      )
+      pdfBuffer = await generateCertificatePDF(certificate, logoBase64)
       console.log('[PDF] Render success')
     } catch (renderError) {
       console.error('[PDF] renderToBuffer failed:', renderError instanceof Error ? renderError.message : String(renderError))

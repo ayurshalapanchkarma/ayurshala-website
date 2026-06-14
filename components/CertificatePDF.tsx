@@ -117,6 +117,7 @@ export const CertificatePDF = ({
   certificate: CertificateData
   logoUrl: string
 }) => {
+  console.log('[PDF]', certificate.certificate_no, certificate.certificate_type?.name)
   const narrative = getNarrativeText(certificate.certificate_type.name, certificate as any)
 
   return (
