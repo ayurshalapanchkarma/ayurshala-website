@@ -328,6 +328,8 @@ export default function Contact() {
               <a href="tel:+919821224767" className="font-sans text-xs text-stone-900 hover:text-brand transition-colors">Call Us</a>
               <a href="mailto:ayurshalapanchkarma@gmail.com" className="font-sans text-xs text-stone-900 hover:text-brand transition-colors">Email</a>
               <a href="/book" className="font-sans text-xs text-stone-900 hover:text-brand transition-colors">Book</a>
+              <a href="/privacy-policy" className="font-sans text-xs text-stone-900 hover:text-brand transition-colors">Privacy</a>
+              <a href="/terms-and-conditions" className="font-sans text-xs text-stone-900 hover:text-brand transition-colors">Terms</a>
             </div>
           </div>
           <div className="border-t border-stone-200/50 pt-1.5 text-center">
