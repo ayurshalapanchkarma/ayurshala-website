@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { renderToBuffer } from '@react-pdf/renderer'
+import React from 'react'
 import { CertificatePDF } from '@/components/CertificatePDF'
 import fs from 'fs'
 import path from 'path'
@@ -54,21 +55,28 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log(`[PDF] Generating PDF for certificate: ${certificate.certificate_no}`)
 
     const logoPath = path.join(process.cwd(), 'public', 'ayurshala.png')
-    if (!fs.existsSync(logoPath)) {
-      console.error(`[PDF] Logo not found at ${logoPath}`)
-      return NextResponse.json({ error: 'Logo file not found' }, { status: 500 })
-    }
+    console.log('Logo path:', logoPath)
+    console.log('Logo exists:', fs.existsSync(logoPath))
 
-    const logoBuffer = fs.readFileSync(logoPath)
-    const logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`
+    let logoBase64 = ''
+    if (fs.existsSync(logoPath)) {
+      const logoBuffer = fs.readFileSync(logoPath)
+      logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`
+      console.log('Logo loaded successfully')
+    } else {
+      console.warn('[PDF] Logo not found, generating PDF without logo')
+    }
 
     console.log(`[PDF] Rendering PDF document with certificate type: ${certificate.certificate_type.name}`)
     const pdfBuffer = await renderToBuffer(
-      CertificatePDF({ certificate: certificate as any, logoUrl: logoBase64 })
+      <CertificatePDF
+        certificate={certificate as any}
+        logoUrl={logoBase64}
+      />
     )
 
     console.log(`[PDF] PDF generated successfully: ${pdfBuffer.length} bytes`)
-    console.log(`[PDF] Buffer type: ${Buffer.isBuffer(pdfBuffer) ? 'Buffer' : typeof pdfBuffer}`)
+    console.log('PDF bytes:', pdfBuffer.length)
 
     const response = new NextResponse(Buffer.from(pdfBuffer), {
       status: 200,
