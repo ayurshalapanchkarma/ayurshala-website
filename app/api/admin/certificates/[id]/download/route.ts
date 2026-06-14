@@ -5,9 +5,10 @@ import { CertificatePDF } from '@/components/CertificatePDF'
 import fs from 'fs'
 import path from 'path'
 
+// Use service role key for server-side operations
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { id: certificateId } = await params
     console.log(`[PDF] Fetching certificate: ${certificateId}`)
 
-    const { data: certificate, error } = await supabase
+    const { data: cert, error } = await supabase
       .from('certificates')
       .select(
         `
@@ -39,6 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .eq('id', certificateId)
       .single()
 
+    const certificate = cert as any
     if (error || !certificate) {
       console.error(`[PDF] Certificate not found: ${error?.message || 'unknown'}`)
       return NextResponse.json({ error: 'Certificate not found' }, { status: 404 })
@@ -60,12 +62,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const logoBuffer = fs.readFileSync(logoPath)
     const logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`
 
-    console.log(`[PDF] Rendering PDF document...`)
+    console.log(`[PDF] Rendering PDF document with certificate type: ${certificate.certificate_type.name}`)
     const pdfBuffer = await renderToBuffer(
       CertificatePDF({ certificate: certificate as any, logoUrl: logoBase64 })
     )
 
     console.log(`[PDF] PDF generated successfully: ${pdfBuffer.length} bytes`)
+    console.log(`[PDF] Buffer type: ${Buffer.isBuffer(pdfBuffer) ? 'Buffer' : typeof pdfBuffer}`)
 
     const response = new NextResponse(Buffer.from(pdfBuffer), {
       status: 200,

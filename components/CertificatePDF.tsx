@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, Image, StyleSheet, Line } from '@react-pdf/renderer'
+import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
 import { getNarrativeText } from './CertificateTemplates'
 
 const styles = StyleSheet.create({
@@ -6,55 +6,25 @@ const styles = StyleSheet.create({
     padding: 0,
     backgroundColor: '#FFFFFF',
     fontFamily: 'Helvetica',
-    position: 'relative',
   },
-  container: {
-    padding: '15mm',
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  border: {
-    position: 'absolute',
+  borderPage: {
+    margin: '12mm',
     border: '2px solid #F97316',
-    left: '12mm',
-    top: '12mm',
-    right: '12mm',
-    bottom: '12mm',
-    width: 'calc(100% - 24mm)',
-    height: 'calc(100% - 24mm)',
-    pointerEvents: 'none',
-  },
-  cornerTL: {
-    position: 'absolute',
-    width: '20px',
-    height: '20px',
-    left: '12mm',
-    top: '12mm',
-    borderLeft: '3px solid #F97316',
-    borderTop: '3px solid #F97316',
-  },
-  cornerBR: {
-    position: 'absolute',
-    width: '20px',
-    height: '20px',
-    right: '12mm',
-    bottom: '12mm',
-    borderRight: '3px solid #F97316',
-    borderBottom: '3px solid #F97316',
-  },
-  content: {
-    flex: 1,
+    padding: '15mm',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    position: 'relative',
-    zIndex: 1,
+    minHeight: '100%',
+  },
+  cornerContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
   },
   logo: {
     width: '70px',
     height: '70px',
-    marginTop: '10mm',
+    marginHorizontal: 'auto',
+    marginTop: '5mm',
     marginBottom: '8mm',
   },
   header: {
@@ -84,7 +54,7 @@ const styles = StyleSheet.create({
     color: '#F97316',
     textAlign: 'center',
     textTransform: 'uppercase',
-    marginBottom: '18mm',
+    marginBottom: '15mm',
     marginTop: '5mm',
   },
   body: {
@@ -100,15 +70,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: '8mm',
     marginTop: 'auto',
-    width: '100%',
-    paddingHorizontal: '20mm',
+    paddingHorizontal: '10mm',
   },
   signatureBlock: {
-    width: '35%',
+    width: '40%',
     textAlign: 'center',
   },
   signatureLine: {
-    borderTop: '1px solid #111827',
+    borderTopWidth: 1,
+    borderTopColor: '#111827',
     paddingTop: '3px',
     marginTop: '12mm',
     fontSize: 10,
@@ -119,7 +89,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 8,
     color: '#6B7280',
-    marginBottom: '10mm',
+    marginBottom: '5mm',
     lineHeight: 1.5,
   },
 })
@@ -152,45 +122,38 @@ export const CertificatePDF = ({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Corner ornaments */}
-        <View style={styles.cornerTL} />
-        <View style={styles.cornerBR} />
+        <View style={styles.borderPage}>
+          {/* Logo */}
+          <Image style={styles.logo} src={logoUrl} />
 
-        {/* Main content */}
-        <View style={styles.container}>
-          <View style={styles.content}>
-            {/* Logo */}
-            <Image style={styles.logo} src={logoUrl} />
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>AYURSHALA PANCHAKARMA CENTER</Text>
+            <Text style={styles.headerText}>SP-28, Wajidpur,</Text>
+            <Text style={styles.headerText}>Sector-130, Noida – 201301</Text>
+            <Text style={styles.headerContact}>+91-9821224767</Text>
+            <Text style={styles.headerContact}>ayurshalapanchkarma@gmail.com</Text>
+          </View>
 
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>AYURSHALA PANCHAKARMA CENTER</Text>
-              <Text style={styles.headerText}>SP-28, Wajidpur,</Text>
-              <Text style={styles.headerText}>Sector-130, Noida – 201301</Text>
-              <Text style={styles.headerContact}>+91-9821224767</Text>
-              <Text style={styles.headerContact}>ayurshalapanchkarma@gmail.com</Text>
-            </View>
+          {/* Certificate Title */}
+          <Text style={styles.certTitle}>{certificate.certificate_type.name}</Text>
 
-            {/* Certificate Title */}
-            <Text style={styles.certTitle}>{certificate.certificate_type.name}</Text>
+          {/* Certificate Body */}
+          <Text style={styles.body}>{narrative}</Text>
 
-            {/* Certificate Body */}
-            <Text style={styles.body}>{narrative}</Text>
-
-            {/* Signature Section */}
-            <View style={styles.signatureSection}>
-              <View style={styles.signatureBlock}>
-                <View style={styles.signatureLine}>
-                  <Text>Patient Signature</Text>
-                </View>
+          {/* Signature Section */}
+          <View style={styles.signatureSection}>
+            <View style={styles.signatureBlock}>
+              <View style={styles.signatureLine}>
+                <Text>Patient Signature</Text>
               </View>
-              <View style={styles.signatureBlock}>
-                <View style={styles.signatureLine}>
-                  <Text>{`Dr. ${certificate.issued_by}`}</Text>
-                  <Text style={{ fontSize: 9, marginTop: '2px' }}>
-                    Ayurshala Panchakarma Center
-                  </Text>
-                </View>
+            </View>
+            <View style={styles.signatureBlock}>
+              <View style={styles.signatureLine}>
+                <Text>{`Dr. ${certificate.issued_by}`}</Text>
+                <Text style={{ fontSize: 9, marginTop: '2px' }}>
+                  Ayurshala Panchakarma Center
+                </Text>
               </View>
             </View>
           </View>

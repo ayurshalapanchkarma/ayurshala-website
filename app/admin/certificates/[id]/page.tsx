@@ -103,9 +103,13 @@ export default function CertificateDetailPage() {
       .eq('id', certificateId)
 
     setCancelling(false)
-    if (!error) {
-      loadCertificate()
+    if (error) {
+      console.error('Cancel error:', error)
+      alert(`Error cancelling certificate: ${error.message}`)
+      return
     }
+    alert('Certificate cancelled successfully')
+    loadCertificate()
   }
 
   if (loading) {
