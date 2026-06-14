@@ -85,9 +85,21 @@ export default function NewCertificatePage() {
       supabase.from('certificate_types').select('id, name').order('name'),
     ])
 
-    if (patientsRes.data) setPatients(patientsRes.data)
+    if (patientsRes.error) {
+      console.error('Failed loading patients:', patientsRes.error)
+    }
+
+    if (patientsRes.data) {
+      console.log('Patients count:', patientsRes.data.length)
+      setPatients(patientsRes.data)
+    }
+
     if (typesRes.data) setCertificateTypes(typesRes.data)
   }
+
+  useEffect(() => {
+    console.log('PATIENT STATE:', patients)
+  }, [patients])
 
   async function loadBookings(patientUuid: string) {
     const { data } = await supabase
@@ -112,7 +124,7 @@ export default function NewCertificatePage() {
         p.full_name.toLowerCase().includes(searchPatient.toLowerCase()) ||
         p.patient_id.toLowerCase().includes(searchPatient.toLowerCase())
       )
-    : []
+    : patients
 
   async function saveDraft() {
     if (!formData.patient_uuid || !formData.certificate_type_id) {
@@ -217,6 +229,9 @@ export default function NewCertificatePage() {
               <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-stone-700'}`}>
                 Patient *
               </label>
+              <div className={`text-xs mb-2 p-2 rounded ${isDark ? 'bg-slate-800/50 text-gray-400' : 'bg-stone-100 text-stone-600'}`}>
+                Patients available: {patients.length} | Filtered: {filteredPatients.length}
+              </div>
               <div className="relative">
                 <div
                   onClick={() => setShowPatientDropdown(!showPatientDropdown)}
