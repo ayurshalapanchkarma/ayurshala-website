@@ -54,9 +54,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     console.log(`[PDF] Generating PDF for certificate: ${certificate.certificate_no}`)
 
-    const logoPath = path.join(process.cwd(), 'public', 'ayurshala.png')
-    console.log('Logo path:', logoPath)
-    console.log('Logo exists:', fs.existsSync(logoPath))
+    const logoPath = path.join(process.cwd(), 'public', 'ayurshala_text.png')
+    console.log('[PDF] Logo path:', logoPath)
+    console.log('[PDF] Logo exists:', fs.existsSync(logoPath))
+    console.log('[PDF] Certificate:', certificate.certificate_no)
 
     let logoBase64 = ''
     if (fs.existsSync(logoPath)) {
@@ -75,8 +76,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       />
     )
 
-    console.log(`[PDF] PDF generated successfully: ${pdfBuffer.length} bytes`)
-    console.log('PDF bytes:', pdfBuffer.length)
+    console.log('[PDF] PDF bytes:', pdfBuffer.length)
+    console.log('[PDF] Returning PDF response')
 
     const response = new NextResponse(Buffer.from(pdfBuffer), {
       status: 200,
