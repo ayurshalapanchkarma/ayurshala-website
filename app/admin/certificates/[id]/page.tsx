@@ -72,7 +72,14 @@ export default function CertificateDetailPage() {
     setDownloading(true)
     try {
       const res = await fetch(`/api/admin/certificates/${certificateId}/download`)
-      if (!res.ok) throw new Error('Download failed')
+
+      if (!res.ok) {
+        const text = await res.text()
+        console.error('[PDF] Download failed', res.status, text)
+        alert(`Download failed (${res.status}): ${text}`)
+        setDownloading(false)
+        return
+      }
 
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
@@ -83,6 +90,7 @@ export default function CertificateDetailPage() {
       window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('PDF download error:', error)
+      alert(`Download error: ${error instanceof Error ? error.message : String(error)}`)
     }
     setDownloading(false)
   }
