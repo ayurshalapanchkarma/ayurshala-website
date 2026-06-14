@@ -1,112 +1,126 @@
-import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, Text, View, Image, StyleSheet, Line } from '@react-pdf/renderer'
+import { getNarrativeText } from './CertificateTemplates'
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
-    backgroundColor: '#ffffff',
+    padding: 0,
+    backgroundColor: '#FFFFFF',
     fontFamily: 'Helvetica',
+    position: 'relative',
   },
   container: {
+    padding: '15mm',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  border: {
+    position: 'absolute',
+    border: '2px solid #F97316',
+    left: '12mm',
+    top: '12mm',
+    right: '12mm',
+    bottom: '12mm',
+    width: 'calc(100% - 24mm)',
+    height: 'calc(100% - 24mm)',
+    pointerEvents: 'none',
+  },
+  cornerTL: {
+    position: 'absolute',
+    width: '20px',
+    height: '20px',
+    left: '12mm',
+    top: '12mm',
+    borderLeft: '3px solid #F97316',
+    borderTop: '3px solid #F97316',
+  },
+  cornerBR: {
+    position: 'absolute',
+    width: '20px',
+    height: '20px',
+    right: '12mm',
+    bottom: '12mm',
+    borderRight: '3px solid #F97316',
+    borderBottom: '3px solid #F97316',
+  },
+  content: {
+    flex: 1,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    position: 'relative',
+    zIndex: 1,
   },
   logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 20,
+    width: '70px',
+    height: '70px',
+    marginTop: '10mm',
+    marginBottom: '8mm',
   },
   header: {
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: '15mm',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#1a472a',
+    marginBottom: '4px',
+    color: '#111827',
   },
   headerText: {
-    fontSize: 11,
-    color: '#333',
-    marginBottom: 2,
+    fontSize: 10,
+    color: '#111827',
+    marginBottom: '1px',
+    lineHeight: 1.4,
+  },
+  headerContact: {
+    fontSize: 9,
+    color: '#6B7280',
+    marginTop: '3px',
   },
   certTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#f97316',
+    color: '#F97316',
     textAlign: 'center',
     textTransform: 'uppercase',
-    marginBottom: 25,
-    letterSpacing: 1,
+    marginBottom: '18mm',
+    marginTop: '5mm',
   },
-  certDetails: {
-    textAlign: 'center',
-    marginBottom: 20,
+  body: {
     fontSize: 11,
+    lineHeight: 1.8,
+    color: '#111827',
+    textAlign: 'justify',
+    marginBottom: '20mm',
   },
-  detailRow: {
-    marginBottom: 6,
-  },
-  content: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  section: {
-    marginBottom: 12,
-    pageBreakInside: 'avoid',
-  },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    textDecoration: 'underline',
-    marginBottom: 6,
-    color: '#333',
-  },
-  sectionContent: {
-    fontSize: 10,
-    color: '#333',
-    lineHeight: 1.4,
-    marginLeft: 10,
-  },
-  patientInfo: {
+  signatureSection: {
     display: 'flex',
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: '8mm',
+    marginTop: 'auto',
     width: '100%',
-    marginBottom: 20,
-    gap: 20,
+    paddingHorizontal: '20mm',
   },
-  infoBlock: {
-    flex: 1,
+  signatureBlock: {
+    width: '35%',
+    textAlign: 'center',
+  },
+  signatureLine: {
+    borderTop: '1px solid #111827',
+    paddingTop: '3px',
+    marginTop: '12mm',
     fontSize: 10,
-  },
-  infoLabel: {
-    fontSize: 9,
     fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 11,
-    color: '#333',
+    color: '#111827',
   },
   footer: {
-    marginTop: 30,
     textAlign: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#999',
-    paddingTop: 15,
-  },
-  footerText: {
-    fontSize: 9,
-    color: '#666',
-    marginBottom: 4,
-  },
-  disclaimer: {
     fontSize: 8,
-    color: '#999',
-    marginTop: 10,
-    fontStyle: 'italic',
+    color: '#6B7280',
+    marginBottom: '10mm',
+    lineHeight: 1.5,
   },
 })
 
@@ -133,115 +147,60 @@ export const CertificatePDF = ({
   certificate: CertificateData
   logoUrl: string
 }) => {
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN')
-  }
+  const narrative = getNarrativeText(certificate.certificate_type.name, certificate as any)
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {/* Corner ornaments */}
+        <View style={styles.cornerTL} />
+        <View style={styles.cornerBR} />
+
+        {/* Main content */}
         <View style={styles.container}>
-          <Image style={styles.logo} src={logoUrl} />
-
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>AYURSHALA PANCHAKARMA CENTER</Text>
-            <Text style={styles.headerText}>SP-28, Wajidpur, Sector-130, Noida – 201301</Text>
-            <Text style={styles.headerText}>+91-9821224767</Text>
-            <Text style={styles.headerText}>ayurshalapanchkarma@gmail.com</Text>
-          </View>
-
-          <Text style={styles.certTitle}>{certificate.certificate_type.name}</Text>
-
-          <View style={styles.certDetails}>
-            <View style={styles.detailRow}>
-              <Text>
-                <Text style={{ fontWeight: 'bold' }}>Certificate No: </Text>
-                {certificate.certificate_no}
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text>
-                <Text style={{ fontWeight: 'bold' }}>Date Issued: </Text>
-                {formatDate(certificate.issue_date)}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.patientInfo}>
-            <View style={styles.infoBlock}>
-              <Text style={styles.infoLabel}>PATIENT NAME</Text>
-              <Text style={styles.infoValue}>{certificate.patient.full_name}</Text>
-            </View>
-            <View style={styles.infoBlock}>
-              <Text style={styles.infoLabel}>PATIENT ID</Text>
-              <Text style={styles.infoValue}>{certificate.patient.patient_id}</Text>
-            </View>
-          </View>
-
           <View style={styles.content}>
-            {(certificate.valid_from || certificate.valid_to) && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>VALIDITY</Text>
-                <Text style={styles.sectionContent}>
-                  {certificate.valid_from && `Valid From: ${formatDate(certificate.valid_from)}`}
-                  {certificate.valid_from && certificate.valid_to && '\n'}
-                  {certificate.valid_to && `Valid To: ${formatDate(certificate.valid_to)}`}
-                </Text>
-              </View>
-            )}
+            {/* Logo */}
+            <Image style={styles.logo} src={logoUrl} />
 
-            {certificate.purpose && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>PURPOSE</Text>
-                <Text style={styles.sectionContent}>{certificate.purpose}</Text>
-              </View>
-            )}
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>AYURSHALA PANCHAKARMA CENTER</Text>
+              <Text style={styles.headerText}>SP-28, Wajidpur,</Text>
+              <Text style={styles.headerText}>Sector-130, Noida – 201301</Text>
+              <Text style={styles.headerContact}>+91-9821224767</Text>
+              <Text style={styles.headerContact}>ayurshalapanchkarma@gmail.com</Text>
+            </View>
 
-            {certificate.diagnosis && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>DIAGNOSIS</Text>
-                <Text style={styles.sectionContent}>{certificate.diagnosis}</Text>
-              </View>
-            )}
+            {/* Certificate Title */}
+            <Text style={styles.certTitle}>{certificate.certificate_type.name}</Text>
 
-            {certificate.treatment_details && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>TREATMENT DETAILS</Text>
-                <Text style={styles.sectionContent}>{certificate.treatment_details}</Text>
-              </View>
-            )}
+            {/* Certificate Body */}
+            <Text style={styles.body}>{narrative}</Text>
 
-            {certificate.recommendations && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>RECOMMENDATIONS</Text>
-                <Text style={styles.sectionContent}>{certificate.recommendations}</Text>
+            {/* Signature Section */}
+            <View style={styles.signatureSection}>
+              <View style={styles.signatureBlock}>
+                <View style={styles.signatureLine}>
+                  <Text>Patient Signature</Text>
+                </View>
               </View>
-            )}
-
-            {certificate.restrictions && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>RESTRICTIONS</Text>
-                <Text style={styles.sectionContent}>{certificate.restrictions}</Text>
+              <View style={styles.signatureBlock}>
+                <View style={styles.signatureLine}>
+                  <Text>{`Dr. ${certificate.issued_by}`}</Text>
+                  <Text style={{ fontSize: 9, marginTop: '2px' }}>
+                    Ayurshala Panchakarma Center
+                  </Text>
+                </View>
               </View>
-            )}
-
-            {certificate.additional_notes && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>ADDITIONAL NOTES</Text>
-                <Text style={styles.sectionContent}>{certificate.additional_notes}</Text>
-              </View>
-            )}
+            </View>
           </View>
 
+          {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              <Text style={{ fontWeight: 'bold' }}>Issued By: </Text>
-              {certificate.issued_by}
-            </Text>
-            <Text style={styles.disclaimer}>
+            <Text>
               This certificate has been electronically generated by Ayurshala Panchakarma Center.
             </Text>
-            <Text style={styles.disclaimer}>No physical signature is required.</Text>
+            <Text>No physical signature is required.</Text>
           </View>
         </View>
       </Page>

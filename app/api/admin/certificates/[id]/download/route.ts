@@ -19,9 +19,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .from('certificates')
       .select(
         `
-        *,
+        id,
+        certificate_no,
         patient:patient_uuid(full_name, patient_id),
-        certificate_type:certificate_type_id(name)
+        certificate_type:certificate_type_id(name),
+        issue_date,
+        issued_by,
+        valid_from,
+        valid_to,
+        purpose,
+        diagnosis,
+        treatment_details,
+        recommendations,
+        restrictions,
+        additional_notes,
+        status
       `
       )
       .eq('id', certificateId)
@@ -39,28 +51,43 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     console.log(`[PDF] Generating PDF for certificate: ${certificate.certificate_no}`)
 
-    // Read logo and convert to base64
     const logoPath = path.join(process.cwd(), 'public', 'ayurshala.png')
+    if (!fs.existsSync(logoPath)) {
+      console.error(`[PDF] Logo not found at ${logoPath}`)
+      return NextResponse.json({ error: 'Logo file not found' }, { status: 500 })
+    }
+
     const logoBuffer = fs.readFileSync(logoPath)
     const logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`
 
-    const buffer = await renderToBuffer(
-      CertificatePDF({ certificate, logoUrl: logoBase64 })
+    console.log(`[PDF] Rendering PDF document...`)
+    const pdfBuffer = await renderToBuffer(
+      CertificatePDF({ certificate: certificate as any, logoUrl: logoBase64 })
     )
 
-    console.log(`[PDF] PDF generated successfully, size: ${buffer.length} bytes`)
+    console.log(`[PDF] PDF generated successfully: ${pdfBuffer.length} bytes`)
 
-    return new NextResponse(new Uint8Array(buffer), {
+    const response = new NextResponse(Buffer.from(pdfBuffer), {
+      status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="certificate-${certificate.certificate_no}.pdf"`,
+        'Content-Disposition': `attachment; filename="certificate-${certificate.certificate_no}.pdf"`,
+        'Content-Length': String(pdfBuffer.length),
         'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       },
     })
+
+    console.log(`[PDF] Response ready for download`)
+    return response
   } catch (error) {
-    console.error('[PDF] Generation error:', error)
+    console.error('[PDF] Generation error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
-      { error: 'PDF generation failed', details: String(error) },
+      {
+        error: 'PDF generation failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     )
   }
