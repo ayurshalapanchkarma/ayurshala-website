@@ -9,7 +9,7 @@ import { useTheme } from 'next-themes'
 
 type Certificate = {
   id: string
-  certificate_number: string
+  certificate_no: string
   patient_uuid: string
   booking_uuid?: string
   certificate_type_id: string
@@ -63,7 +63,7 @@ export default function CertificatesPage() {
     if (!error && data) {
       const filtered = search
         ? data.filter(c => 
-            c.certificate_number.toLowerCase().includes(search.toLowerCase()) ||
+            c.certificate_no.toLowerCase().includes(search.toLowerCase()) ||
             c.patient?.full_name.toLowerCase().includes(search.toLowerCase())
           )
         : data
@@ -252,7 +252,7 @@ export default function CertificatesPage() {
                   {certificates.map((cert) => (
                     <tr key={cert.id} className={isDark ? 'hover:bg-slate-800/30' : 'hover:bg-white/40'}>
                       <td className={`px-6 py-3 font-mono font-semibold ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                        {cert.certificate_number}
+                        {cert.certificate_no}
                       </td>
                       <td className={`px-6 py-3 ${isDark ? 'text-gray-200' : 'text-stone-900'}`}>
                         {cert.patient?.full_name}

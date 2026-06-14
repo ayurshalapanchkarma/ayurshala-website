@@ -9,7 +9,7 @@ import { useTheme } from 'next-themes'
 
 type Certificate = {
   id: string
-  certificate_number: string
+  certificate_no: string
   patient_uuid: string
   booking_uuid?: string
   certificate_type_id: string
@@ -78,7 +78,7 @@ export default function CertificateDetailPage() {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `certificate-${certificate.certificate_number}.pdf`
+      a.download = `certificate-${certificate.certificate_no}.pdf`
       a.click()
       window.URL.revokeObjectURL(url)
     } catch (error) {
@@ -133,7 +133,7 @@ export default function CertificateDetailPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className={`text-4xl font-serif mb-2 ${isDark ? 'text-white' : 'text-stone-900'}`}>
-              {certificate.certificate_number}
+              {certificate.certificate_no}
             </h1>
             <p className={isDark ? 'text-gray-400' : 'text-stone-600'}>
               {certificate.certificate_type?.name}
@@ -175,7 +175,7 @@ export default function CertificateDetailPage() {
                   CERTIFICATE NUMBER
                 </p>
                 <p className={`font-mono text-lg font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                  {certificate.certificate_number}
+                  {certificate.certificate_no}
                 </p>
               </div>
 

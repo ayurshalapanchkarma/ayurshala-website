@@ -81,7 +81,7 @@ export default function NewCertificatePage() {
 
   async function loadData() {
     const [patientsRes, typesRes] = await Promise.all([
-      supabase.from('patients').select('id, full_name, patient_id, email, phone').order('full_name'),
+      supabase.from('patients').select('id, patient_id, full_name, email, phone').eq('is_deleted', false).order('full_name'),
       supabase.from('certificate_types').select('id, name').order('name'),
     ])
 
@@ -124,10 +124,10 @@ export default function NewCertificatePage() {
     }
 
     setLoading(true)
-    const certNumber = `AYC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`
+    const cert_no = `AYC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`
 
     const { error } = await supabase.from('certificates').insert([{
-      certificate_number: certNumber,
+      certificate_no: cert_no,
       patient_uuid: formData.patient_uuid,
       booking_uuid: formData.booking_uuid || null,
       certificate_type_id: formData.certificate_type_id,
@@ -142,7 +142,6 @@ export default function NewCertificatePage() {
       restrictions: formData.restrictions || null,
       additional_notes: formData.additional_notes || null,
       status: 'DRAFT',
-      created_at: new Date().toISOString(),
     }])
 
     setLoading(false)
@@ -160,10 +159,10 @@ export default function NewCertificatePage() {
     }
 
     setLoading(true)
-    const certNumber = `AYC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`
+    const cert_no = `AYC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`
 
     const payload = {
-      certificate_number: certNumber,
+      certificate_no: cert_no,
       patient_uuid: formData.patient_uuid,
       booking_uuid: formData.booking_uuid || null,
       certificate_type_id: formData.certificate_type_id,
@@ -178,12 +177,9 @@ export default function NewCertificatePage() {
       restrictions: formData.restrictions || null,
       additional_notes: formData.additional_notes || null,
       status: 'ISSUED',
-      created_at: new Date().toISOString(),
     }
 
-    console.log('Issuing certificate with payload:', payload)
-
-    const { data, error } = await supabase.from('certificates').insert([payload]).select()
+    const { error } = await supabase.from('certificates').insert([payload]).select()
 
     if (error) {
       console.error('Error issuing certificate:', error)
@@ -192,7 +188,6 @@ export default function NewCertificatePage() {
       return
     }
 
-    console.log('Certificate issued successfully:', data)
     setLoading(false)
     router.push('/admin/certificates')
   }

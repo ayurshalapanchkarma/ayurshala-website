@@ -33,7 +33,7 @@ export async function GET(
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Certificate - ${certificate.certificate_number}</title>
+  <title>Certificate - ${certificate.certificate_no}</title>
   <style>
     body {
       font-family: 'Times New Roman', serif;
@@ -161,7 +161,7 @@ export async function GET(
     <div class="title">${certificate.certificate_type.name}</div>
 
     <div class="cert-details">
-      <p><strong>Certificate No:</strong> ${certificate.certificate_number}</p>
+      <p><strong>Certificate No:</strong> ${certificate.certificate_no}</p>
       <p><strong>Date Issued:</strong> ${new Date(certificate.issue_date).toLocaleDateString('en-IN')}</p>
     </div>
 
