@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import React from 'react'
+import { pdf } from '@react-pdf/renderer'
+import { CertificatePDF } from '@/components/CertificatePDF'
 import { generateCertificatePDF } from '@/lib/certificates/generatePDF'
 import fs from 'fs'
 import path from 'path'
@@ -79,8 +82,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     let pdfBuffer
     try {
-      pdfBuffer = await generateCertificatePDF(certificate, logoBase64)
+      const element = React.createElement(CertificatePDF, {
+        certificate,
+        logoUrl: logoBase64,
+      })
+
+      const pdfInstance = pdf(element as any)
+      const buffer = await pdfInstance.toBuffer()
+
       console.log('[PDF] Render success')
+      console.log('[PDF] Buffer length:', (buffer as any).length)
+
+      pdfBuffer = buffer
     } catch (renderError) {
       console.error('[PDF] renderToBuffer failed:', renderError instanceof Error ? renderError.message : String(renderError))
       console.error('[PDF] renderToBuffer error details:', renderError)
@@ -93,14 +106,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       )
     }
 
-    console.log('[PDF] Buffer length:', pdfBuffer.length)
-
-    const response = new NextResponse(Buffer.from(pdfBuffer), {
+    const response = new NextResponse(pdfBuffer as any, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="certificate-${certificate.certificate_no}.pdf"`,
-        'Content-Length': String(pdfBuffer.length),
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
