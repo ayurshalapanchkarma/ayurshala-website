@@ -136,9 +136,9 @@ export default function StatusPage({
                   <Phone className="w-4 h-4" />
                   <span>+91-9821224767</span>
                 </a>
-                <a href="mailto:admin@ayurshalapanchkarma.com" className={`flex items-center gap-2 text-sm ${isDark ? 'text-gray-300 hover:text-white' : 'text-stone-600 hover:text-stone-900'} transition`}>
+                <a href="mailto:ayurshalapanchkarma@gmail.com" className={`flex items-center gap-2 text-sm ${isDark ? 'text-gray-300 hover:text-white' : 'text-stone-600 hover:text-stone-900'} transition`}>
                   <Mail className="w-4 h-4" />
-                  <span className="truncate">admin@ayurshalapanchkarma.com</span>
+                  <span className="truncate">ayurshalapanchkarma@gmail.com</span>
                 </a>
               </div>
             </div>

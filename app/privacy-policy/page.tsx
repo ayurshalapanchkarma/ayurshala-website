@@ -147,7 +147,7 @@ export default function PrivacyPolicy() {
             <div className={`space-y-2 ${textColor}`}>
               <p><strong>Ayurshala Panchakarma Center</strong></p>
               <p>SP-28, Wajidpur, Sector-130, Noida – 201301</p>
-              <p>Email: <a href="mailto:admin@ayurshalapanchkarma.com" className={linkColor}>admin@ayurshalapanchkarma.com</a></p>
+              <p>Email: <a href="mailto:ayurshalapanchkarma@gmail.com" className={linkColor}>ayurshalapanchkarma@gmail.com</a></p>
               <p>Phone: <a href="tel:+919821224767" className={linkColor}>+91-9821224767</a></p>
             </div>
           </section>
