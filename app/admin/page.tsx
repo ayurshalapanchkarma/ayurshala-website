@@ -7,7 +7,7 @@ import Link from 'next/link'
 import GlassBackground from '@/components/GlassBackground'
 import { AdminGuard } from '@/components/AdminGuard'
 import { useTheme } from 'next-themes'
-import { Home, LogOut, Clock, Moon, Sun, Calendar, Clock as ClockIcon, Wallet, TrendingUp } from 'lucide-react'
+import { Home, LogOut, Clock, Moon, Sun, Calendar, Clock as ClockIcon, Wallet, TrendingUp, FileText } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -485,8 +485,11 @@ export default function AdminPage() {
                 >
                   {dark ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
                 </button>
-                <Link href="/" className={`p-1.5 rounded-lg text-xs transition border flex items-center gap-1 ${dark ? 'bg-gray-800/60 text-gray-300 border-gray-700' : 'bg-white/40 text-stone-700 border-white/60'} hover:opacity-80`}>
+                <Link href="/" className={`p-1.5 rounded-lg text-xs transition border flex items-center gap-1 ${dark ? 'bg-gray-800/60 text-gray-300 border-gray-700' : 'bg-white/40 text-stone-700 border-white/60'} hover:opacity-80`} title="Home">
                   <Home className="w-3 h-3" />
+                </Link>
+                <Link href="/admin/certificates" className={`p-1.5 rounded-lg text-xs transition border flex items-center gap-1 ${dark ? 'bg-gray-800/60 text-gray-300 border-gray-700' : 'bg-white/40 text-stone-700 border-white/60'} hover:opacity-80`} title="Certificates">
+                  <FileText className="w-3 h-3" />
                 </Link>
                 <button
                   onClick={async () => {

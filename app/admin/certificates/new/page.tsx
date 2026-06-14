@@ -85,21 +85,12 @@ export default function NewCertificatePage() {
       supabase.from('certificate_types').select('id, name').order('name'),
     ])
 
-    if (patientsRes.error) {
-      console.error('Failed loading patients:', patientsRes.error)
-    }
-
     if (patientsRes.data) {
-      console.log('Patients count:', patientsRes.data.length)
       setPatients(patientsRes.data)
     }
 
     if (typesRes.data) setCertificateTypes(typesRes.data)
   }
-
-  useEffect(() => {
-    console.log('PATIENT STATE:', patients)
-  }, [patients])
 
   async function loadBookings(patientUuid: string) {
     const { data } = await supabase
@@ -138,18 +129,18 @@ export default function NewCertificatePage() {
     const { error } = await supabase.from('certificates').insert([{
       certificate_number: certNumber,
       patient_uuid: formData.patient_uuid,
-      booking_uuid: formData.booking_uuid,
+      booking_uuid: formData.booking_uuid || null,
       certificate_type_id: formData.certificate_type_id,
       issue_date: formData.issue_date,
       issued_by: formData.issued_by,
-      valid_from: formData.valid_from,
-      valid_to: formData.valid_to,
-      purpose: formData.purpose,
-      diagnosis: formData.diagnosis,
-      treatment_details: formData.treatment_details,
-      recommendations: formData.recommendations,
-      restrictions: formData.restrictions,
-      additional_notes: formData.additional_notes,
+      valid_from: formData.valid_from || null,
+      valid_to: formData.valid_to || null,
+      purpose: formData.purpose || null,
+      diagnosis: formData.diagnosis || null,
+      treatment_details: formData.treatment_details || null,
+      recommendations: formData.recommendations || null,
+      restrictions: formData.restrictions || null,
+      additional_notes: formData.additional_notes || null,
       status: 'DRAFT',
       created_at: new Date().toISOString(),
     }])
@@ -158,7 +149,7 @@ export default function NewCertificatePage() {
     if (!error) {
       router.push('/admin/certificates')
     } else {
-      alert('Error saving certificate')
+      alert(`Error saving certificate: ${error?.message}`)
     }
   }
 
@@ -171,31 +162,39 @@ export default function NewCertificatePage() {
     setLoading(true)
     const certNumber = `AYC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`
 
-    const { error } = await supabase.from('certificates').insert([{
+    const payload = {
       certificate_number: certNumber,
       patient_uuid: formData.patient_uuid,
-      booking_uuid: formData.booking_uuid,
+      booking_uuid: formData.booking_uuid || null,
       certificate_type_id: formData.certificate_type_id,
       issue_date: formData.issue_date,
       issued_by: formData.issued_by,
-      valid_from: formData.valid_from,
-      valid_to: formData.valid_to,
-      purpose: formData.purpose,
-      diagnosis: formData.diagnosis,
-      treatment_details: formData.treatment_details,
-      recommendations: formData.recommendations,
-      restrictions: formData.restrictions,
-      additional_notes: formData.additional_notes,
+      valid_from: formData.valid_from || null,
+      valid_to: formData.valid_to || null,
+      purpose: formData.purpose || null,
+      diagnosis: formData.diagnosis || null,
+      treatment_details: formData.treatment_details || null,
+      recommendations: formData.recommendations || null,
+      restrictions: formData.restrictions || null,
+      additional_notes: formData.additional_notes || null,
       status: 'ISSUED',
       created_at: new Date().toISOString(),
-    }])
-
-    setLoading(false)
-    if (!error) {
-      router.push('/admin/certificates')
-    } else {
-      alert('Error issuing certificate')
     }
+
+    console.log('Issuing certificate with payload:', payload)
+
+    const { data, error } = await supabase.from('certificates').insert([payload]).select()
+
+    if (error) {
+      console.error('Error issuing certificate:', error)
+      setLoading(false)
+      alert(`Error issuing certificate: ${error.message}`)
+      return
+    }
+
+    console.log('Certificate issued successfully:', data)
+    setLoading(false)
+    router.push('/admin/certificates')
   }
 
   return (
@@ -229,9 +228,6 @@ export default function NewCertificatePage() {
               <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-stone-700'}`}>
                 Patient *
               </label>
-              <div className={`text-xs mb-2 p-2 rounded ${isDark ? 'bg-slate-800/50 text-gray-400' : 'bg-stone-100 text-stone-600'}`}>
-                Patients available: {patients.length} | Filtered: {filteredPatients.length}
-              </div>
               <div className="relative">
                 <div
                   onClick={() => setShowPatientDropdown(!showPatientDropdown)}
