@@ -89,15 +89,14 @@ export default function CertificateDetailPage() {
 
   async function cancelCertificate() {
     if (!certificate) return
-    const reason = prompt('Enter cancellation reason:')
-    if (!reason) return
+    const confirmed = window.confirm('Are you sure you want to cancel this certificate?')
+    if (!confirmed) return
 
     setCancelling(true)
     const { error } = await supabase
       .from('certificates')
       .update({
         status: 'CANCELLED',
-        cancel_reason: reason,
         updated_at: new Date().toISOString(),
       })
       .eq('id', certificateId)

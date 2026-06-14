@@ -69,14 +69,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     console.log(`[PDF] Rendering PDF document with certificate type: ${certificate.certificate_type.name}`)
-    const pdfBuffer = await renderToBuffer(
-      <CertificatePDF
-        certificate={certificate as any}
-        logoUrl={logoBase64}
-      />
-    )
+    
+    let pdfBuffer
+    try {
+      pdfBuffer = await renderToBuffer(
+        <CertificatePDF
+          certificate={certificate as any}
+          logoUrl={logoBase64}
+        />
+      )
+      console.log('[PDF] PDF bytes:', pdfBuffer.length)
+    } catch (renderError) {
+      console.error('[PDF] renderToBuffer failed:', renderError instanceof Error ? renderError.message : renderError)
+      throw renderError
+    }
 
-    console.log('[PDF] PDF bytes:', pdfBuffer.length)
     console.log('[PDF] Returning PDF response')
 
     const response = new NextResponse(Buffer.from(pdfBuffer), {

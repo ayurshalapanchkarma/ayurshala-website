@@ -158,6 +158,15 @@ export default function NewCertificatePage() {
       return
     }
 
+    if (formData.valid_from && formData.valid_to) {
+      const validFrom = new Date(formData.valid_from)
+      const validTo = new Date(formData.valid_to)
+      if (validTo <= validFrom) {
+        alert('Valid To date must be after Valid From date')
+        return
+      }
+    }
+
     setLoading(true)
     const cert_no = `AYC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`
 
