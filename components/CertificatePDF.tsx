@@ -26,7 +26,7 @@ export const CertificatePDF = ({
   return (
     <Document>
       <Page size="A4">
-        <Text>Hello PDF</Text>
+        <Text>PDF TEST</Text>
       </Page>
     </Document>
   )
