@@ -207,6 +207,7 @@ export default function AdminPage() {
   const [refundLoading, setRefundLoading] = useState(false)
   const [cashModal, setCashModal] = useState<{ booking_id: string; amount_paid: number; note: string } | null>(null)
   const [cashLoading, setCashLoading] = useState(false)
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string; amount?: number } | null>(null)
   const [sortField, setSortField] = useState<'booking' | 'patient' | 'date' | 'status' | 'payment' | 'action'>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const { theme, setTheme } = useTheme()
@@ -226,6 +227,14 @@ export default function AdminPage() {
     }, 1000)
     return () => clearInterval(timer)
   }, [])
+
+  // Clear error notifications after 5 seconds
+  useEffect(() => {
+    if (notification?.type === 'error') {
+      const timer = setTimeout(() => setNotification(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [notification])
 
   // Fetch bookings when tab changes
   useEffect(() => {
@@ -371,16 +380,25 @@ export default function AdminPage() {
     if (amount_paid <= 0) return
 
     setCashLoading(true)
-    const res = await fetch('/api/admin/cash-collection', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ booking_id, amount_paid, note }),
-    })
+    try {
+      const res = await fetch('/api/admin/cash-collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id, action: 'collect_cash', amount_paid, note }),
+      })
 
-    if (res.ok) {
-      setCashModal(null)
-      setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, payment_status: 'PAID', amount_paid } : b))
-      await fetchBookings()
+      const data = await res.json()
+
+      if (res.ok) {
+        setCashModal(null)
+        setBookings(prev => prev.map(b => b.booking_id === booking_id ? { ...b, payment_status: 'PAID', amount_paid } : b))
+        setNotification({ type: 'success', message: `Cash of ₹${amount_paid} received successfully.`, amount: amount_paid })
+        await fetchBookings()
+      } else {
+        setNotification({ type: 'error', message: data.error || 'Failed to process cash collection' })
+      }
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Error processing payment. Please try again.' })
     }
     setCashLoading(false)
   }
@@ -693,6 +711,44 @@ export default function AdminPage() {
                   </div>
                 ) : null
               })()}
+            </motion.div>
+          </div>
+        )}
+
+        {/* Success Notification Modal */}
+        {notification && notification.type === 'success' && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <h2 className={`text-xl font-semibold mb-2 ${dark ? 'text-white' : 'text-stone-900'}`}>Success!</h2>
+              <p className={`mb-6 ${dark ? 'text-gray-300' : 'text-stone-600'}`}>{notification.message}</p>
+              <button onClick={() => {
+                setNotification(null)
+                router.push('/admin')
+              }} className="w-full px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">Return to Bookings</button>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Error Notification */}
+        {notification && notification.type === 'error' && (
+          <div className="fixed top-4 right-4 z-50">
+            <motion.div initial={{ x: 400, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 400, opacity: 0 }} className="bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 text-red-900 dark:text-red-200 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <span>{notification.message}</span>
+              <button onClick={() => setNotification(null)} className="ml-2 text-red-900 dark:text-red-200 hover:text-red-700 dark:hover:text-red-100">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
             </motion.div>
           </div>
         )}
