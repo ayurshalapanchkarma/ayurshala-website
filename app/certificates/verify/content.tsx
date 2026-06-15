@@ -114,7 +114,7 @@ export default function VerifyContent() {
           <div className="border-t pt-4">
             <p className="text-sm text-gray-600 mb-3">Issued by</p>
             <p className="font-semibold text-lg text-orange-600">Ayurshala Panchakarma Center</p>
-            <p className="text-xs text-gray-500 mt-1">www.ayurshalapanchkarma.com</p>
+            <p className="text-xs text-gray-500 mt-1">www.ayurshalapanchakarma.com</p>
           </div>
         </div>
       </div>
