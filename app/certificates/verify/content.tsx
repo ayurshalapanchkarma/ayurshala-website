@@ -13,7 +13,18 @@ export default function VerifyContent() {
   useEffect(() => {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+    )
+
+    console.log(
+      '[VERIFY]',
+      'url:',
+      !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      'anon:',
+      !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      'publishable:',
+      !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
     )
 
     const certificateNo = searchParams.get('certificate')
@@ -60,7 +71,8 @@ export default function VerifyContent() {
           verifiedAt: new Date().toLocaleString('en-IN'),
         })
         setStatus('verified')
-      } catch (e) {
+      } catch (error) {
+        console.error('[CERTIFICATE VERIFY PAGE]', error)
         setStatus('invalid')
       }
     }
