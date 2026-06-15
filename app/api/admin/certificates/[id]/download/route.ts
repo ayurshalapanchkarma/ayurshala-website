@@ -1,140 +1,78 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import React from 'react'
-import { pdf } from '@react-pdf/renderer'
-import { CertificatePDF } from '@/components/CertificatePDF'
+import { spawn } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Use service role key for server-side operations
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+function spawnPDF(payload: object): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const script = path.join(process.cwd(), 'scripts', 'render-pdf.js')
+    const child = spawn(process.execPath, [script])
+    const chunks: Buffer[] = []
+    const errChunks: Buffer[] = []
+    child.stdout.on('data', (d: Buffer) => chunks.push(d))
+    child.stderr.on('data', (d: Buffer) => errChunks.push(d))
+    child.on('close', (code) => {
+      if (code !== 0) reject(new Error(Buffer.concat(errChunks).toString() || `PDF process exited ${code}`))
+      else resolve(Buffer.concat(chunks))
+    })
+    child.stdin.write(JSON.stringify(payload))
+    child.stdin.end()
+  })
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: certificateId } = await params
-    console.log('[PDF] Start')
-    console.log('[PDF] Certificate ID:', certificateId)
 
-    const { data: cert, error } = await supabase
+    const { data: certificate, error } = await supabase
       .from('certificates')
-      .select(
-        `
-        id,
-        certificate_no,
+      .select(`
+        id, certificate_no,
         patient:patient_uuid(full_name, patient_id),
         certificate_type:certificate_type_id(name),
-        issue_date,
-        issued_by,
-        valid_from,
-        valid_to,
-        purpose,
-        diagnosis,
-        treatment_details,
-        recommendations,
-        restrictions,
-        additional_notes,
-        status
-      `
-      )
+        issue_date, issued_by, valid_from, valid_to,
+        purpose, diagnosis, treatment_details,
+        recommendations, restrictions, additional_notes, status
+      `)
       .eq('id', certificateId)
       .single()
 
-    const certificate = cert as any
     if (error || !certificate) {
-      console.error('[PDF] Certificate query failed:', error?.message || 'not found')
       return NextResponse.json({ error: error?.message || 'Certificate not found' }, { status: 404 })
     }
 
-    console.log('[PDF] Certificate query success')
-    console.log('[PDF] Status:', certificate.status)
-
     if (certificate.status !== 'ISSUED') {
-      console.error(`[PDF] Certificate not issued: ${certificate.status}`)
       return NextResponse.json({ error: 'Certificate not issued' }, { status: 403 })
     }
 
-    console.log(`[PDF] Generating PDF for certificate: ${certificate.certificate_no}`)
-
     const logoPath = path.join(process.cwd(), 'public', 'ayurshala_text.png')
-    console.log('[PDF] Logo path:', logoPath)
-    console.log('[PDF] Logo exists:', fs.existsSync(logoPath))
-
     if (!fs.existsSync(logoPath)) {
-      console.error('[PDF] Logo missing at', logoPath)
       return NextResponse.json({ error: 'Logo missing' }, { status: 500 })
     }
+    const logoUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`
 
-    let logoBase64 = ''
-    try {
-      const logoBuffer = fs.readFileSync(logoPath)
-      logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`
-      console.log('[PDF] Logo loaded successfully')
-    } catch (logoError) {
-      console.error('[PDF] Logo read failed:', logoError instanceof Error ? logoError.message : logoError)
-      return NextResponse.json({ error: 'Logo read failed' }, { status: 500 })
-    }
+    const buffer = await spawnPDF({ certificate, logoUrl })
 
-    console.log('[PDF] About to render PDF')
-
-    let pdfBuffer
-    try {
-      console.log('[PDF] Creating element')
-      const element = React.createElement(CertificatePDF as any, {
-        certificate,
-        logoUrl: logoBase64,
-      })
-
-      console.log('[PDF] Creating pdf instance')
-      const pdfInstance = pdf()
-
-      console.log('[PDF] Updating container')
-      pdfInstance.updateContainer(element)
-
-      console.log('[PDF] Generating buffer')
-      const buffer = await pdfInstance.toBuffer()
-
-      console.log('[PDF] Render success')
-      console.log('[PDF] Buffer length:', (buffer as any).length)
-
-      pdfBuffer = buffer
-    } catch (renderError) {
-      console.error('[PDF] renderToBuffer failed:', renderError instanceof Error ? renderError.message : String(renderError))
-      console.error('[PDF] renderToBuffer error details:', renderError)
-      return NextResponse.json(
-        {
-          error: 'PDF render failed',
-          details: renderError instanceof Error ? renderError.message : String(renderError),
-        },
-        { status: 500 }
-      )
-    }
-
-    const response = new NextResponse(pdfBuffer as any, {
+    return new NextResponse(buffer as any, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="certificate-${certificate.certificate_no}.pdf"`,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        'Content-Disposition': `attachment; filename="certificate-${(certificate as any).certificate_no}.pdf"`,
+        'Cache-Control': 'no-cache',
       },
     })
-
-    console.log('[PDF] Returning response')
-    return response
   } catch (error) {
-    console.error('[PDF] Catch-all error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
-      {
-        error: 'Unexpected error',
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
