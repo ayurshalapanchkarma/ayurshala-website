@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { spawn } from 'child_process'
 import fs from 'fs'
 import path from 'path'
+import QRCode from 'qrcode'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -60,7 +61,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
     const logoUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`
 
-    const buffer = await spawnPDF({ certificate, logoUrl })
+    const certNo = (certificate as any).certificate_no
+    const verifyUrl = `https://www.ayurshalapanchkarma.com/certificates/${certNo}/verify`
+    const qrUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, width: 80 })
+
+    const buffer = await spawnPDF({ certificate, logoUrl, qrUrl })
 
     return new NextResponse(buffer as any, {
       status: 200,
