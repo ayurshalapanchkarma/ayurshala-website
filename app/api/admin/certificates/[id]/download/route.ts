@@ -99,6 +99,17 @@ function drawBorder(page: any) {
   })
 }
 
+function drawCenteredText(page: any, text: string, y: number, size: number, color: any, maxWidth: number): number {
+  page.drawText(text, {
+    x: PAGE_WIDTH / 2 - maxWidth / 2,
+    y: y,
+    size: size,
+    color: color,
+    maxWidth: maxWidth,
+  })
+  return y - (size + 2)
+}
+
 function drawHeaderBlock(page: any, logo: any, certTitle: string): number {
   let y = PAGE_HEIGHT - MARGIN - 20
 
@@ -109,46 +120,26 @@ function drawHeaderBlock(page: any, logo: any, certTitle: string): number {
     width: 70,
     height: 70,
   })
-  y -= 70 + 18
+  y -= 70 + 16
 
-  // Clinic name
-  page.drawText('AYURSHALA PANCHAKARMA CENTER', {
-    x: PAGE_WIDTH / 2 - 140,
-    y: y,
-    size: 14,
-    color: BLACK,
-    maxWidth: 280,
-  })
-  y -= 14 + 8
+  // Clinic name (centered, bold effect via size)
+  y = drawCenteredText(page, 'AYURSHALA PANCHAKARMA CENTER', y, 14, BLACK, 280)
+  y -= 6
 
-  // Address + Contact as ONE block (centered)
-  page.drawText('SP-28, Wajidpur, Sector-130, Noida – 201301', {
-    x: PAGE_WIDTH / 2 - 180,
-    y: y,
-    size: 10,
-    color: BLACK,
-    maxWidth: 360,
-  })
-  y -= 10 + 6
+  // Address lines (centered separately)
+  y = drawCenteredText(page, 'SP-28, Wajidpur,', y, 10, BLACK, 200)
+  y -= 2
 
-  page.drawText('+91-9821224767 | ayurshalapanchkarma@gmail.com', {
-    x: PAGE_WIDTH / 2 - 160,
-    y: y,
-    size: 9,
-    color: GRAY,
-    maxWidth: 320,
-  })
-  y -= 9 + 24
+  y = drawCenteredText(page, 'Sector-130, Noida – 201301', y, 10, BLACK, 200)
+  y -= 8
 
-  // Certificate title
-  page.drawText(certTitle.toUpperCase(), {
-    x: PAGE_WIDTH / 2 - 140,
-    y: y,
-    size: 16,
-    color: ORANGE,
-    maxWidth: 280,
-  })
-  y -= 16 + 30
+  // Contact (centered, gray)
+  y = drawCenteredText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', y, 9, GRAY, 280)
+  y -= 18
+
+  // Certificate title (centered, orange)
+  y = drawCenteredText(page, certTitle.toUpperCase(), y, 16, ORANGE, 280)
+  y -= 28
 
   return y
 }
@@ -236,68 +227,76 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const final = pages[pages.length - 1]
     currentY = currentY - 20
 
-    // Signature blocks
-    const sigWidth = (CONTENT_WIDTH - 20) / 2
-    const sigY = currentY - 40
+    // Signature lines
+    const sigWidth = 70
+    const patientSigX = CONTENT_LEFT
+    const doctorSigX = CONTENT_LEFT + (CONTENT_WIDTH - 20) - sigWidth
+    const sigLineY = currentY - 40
 
+    // Patient signature line
     final.drawLine({
-      start: { x: CONTENT_LEFT, y: sigY },
-      end: { x: CONTENT_LEFT + sigWidth - 10, y: sigY },
+      start: { x: patientSigX, y: sigLineY },
+      end: { x: patientSigX + sigWidth, y: sigLineY },
       color: BLACK,
     })
 
     final.drawText('Patient Signature', {
-      x: CONTENT_LEFT,
-      y: sigY - 16,
+      x: patientSigX,
+      y: sigLineY - 16,
       size: 10,
       color: BLACK,
     })
 
+    // Doctor signature line
     final.drawLine({
-      start: { x: CONTENT_LEFT + sigWidth + 10, y: sigY },
-      end: { x: CONTENT_LEFT + CONTENT_WIDTH - 20, y: sigY },
+      start: { x: doctorSigX, y: sigLineY },
+      end: { x: doctorSigX + sigWidth, y: sigLineY },
       color: BLACK,
     })
 
+    // Doctor name and clinic (right-aligned)
     final.drawText('Dr. ' + String(certificate.issued_by), {
-      x: CONTENT_LEFT + sigWidth + 10,
-      y: sigY - 16,
+      x: doctorSigX,
+      y: sigLineY - 16,
       size: 10,
       color: BLACK,
     })
 
     final.drawText('Ayurshala Panchakarma Center', {
-      x: CONTENT_LEFT + sigWidth + 10,
-      y: sigY - 28,
+      x: doctorSigX,
+      y: sigLineY - 28,
       size: 9,
       color: BLACK,
     })
 
-    // QR - centered below signatures
+    // QR - centered below doctor signature block (using doctor block as reference)
     const qrSize = 60
+    const qrX = doctorSigX + sigWidth / 2 - qrSize / 2
+    const qrY = sigLineY - 85
+
     final.drawImage(qr, {
-      x: PAGE_WIDTH / 2 - 30,
-      y: sigY - 110,
+      x: qrX,
+      y: qrY,
       width: qrSize,
       height: qrSize,
     })
 
-    // QR caption - centered
+    // "Scan to verify authenticity" - centered below QR
     final.drawText('Scan to verify authenticity', {
-      x: PAGE_WIDTH / 2 - 100,
-      y: sigY - 120,
+      x: qrX - 50,
+      y: qrY - 20,
       size: 8,
       color: GRAY,
-      maxWidth: 200,
+      maxWidth: qrSize + 100,
     })
 
-    // Certification disclaimer - centered
-    final.drawText('Electronically generated certificate. No physical signature required.', {
-      x: PAGE_WIDTH / 2 - 130,
-      y: sigY - 140,
+    // Certification disclaimer - right-aligned to certificate right margin
+    final.drawText('Electronically generated certificate.\nNo physical signature required.', {
+      x: doctorSigX - 20,
+      y: qrY - 50,
       size: 8,
       color: GRAY,
-      maxWidth: 260,
+      maxWidth: 150,
     })
 
     const pdfBytes = await pdfDoc.save()
