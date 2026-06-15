@@ -95,7 +95,7 @@
 
 - [x] Footer section appears: YES ✅
 - [x] Phone link: +91-9821224767 ✅
-- [x] Email link: admin@ayurshalapanchkarma.com ✅
+- [x] Email link: ayurshalapanchkarma@gmail.com ✅
 - [x] Icons displayed: YES ✅
 - [x] Links functional: YES ✅
 - [x] Light theme: ✅ Readable
