@@ -88,7 +88,7 @@ export default function VerifyContent() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50/60 via-white to-orange-100/40 p-4 py-12">
         <div className="w-full max-w-2xl backdrop-blur-2xl bg-white/50 border border-white/30 rounded-3xl shadow-2xl p-8 md:p-12 text-center">
           {/* Logo */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6">
             <Image
               src="/ayurshala_text.png"
               alt="Ayurshala Panchakarma Center"
@@ -99,18 +99,18 @@ export default function VerifyContent() {
           </div>
 
           {/* Title with Badge */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 mb-8">
-            <h1 style={{ color: '#1D9BF0', fontFamily: 'Poppins' }} className="text-2xl md:text-5xl font-bold m-0">
+          <div className="flex items-center justify-center gap-2 mb-10">
+            <h1 style={{ color: '#1D9BF0', fontFamily: 'Poppins', lineHeight: '1.1', margin: 0 }} className="text-2xl md:text-4xl font-bold">
               Certificate Verified
             </h1>
             {badgeVisible && (
               <Image
                 src="/meta-verified.png"
                 alt="Verified"
-                width={36}
-                height={36}
-                className="w-7 md:w-9 h-auto object-contain"
-                style={{ verticalAlign: 'middle' }}
+                width={32}
+                height={32}
+                className="w-6 md:w-8 h-auto object-contain flex-shrink-0"
+                style={{ verticalAlign: 'baseline' }}
                 priority
                 onError={() => setBadgeVisible(false)}
               />
