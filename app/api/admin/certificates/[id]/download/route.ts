@@ -21,10 +21,10 @@ const GRAY = rgb(107 / 255, 114 / 255, 128 / 255)
 
 const PAGE_WIDTH = 595
 const PAGE_HEIGHT = 842
-const MARGIN = 12 * 2.834
-const FOOTER_SPACE = 150
-const CONTENT_LEFT = MARGIN + 20
-const CONTENT_WIDTH = PAGE_WIDTH - (MARGIN + 20) * 2
+const MARGIN = 18 * 2.834
+const CONTENT_LEFT = MARGIN + 15
+const CONTENT_WIDTH = PAGE_WIDTH - (MARGIN + 15) * 2
+const CERTIFICATION_SPACE = 180
 
 function formatDate(d: string | null) {
   if (!d) return ''
@@ -95,23 +95,23 @@ function drawBorder(page: any) {
     width: PAGE_WIDTH - MARGIN * 2,
     height: PAGE_HEIGHT - MARGIN * 2,
     borderColor: ORANGE,
-    borderWidth: 2,
+    borderWidth: 1.5,
   })
 }
 
-function drawHeaderAndGetCurrentY(page: any, logo: any, certTitle: string): number {
+function drawHeaderBlock(page: any, logo: any, certTitle: string): number {
   let y = PAGE_HEIGHT - MARGIN - 20
 
-  // Logo - centered, 70×70
+  // Logo
   page.drawImage(logo, {
     x: PAGE_WIDTH / 2 - 35,
     y: y - 70,
     width: 70,
     height: 70,
   })
-  y -= 70 + 20
+  y -= 70 + 18
 
-  // Clinic name - centered, Marcellus font
+  // Clinic name
   page.drawText('AYURSHALA PANCHAKARMA CENTER', {
     x: PAGE_WIDTH / 2 - 140,
     y: y,
@@ -121,27 +121,16 @@ function drawHeaderAndGetCurrentY(page: any, logo: any, certTitle: string): numb
   })
   y -= 14 + 8
 
-  // Address line 1
-  page.drawText('SP-28, Wajidpur,', {
-    x: PAGE_WIDTH / 2 - 100,
+  // Address + Contact as ONE block (centered)
+  page.drawText('SP-28, Wajidpur, Sector-130, Noida – 201301', {
+    x: PAGE_WIDTH / 2 - 180,
     y: y,
-    size: 11,
+    size: 10,
     color: BLACK,
-    maxWidth: 200,
+    maxWidth: 360,
   })
-  y -= 11 + 6
+  y -= 10 + 6
 
-  // Address line 2
-  page.drawText('Sector-130, Noida – 201301', {
-    x: PAGE_WIDTH / 2 - 120,
-    y: y,
-    size: 11,
-    color: BLACK,
-    maxWidth: 240,
-  })
-  y -= 11 + 6
-
-  // Contact
   page.drawText('+91-9821224767 | ayurshalapanchkarma@gmail.com', {
     x: PAGE_WIDTH / 2 - 160,
     y: y,
@@ -149,17 +138,17 @@ function drawHeaderAndGetCurrentY(page: any, logo: any, certTitle: string): numb
     color: GRAY,
     maxWidth: 320,
   })
-  y -= 9 + 20
+  y -= 9 + 24
 
-  // Certificate title - centered
+  // Certificate title
   page.drawText(certTitle.toUpperCase(), {
-    x: PAGE_WIDTH / 2 - 150,
+    x: PAGE_WIDTH / 2 - 140,
     y: y,
     size: 16,
     color: ORANGE,
-    maxWidth: 300,
+    maxWidth: 280,
   })
-  y -= 16 + 20
+  y -= 16 + 30
 
   return y
 }
@@ -222,11 +211,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     pages.push(currentPage)
     drawBorder(currentPage)
 
-    let currentY = drawHeaderAndGetCurrentY(currentPage, logo, ct.name)
+    let currentY = drawHeaderBlock(currentPage, logo, ct.name)
 
     // Draw body
     for (const line of lines) {
-      if (currentY - lineHeight < MARGIN + FOOTER_SPACE) {
+      if (currentY - lineHeight < MARGIN + CERTIFICATION_SPACE) {
         currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
         pages.push(currentPage)
         drawBorder(currentPage)
@@ -243,13 +232,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       currentY -= lineHeight
     }
 
-    // Final page footer (signatures, QR)
+    // Certification section - FINAL PAGE ONLY
     const final = pages[pages.length - 1]
-    const sigY = MARGIN + 100
+    currentY = currentY - 20
+
+    // Signature blocks
+    const sigWidth = (CONTENT_WIDTH - 20) / 2
+    const sigY = currentY - 40
 
     final.drawLine({
       start: { x: CONTENT_LEFT, y: sigY },
-      end: { x: CONTENT_LEFT + (CONTENT_WIDTH - 20) / 2 - 10, y: sigY },
+      end: { x: CONTENT_LEFT + sigWidth - 10, y: sigY },
       color: BLACK,
     })
 
@@ -261,48 +254,50 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     final.drawLine({
-      start: { x: CONTENT_LEFT + (CONTENT_WIDTH - 20) / 2 + 10, y: sigY },
+      start: { x: CONTENT_LEFT + sigWidth + 10, y: sigY },
       end: { x: CONTENT_LEFT + CONTENT_WIDTH - 20, y: sigY },
       color: BLACK,
     })
 
     final.drawText('Dr. ' + String(certificate.issued_by), {
-      x: CONTENT_LEFT + (CONTENT_WIDTH - 20) / 2 + 10,
+      x: CONTENT_LEFT + sigWidth + 10,
       y: sigY - 16,
       size: 10,
       color: BLACK,
     })
 
     final.drawText('Ayurshala Panchakarma Center', {
-      x: CONTENT_LEFT + (CONTENT_WIDTH - 20) / 2 + 10,
+      x: CONTENT_LEFT + sigWidth + 10,
       y: sigY - 28,
       size: 9,
       color: BLACK,
     })
 
-    // QR - bottom right
+    // QR - centered below signatures
+    const qrSize = 60
     final.drawImage(qr, {
-      x: PAGE_WIDTH - MARGIN - 20 - 60,
-      y: MARGIN + 20,
-      width: 60,
-      height: 60,
+      x: PAGE_WIDTH / 2 - 30,
+      y: sigY - 110,
+      width: qrSize,
+      height: qrSize,
     })
 
-    final.drawText('Scan to verify\nauthenticity', {
-      x: PAGE_WIDTH - MARGIN - 20 - 60 - 15,
-      y: MARGIN + 5,
+    // QR caption - centered
+    final.drawText('Scan to verify authenticity', {
+      x: PAGE_WIDTH / 2 - 100,
+      y: sigY - 120,
       size: 8,
       color: GRAY,
-      maxWidth: 75,
+      maxWidth: 200,
     })
 
-    // Footer disclaimer
-    final.drawText('This certificate has been electronically generated by Ayurshala Panchakarma Center. No physical signature is required.', {
-      x: CONTENT_LEFT,
-      y: MARGIN + 8,
+    // Certification disclaimer - centered
+    final.drawText('Electronically generated certificate. No physical signature required.', {
+      x: PAGE_WIDTH / 2 - 130,
+      y: sigY - 140,
       size: 8,
       color: GRAY,
-      maxWidth: CONTENT_WIDTH - 20,
+      maxWidth: 260,
     })
 
     const pdfBytes = await pdfDoc.save()
