@@ -99,54 +99,54 @@ function drawBorders(page: any) {
   })
 }
 
-function drawHeader(page: any, logoImage: any) {
-  let y = PAGE_HEIGHT - MARGIN - 20
+function drawHeader(page: any, logoImage: any): number {
+  let currentY = PAGE_HEIGHT - MARGIN - 20
 
-  // Logo - centered
+  // Logo - 70x70
   page.drawImage(logoImage, {
     x: PAGE_WIDTH / 2 - 35,
-    y: y - 60,
+    y: currentY - 70,
     width: 70,
     height: 70,
   })
-  y -= 90
+  currentY -= 70 + 25 // Logo + gap
 
   // Clinic name - centered
   const nameWidth = 280
   page.drawText('AYURSHALA PANCHAKARMA CENTER', {
     x: PAGE_WIDTH / 2 - nameWidth / 2,
-    y: y,
+    y: currentY,
     size: 13,
     color: BLACK,
     maxWidth: nameWidth,
   })
-  y -= 18
+  currentY -= 16 + 12 // Text height + gap
 
   // Address - centered
   const addrWidth = 300
   page.drawText('SP-28, Wajidpur,\nSector-130, Noida – 201301', {
     x: PAGE_WIDTH / 2 - addrWidth / 2,
-    y: y,
+    y: currentY,
     size: 10,
     color: BLACK,
     maxWidth: addrWidth,
   })
-  y -= 28
+  currentY -= 24 + 20 // Address height + gap
 
   // Contact - centered
   const contactWidth = 340
   page.drawText('+91-9821224767 | ayurshalapanchkarma@gmail.com', {
     x: PAGE_WIDTH / 2 - contactWidth / 2,
-    y: y,
+    y: currentY,
     size: 9,
     color: GRAY,
     maxWidth: contactWidth,
   })
 
-  return PAGE_HEIGHT - MARGIN - 20 - 130
+  return currentY - 20
 }
 
-function drawCertificateTitle(page: any, title: string, startY: number) {
+function drawCertificateTitle(page: any, title: string, startY: number): number {
   const titleWidth = 350
   page.drawText(title.toUpperCase(), {
     x: PAGE_WIDTH / 2 - titleWidth / 2,
@@ -155,7 +155,7 @@ function drawCertificateTitle(page: any, title: string, startY: number) {
     color: ORANGE,
     maxWidth: titleWidth,
   })
-  return startY - 28
+  return startY - 18 - 20 // Title height + gap
 }
 
 function drawFooter(page: any) {

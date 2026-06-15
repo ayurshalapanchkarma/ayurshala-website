@@ -99,17 +99,18 @@ export default function VerifyContent() {
           </div>
 
           {/* Title with Badge */}
-          <div className="flex items-center justify-center gap-3 md:gap-4 mb-8">
-            <h1 style={{ color: '#1D9BF0' }} className="text-3xl md:text-4xl font-bold">
+          <div className="flex items-center justify-center gap-2 md:gap-3 mb-8">
+            <h1 style={{ color: '#1D9BF0', fontFamily: 'Poppins' }} className="text-2xl md:text-5xl font-bold m-0">
               Certificate Verified
             </h1>
             {badgeVisible && (
               <Image
                 src="/meta-verified.png"
                 alt="Verified"
-                width={40}
-                height={40}
-                className="w-8 md:w-10 h-auto object-contain"
+                width={36}
+                height={36}
+                className="w-7 md:w-9 h-auto object-contain"
+                style={{ verticalAlign: 'middle' }}
                 priority
                 onError={() => setBadgeVisible(false)}
               />
