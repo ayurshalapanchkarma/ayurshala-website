@@ -22,9 +22,18 @@ const GRAY = rgb(107 / 255, 114 / 255, 128 / 255)
 const PAGE_WIDTH = 595
 const PAGE_HEIGHT = 842
 const MARGIN = 18 * 2.834
-const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2
-const CONTENT_CENTER_X = MARGIN + CONTENT_WIDTH / 2
-const CONTENT_LEFT = MARGIN + 20
+
+// Border as single source of truth
+const BORDER_LEFT = MARGIN
+const BORDER_RIGHT = PAGE_WIDTH - MARGIN
+const BORDER_TOP = PAGE_HEIGHT - MARGIN
+const BORDER_BOTTOM = MARGIN
+const BORDER_WIDTH = BORDER_RIGHT - BORDER_LEFT
+const BORDER_CENTER_X = BORDER_LEFT + BORDER_WIDTH / 2
+
+const INNER_PADDING = 20
+const CONTENT_LEFT = BORDER_LEFT + INNER_PADDING
+const CONTENT_WIDTH = BORDER_WIDTH - INNER_PADDING * 2
 
 function formatDate(d: string | null) {
   if (!d) return ''
@@ -94,10 +103,10 @@ function splitLines(text: string, maxWidth: number, fontSize: number): string[] 
 
 function drawBorder(page: any) {
   page.drawRectangle({
-    x: MARGIN,
-    y: MARGIN,
-    width: PAGE_WIDTH - MARGIN * 2,
-    height: PAGE_HEIGHT - MARGIN * 2,
+    x: BORDER_LEFT,
+    y: BORDER_BOTTOM,
+    width: BORDER_WIDTH,
+    height: BORDER_TOP - BORDER_BOTTOM,
     borderColor: ORANGE,
     borderWidth: 1.5,
   })
@@ -106,7 +115,7 @@ function drawBorder(page: any) {
 function drawCenteredText(page: any, text: string, y: number, fontSize: number, color: any): number {
   const charWidth = fontSize * 0.5
   const textWidth = text.length * charWidth
-  const x = CONTENT_CENTER_X - textWidth / 2
+  const x = BORDER_CENTER_X - textWidth / 2
 
   page.drawText(text, {
     x: x,
@@ -119,34 +128,34 @@ function drawCenteredText(page: any, text: string, y: number, fontSize: number, 
 }
 
 function drawHeader(page: any, logo: any, certTitle: string): number {
-  let y = PAGE_HEIGHT - MARGIN - 20
+  let y = BORDER_TOP - 20
 
-  // Logo - centered
+  // Logo - centered to border
   page.drawImage(logo, {
-    x: CONTENT_CENTER_X - 35,
+    x: BORDER_CENTER_X - 35,
     y: y - 70,
     width: 70,
     height: 70,
   })
   y -= 70 + 24
 
-  // Clinic name - centered
+  // Clinic name - centered to border
   y = drawCenteredText(page, 'AYURSHALA PANCHAKARMA CENTER', y, 14, BLACK)
   y -= 14
 
-  // Address line 1 - centered
+  // Address line 1 - centered to border
   y = drawCenteredText(page, 'SP-28, Wajidpur,', y, 10, BLACK)
   y -= 10
 
-  // Address line 2 - centered
+  // Address line 2 - centered to border
   y = drawCenteredText(page, 'Sector-130, Noida – 201301', y, 10, BLACK)
   y -= 14
 
-  // Contact - centered
+  // Contact - centered to border
   y = drawCenteredText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', y, 9, GRAY)
   y -= 28
 
-  // Certificate title - centered
+  // Certificate title - centered to border
   y = drawCenteredText(page, certTitle.toUpperCase(), y, 16, ORANGE)
   y -= 30
 
@@ -157,22 +166,23 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
   const SIG_WIDTH = 180
   const QR_SIZE = 60
 
-  const patientLineX = CONTENT_LEFT
-  const doctorLineX = PAGE_WIDTH - MARGIN - SIG_WIDTH - 20
-  const doctorCenterX = doctorLineX + SIG_WIDTH / 2
+  // Signature positions relative to border
+  const patientX = BORDER_LEFT + 40
+  const doctorX = BORDER_RIGHT - 220
+  const doctorCenterX = doctorX + SIG_WIDTH / 2
 
   let y = startY
 
   // Signature lines
   page.drawLine({
-    start: { x: patientLineX, y: y },
-    end: { x: patientLineX + SIG_WIDTH, y: y },
+    start: { x: patientX, y: y },
+    end: { x: patientX + SIG_WIDTH, y: y },
     color: BLACK,
   })
 
   page.drawLine({
-    start: { x: doctorLineX, y: y },
-    end: { x: doctorLineX + SIG_WIDTH, y: y },
+    start: { x: doctorX, y: y },
+    end: { x: doctorX + SIG_WIDTH, y: y },
     color: BLACK,
   })
 
@@ -180,14 +190,14 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
 
   // Labels
   page.drawText('Patient Signature', {
-    x: patientLineX,
+    x: patientX,
     y: y,
     size: 10,
     color: BLACK,
   })
 
   page.drawText('Dr. ' + doctorName, {
-    x: doctorLineX,
+    x: doctorX,
     y: y,
     size: 10,
     color: BLACK,
@@ -196,7 +206,7 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
   y -= 12
 
   page.drawText('Ayurshala Panchakarma Center', {
-    x: doctorLineX,
+    x: doctorX,
     y: y,
     size: 9,
     color: BLACK,
@@ -317,20 +327,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Draw body
     for (const line of lines) {
-      if (currentY - lineHeight - certificationHeight < MARGIN) {
+      if (currentY - lineHeight - certificationHeight < BORDER_BOTTOM) {
         // Certification block won't fit, move to next page
         currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
         pages.push(currentPage)
         drawBorder(currentPage)
-        currentY = PAGE_HEIGHT - MARGIN - 20
+        currentY = BORDER_TOP - 20
       }
 
       currentPage.drawText(line, {
-        x: CONTENT_LEFT + 20,
+        x: CONTENT_LEFT,
         y: currentY,
         size: 11,
         color: BLACK,
-        maxWidth: CONTENT_WIDTH - 40,
+        maxWidth: CONTENT_WIDTH,
       })
       currentY -= lineHeight
     }
