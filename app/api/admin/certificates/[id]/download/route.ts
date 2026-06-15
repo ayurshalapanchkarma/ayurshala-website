@@ -22,9 +22,9 @@ const GRAY = rgb(107 / 255, 114 / 255, 128 / 255)
 const PAGE_WIDTH = 595
 const PAGE_HEIGHT = 842
 const MARGIN = 18 * 2.834
-const CONTENT_LEFT = MARGIN + 15
-const CONTENT_WIDTH = PAGE_WIDTH - (MARGIN + 15) * 2
-const CONTENT_CENTER_X = MARGIN + 15 + CONTENT_WIDTH / 2
+const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2
+const CONTENT_CENTER_X = MARGIN + CONTENT_WIDTH / 2
+const CONTENT_LEFT = MARGIN + 20
 
 function formatDate(d: string | null) {
   if (!d) return ''
@@ -115,7 +115,7 @@ function drawCenteredText(page: any, text: string, y: number, fontSize: number, 
     color: color,
   })
 
-  return y - (fontSize + 2)
+  return y - fontSize
 }
 
 function drawHeader(page: any, logo: any, certTitle: string): number {
@@ -157,21 +157,22 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
   const SIG_WIDTH = 180
   const QR_SIZE = 60
 
+  const patientLineX = CONTENT_LEFT
+  const doctorLineX = PAGE_WIDTH - MARGIN - SIG_WIDTH - 20
+  const doctorCenterX = doctorLineX + SIG_WIDTH / 2
+
   let y = startY
 
   // Signature lines
-  const patientX = CONTENT_LEFT
-  const doctorX = CONTENT_LEFT + CONTENT_WIDTH - SIG_WIDTH
-
   page.drawLine({
-    start: { x: patientX, y: y },
-    end: { x: patientX + SIG_WIDTH, y: y },
+    start: { x: patientLineX, y: y },
+    end: { x: patientLineX + SIG_WIDTH, y: y },
     color: BLACK,
   })
 
   page.drawLine({
-    start: { x: doctorX, y: y },
-    end: { x: doctorX + SIG_WIDTH, y: y },
+    start: { x: doctorLineX, y: y },
+    end: { x: doctorLineX + SIG_WIDTH, y: y },
     color: BLACK,
   })
 
@@ -179,14 +180,14 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
 
   // Labels
   page.drawText('Patient Signature', {
-    x: patientX,
+    x: patientLineX,
     y: y,
     size: 10,
     color: BLACK,
   })
 
   page.drawText('Dr. ' + doctorName, {
-    x: doctorX,
+    x: doctorLineX,
     y: y,
     size: 10,
     color: BLACK,
@@ -195,7 +196,7 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
   y -= 12
 
   page.drawText('Ayurshala Panchakarma Center', {
-    x: doctorX,
+    x: doctorLineX,
     y: y,
     size: 9,
     color: BLACK,
@@ -203,9 +204,8 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
 
   y -= 80
 
-  // QR - centered under doctor block
-  const doctorCenter = doctorX + SIG_WIDTH / 2
-  const qrX = doctorCenter - QR_SIZE / 2
+  // QR - centered to doctor block center
+  const qrX = doctorCenterX - QR_SIZE / 2
 
   page.drawImage(qr, {
     x: qrX,
@@ -216,11 +216,11 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
 
   y -= QR_SIZE + 20
 
-  // Scan text - centered
+  // Scan text - centered to doctor block center
   const scanText = 'Scan to verify authenticity'
   const scanWidth = scanText.length * 8 * 0.5
   page.drawText(scanText, {
-    x: CONTENT_CENTER_X - scanWidth / 2,
+    x: doctorCenterX - scanWidth / 2,
     y: y,
     size: 8,
     color: GRAY,
@@ -228,21 +228,21 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
 
   y -= 20
 
-  // Electronic note - centered
+  // Electronic note - centered to doctor block center
   const noteText1 = 'Electronically generated certificate.'
   const noteText2 = 'No physical signature required.'
   const noteWidth1 = noteText1.length * 8 * 0.5
   const noteWidth2 = noteText2.length * 8 * 0.5
 
   page.drawText(noteText1, {
-    x: CONTENT_CENTER_X - noteWidth1 / 2,
+    x: doctorCenterX - noteWidth1 / 2,
     y: y,
     size: 8,
     color: GRAY,
   })
 
   page.drawText(noteText2, {
-    x: CONTENT_CENTER_X - noteWidth2 / 2,
+    x: doctorCenterX - noteWidth2 / 2,
     y: y - 10,
     size: 8,
     color: GRAY,
@@ -306,7 +306,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const narrative = getNarrative(ct.name, certificate)
     const lines = splitLines(narrative, CONTENT_WIDTH - 40, 11)
     const lineHeight = 11 * 1.5
-    const certificationHeight = 280
+    const certificationHeight = 220
 
     let pages: any[] = []
     let currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
@@ -317,8 +317,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Draw body
     for (const line of lines) {
-      if (currentY - lineHeight < MARGIN + certificationHeight) {
-        // Certification block doesn't fit, move to next page
+      if (currentY - lineHeight - certificationHeight < MARGIN) {
+        // Certification block won't fit, move to next page
         currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
         pages.push(currentPage)
         drawBorder(currentPage)
