@@ -99,7 +99,7 @@ function drawBorder(page: any) {
   })
 }
 
-function drawHeaderAndGetCurrentY(page: any, logo: any): number {
+function drawHeaderAndGetCurrentY(page: any, logo: any, certTitle: string): number {
   let y = PAGE_HEIGHT - MARGIN - 20
 
   // Logo - centered, 70×70
@@ -152,7 +152,7 @@ function drawHeaderAndGetCurrentY(page: any, logo: any): number {
   y -= 9 + 20
 
   // Certificate title - centered
-  page.drawText(certType.toUpperCase(), {
+  page.drawText(certTitle.toUpperCase(), {
     x: PAGE_WIDTH / 2 - 150,
     y: y,
     size: 16,
@@ -163,8 +163,6 @@ function drawHeaderAndGetCurrentY(page: any, logo: any): number {
 
   return y
 }
-
-let certType: any = null
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -197,8 +195,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Certificate type not found' }, { status: 404 })
     }
 
-    certType = ct
-
     if (certificate.status !== 'ISSUED') {
       return NextResponse.json({ error: 'Certificate not issued' }, { status: 403 })
     }
@@ -226,7 +222,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     pages.push(currentPage)
     drawBorder(currentPage)
 
-    let currentY = drawHeaderAndGetCurrentY(currentPage, logo)
+    let currentY = drawHeaderAndGetCurrentY(currentPage, logo, ct.name)
 
     // Draw body
     for (const line of lines) {
