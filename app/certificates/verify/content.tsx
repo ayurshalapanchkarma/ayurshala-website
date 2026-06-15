@@ -86,6 +86,9 @@ export default function VerifyContent() {
   if (status === 'verified' && data) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50/60 via-white to-orange-100/40 p-4 py-12">
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap');
+        `}</style>
         <div className="w-full max-w-2xl backdrop-blur-2xl bg-white/50 border border-white/30 rounded-3xl shadow-2xl p-8 md:p-12 text-center">
           {/* Logo */}
           <div className="flex justify-center mb-6">
@@ -100,16 +103,16 @@ export default function VerifyContent() {
 
           {/* Title with Badge */}
           <div className="flex items-center justify-center gap-2 mb-10">
-            <h1 style={{ color: '#1D9BF0', fontFamily: 'Poppins', lineHeight: '1.1', margin: 0 }} className="text-2xl md:text-4xl font-bold">
+            <h1 style={{ color: '#1D9BF0', fontFamily: "'Cormorant Garamond', serif", lineHeight: '1.1', margin: 0 }} className="text-4xl md:text-5xl font-bold">
               Certificate Verified
             </h1>
             {badgeVisible && (
               <Image
                 src="/meta-verified.png"
                 alt="Verified"
-                width={32}
-                height={32}
-                className="w-6 md:w-8 h-auto object-contain flex-shrink-0"
+                width={38}
+                height={38}
+                className="w-8 md:w-9 h-auto object-contain flex-shrink-0"
                 style={{ verticalAlign: 'baseline' }}
                 priority
                 onError={() => setBadgeVisible(false)}
