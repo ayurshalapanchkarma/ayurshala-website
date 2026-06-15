@@ -185,10 +185,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const contentX = MARGIN + CONTENT_MARGIN
     const contentWidth = pageWidth - (MARGIN + CONTENT_MARGIN) * 2
+    const bodyWidth = contentWidth * 0.85
+    const bodyX = pageWidth / 2 - bodyWidth / 2
     const bottomBoundary = MARGIN + CONTENT_MARGIN + 40
     let currentY = pageHeight - MARGIN - CONTENT_MARGIN - 20
 
-    // Logo
+    // Logo - centered
     if (logoBytes) {
       try {
         const logoImage = await pdfDoc.embedPng(logoBytes)
@@ -204,44 +206,52 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
-    // Header
+    // Header - centered
+    const headerWidth = 200
     currentPage.drawText('AYURSHALA PANCHAKARMA CENTER', {
-      x: contentX,
+      x: pageWidth / 2 - headerWidth / 2,
       y: currentY,
       size: 14,
       color: BLACK,
+      maxWidth: headerWidth,
     })
     currentY -= 18
 
+    const addressWidth = 250
     currentPage.drawText('SP-28, Wajidpur, Sector-130, Noida – 201301', {
-      x: contentX,
+      x: pageWidth / 2 - addressWidth / 2,
       y: currentY,
       size: 10,
       color: BLACK,
+      maxWidth: addressWidth,
     })
     currentY -= 14
 
+    const contactWidth = 320
     currentPage.drawText('+91-9821224767 | ayurshalapanchkarma@gmail.com', {
-      x: contentX,
+      x: pageWidth / 2 - contactWidth / 2,
       y: currentY,
       size: 9,
       color: GRAY,
+      maxWidth: contactWidth,
     })
     currentY -= 28
 
-    // Title
+    // Title - centered
+    const titleWidth = 300
     currentPage.drawText(String(certType.name).toUpperCase(), {
-      x: contentX,
+      x: pageWidth / 2 - titleWidth / 2,
       y: currentY,
       size: 20,
       color: ORANGE,
+      maxWidth: titleWidth,
     })
     currentY -= 32
 
-    // Narrative
+    // Narrative - centered body
     const narrative = getNarrative(certType.name, certificate)
-    const narrativeLines = splitIntoLines(narrative, contentWidth - 20, 11)
-    const lineHeight = 11 * LINE_HEIGHT_MULTIPLIER
+    const narrativeLines = splitIntoLines(narrative, bodyWidth, 12)
+    const lineHeight = 12 * 1.6
 
     for (const line of narrativeLines) {
       if (currentY - lineHeight < bottomBoundary) {
@@ -251,15 +261,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         currentY = pageHeight - MARGIN - CONTENT_MARGIN - 20
       }
       currentPage.drawText(line, {
-        x: contentX,
+        x: bodyX,
         y: currentY,
-        size: 11,
+        size: 12,
         color: BLACK,
+        maxWidth: bodyWidth,
       })
       currentY -= lineHeight
     }
 
-    currentY -= 20
+    currentY -= 12
 
     // Check if signature section fits
     const signatureHeight = 80
@@ -270,58 +281,61 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       currentY = pageHeight - MARGIN - CONTENT_MARGIN - 20
     }
 
-    // Signature section
+    // Signature section - balanced
     const sigLineY = currentY - 50
-    const sigWidth = (contentWidth - 40) / 2
+    const sigWidth = bodyWidth / 2
 
     currentPage.drawLine({
-      start: { x: contentX, y: sigLineY },
-      end: { x: contentX + sigWidth - 20, y: sigLineY },
+      start: { x: bodyX, y: sigLineY },
+      end: { x: bodyX + sigWidth - 20, y: sigLineY },
       color: BLACK,
     })
 
     currentPage.drawText('Patient Signature', {
-      x: contentX,
+      x: bodyX,
       y: sigLineY - 15,
       size: 10,
       color: BLACK,
     })
 
     currentPage.drawLine({
-      start: { x: contentX + sigWidth + 20, y: sigLineY },
-      end: { x: contentX + contentWidth - 20, y: sigLineY },
+      start: { x: bodyX + sigWidth + 20, y: sigLineY },
+      end: { x: bodyX + bodyWidth, y: sigLineY },
       color: BLACK,
     })
 
     currentPage.drawText('Dr. ' + String(certificate.issued_by), {
-      x: contentX + sigWidth + 20,
+      x: bodyX + sigWidth + 20,
       y: sigLineY - 15,
       size: 10,
       color: BLACK,
     })
 
     currentPage.drawText('Ayurshala Panchakarma Center', {
-      x: contentX + sigWidth + 20,
+      x: bodyX + sigWidth + 20,
       y: sigLineY - 28,
       size: 9,
       color: BLACK,
     })
 
-    // QR code
+    // QR code - bottom right
     try {
       const qrImage = await pdfDoc.embedPng(qrBuffer)
       const qrSize = 60
+      const qrX = pageWidth - MARGIN - CONTENT_MARGIN - qrSize
+      const qrY = MARGIN + CONTENT_MARGIN + 20
+      
       currentPage.drawImage(qrImage, {
-        x: pageWidth - MARGIN - CONTENT_MARGIN - qrSize,
-        y: sigLineY - 80,
+        x: qrX,
+        y: qrY,
         width: qrSize,
         height: qrSize,
       })
 
       currentPage.drawText('Scan to verify\nauthenticity', {
-        x: pageWidth - MARGIN - CONTENT_MARGIN - qrSize,
-        y: sigLineY - 95,
-        size: 7,
+        x: qrX,
+        y: qrY - 20,
+        size: 8,
         color: GRAY,
         maxWidth: qrSize,
       })
@@ -329,7 +343,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       // QR embedding failed, continue without it
     }
 
-    // Footer on last page
+    // Footer on last page - centered
     drawFooter(currentPage, pageWidth)
 
     const pdfBytes = await pdfDoc.save()

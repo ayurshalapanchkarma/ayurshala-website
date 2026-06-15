@@ -10,6 +10,7 @@ export default function VerifyContent() {
   const router = useRouter()
   const [status, setStatus] = useState<'loading' | 'verified' | 'invalid' | 'inactive'>('loading')
   const [data, setData] = useState<any>(null)
+  const [badgeVisible, setBadgeVisible] = useState(true)
 
   useEffect(() => {
     const supabase = createClient(
@@ -109,13 +110,17 @@ export default function VerifyContent() {
 
           {/* Meta Verified Badge */}
           <div className="flex justify-center mb-6">
-            <Image
-              src="/meta_verified-removebg-preview.png"
-              alt="Certificate verified"
-              width={80}
-              height={80}
-              className="w-16 md:w-20 h-auto"
-            />
+            {badgeVisible && (
+              <Image
+                src="/meta-verified.png"
+                alt="Verified Certificate"
+                width={64}
+                height={64}
+                className="w-16 md:w-20 h-auto object-contain"
+                priority
+                onError={() => setBadgeVisible(false)}
+              />
+            )}
           </div>
 
           {/* Title */}
