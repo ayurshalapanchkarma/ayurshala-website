@@ -19,16 +19,6 @@ export default function VerifyContent() {
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
     )
 
-    console.log(
-      '[VERIFY]',
-      'url:',
-      !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'anon:',
-      !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      'publishable:',
-      !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-    )
-
     const certificateNo = searchParams.get('certificate')
     if (!certificateNo) {
       setStatus('invalid')
@@ -98,7 +88,7 @@ export default function VerifyContent() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50/60 via-white to-orange-100/40 p-4 py-12">
         <div className="w-full max-w-2xl backdrop-blur-2xl bg-white/50 border border-white/30 rounded-3xl shadow-2xl p-8 md:p-12 text-center">
           {/* Logo */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-8">
             <Image
               src="/ayurshala_text.png"
               alt="Ayurshala Panchakarma Center"
@@ -108,18 +98,18 @@ export default function VerifyContent() {
             />
           </div>
 
-          {/* Title with Meta Badge */}
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <h1 style={{ color: '#1D9BF0' }} className="text-4xl font-bold">
+          {/* Title with Badge */}
+          <div className="flex items-center justify-center gap-3 md:gap-4 mb-8">
+            <h1 style={{ color: '#1D9BF0' }} className="text-3xl md:text-4xl font-bold">
               Certificate Verified
             </h1>
             {badgeVisible && (
               <Image
                 src="/meta-verified.png"
                 alt="Verified"
-                width={42}
-                height={42}
-                className="object-contain"
+                width={40}
+                height={40}
+                className="w-8 md:w-10 h-auto object-contain"
                 priority
                 onError={() => setBadgeVisible(false)}
               />
