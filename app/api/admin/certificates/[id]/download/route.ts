@@ -5,6 +5,7 @@ import { PDFDocument, rgb } from 'pdf-lib'
 import QRCode from 'qrcode'
 import fs from 'fs'
 import path from 'path'
+import { APP_URL } from '@/lib/constants'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -171,8 +172,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const logoPath = path.join(process.cwd(), 'public', 'ayurshala_text.png')
     const logoBytes = fs.existsSync(logoPath) ? fs.readFileSync(logoPath) : null
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ayurshalapanchakarma.com'
-    const qrUrl = `${siteUrl}/certificates/verify?certificate=${encodeURIComponent(String(certificate.certificate_no))}`
+    const qrUrl = `${APP_URL}/certificates/verify?certificate=${encodeURIComponent(String(certificate.certificate_no))}`
     const qrCodeImage = await QRCode.toDataURL(qrUrl, { width: 100 })
     const qrBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64')
 
