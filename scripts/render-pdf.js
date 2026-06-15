@@ -15,7 +15,6 @@ const styles = StyleSheet.create({
     border: '2px solid #F97316',
     padding: '15mm',
     flexDirection: 'column',
-    flex: 1,
   },
   logo: {
     width: '70px',
@@ -59,13 +58,13 @@ const styles = StyleSheet.create({
     lineHeight: 1.8,
     color: '#111827',
     textAlign: 'justify',
-    marginBottom: '20mm',
+    marginBottom: 10,
   },
   signatureSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: '8mm',
-    marginTop: 'auto',
+    marginTop: 25,
+    marginBottom: 8,
     paddingHorizontal: '10mm',
   },
   signatureBlock: {
@@ -75,8 +74,8 @@ const styles = StyleSheet.create({
   signatureLine: {
     borderTopWidth: 1,
     borderTopColor: '#111827',
-    paddingTop: '3px',
-    marginTop: '12mm',
+    paddingTop: 3,
+    marginTop: 20,
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
     color: '#111827',
@@ -91,7 +90,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 8,
     color: '#6B7280',
-    marginBottom: '5mm',
+    marginTop: 15,
     lineHeight: 1.5,
   },
 })
