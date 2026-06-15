@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { PDFDocument, PDFPage, rgb, degrees } from 'pdf-lib'
 import fs from 'fs'
 import path from 'path'
 
@@ -47,6 +48,25 @@ function getNarrative(certType: string, cert: any) {
   }
 }
 
+function wrapText(text: string, maxWidth: number, fontSize: number): string[] {
+  const lines: string[] = []
+  const words = text.split(' ')
+  let currentLine = ''
+
+  for (const word of words) {
+    const testLine = currentLine ? currentLine + ' ' + word : word
+    const estimatedWidth = testLine.length * (fontSize * 0.5)
+    if (estimatedWidth > maxWidth && currentLine) {
+      lines.push(currentLine)
+      currentLine = word
+    } else {
+      currentLine = testLine
+    }
+  }
+  if (currentLine) lines.push(currentLine)
+  return lines
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: certificateId } = await params
@@ -68,7 +88,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: error ? String(error.message) : 'Certificate not found' }, { status: 404 })
     }
 
-    // Get certificate type name
     const { data: certType, error: certTypeError } = await supabase
       .from('certificate_types')
       .select('name')
@@ -87,71 +106,173 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!fs.existsSync(logoPath)) {
       return NextResponse.json({ error: 'Logo missing' }, { status: 500 })
     }
-    const logoUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`
+    const logoBytes = fs.readFileSync(logoPath)
 
-    const React = await import('react')
-    const { renderToBuffer, Document, Page, Text, View, Image, StyleSheet } =
-      await import('@react-pdf/renderer')
+    const pdfDoc = await PDFDocument.create()
+    const page = pdfDoc.addPage([595, 842])
+    const { width, height } = page.getSize()
 
-    const styles = StyleSheet.create({
-      page: { padding: 0, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
-      borderPage: { margin: '12mm', border: '2px solid #F97316', padding: '15mm', flexDirection: 'column' },
-      logo: { width: '70px', height: '70px', marginHorizontal: 'auto', marginTop: '5mm', marginBottom: '8mm' },
-      header: { textAlign: 'center', marginBottom: '15mm' },
-      headerTitle: { fontSize: 14, fontFamily: 'Helvetica-Bold', marginBottom: '4px', color: '#111827' },
-      headerText: { fontSize: 10, color: '#111827', marginBottom: '1px', lineHeight: 1.4 },
-      headerContact: { fontSize: 9, color: '#6B7280', marginTop: '3px' },
-      certTitle: { fontSize: 20, fontFamily: 'Helvetica-Bold', color: '#F97316', textAlign: 'center', textTransform: 'uppercase', marginBottom: '15mm', marginTop: '5mm' },
-      body: { fontSize: 11, lineHeight: 1.8, color: '#111827', textAlign: 'justify', marginBottom: 10 },
-      signatureSection: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 25, marginBottom: 8, paddingHorizontal: '10mm' },
-      signatureBlock: { width: '40%', textAlign: 'center' },
-      signatureLine: { borderTopWidth: 1, borderTopColor: '#111827', paddingTop: 3, marginTop: 20, fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#111827' },
-      signatureSub: { fontSize: 9, marginTop: '2px', fontFamily: 'Helvetica', color: '#111827' },
-      footer: { textAlign: 'center', fontSize: 8, color: '#6B7280', marginTop: 15, lineHeight: 1.5 },
+    const margin = 36
+    const borderMargin = 12 * 2.834
+    const borderX = borderMargin
+    const borderY = borderMargin
+    const borderWidth = width - borderMargin * 2
+    const borderHeight = height - borderMargin * 2
+
+    page.drawRectangle({
+      x: borderX,
+      y: borderY,
+      width: borderWidth,
+      height: borderHeight,
+      borderColor: rgb(249 / 255, 115 / 255, 22 / 255),
+      borderWidth: 2,
     })
 
+    const contentX = borderX + 15 * 2.834
+    const contentY = borderY + borderHeight - 15 * 2.834
+    const contentWidth = borderWidth - 30 * 2.834
+
+    try {
+      const logoImage = await pdfDoc.embedPng(logoBytes)
+      const logoSize = 70
+      page.drawImage(logoImage, {
+        x: width / 2 - logoSize / 2,
+        y: contentY - logoSize - 20,
+        width: logoSize,
+        height: logoSize,
+      })
+    } catch (e) {
+      // Logo embedding failed, continue without it
+    }
+
+    let currentY = contentY - 110
+
+    page.drawText('AYURSHALA PANCHAKARMA CENTER', {
+      x: contentX,
+      y: currentY,
+      size: 14,
+      color: rgb(17 / 255, 24 / 255, 39 / 255),
+      maxWidth: contentWidth,
+    })
+    currentY -= 16
+
+    page.drawText('SP-28, Wajidpur,', {
+      x: contentX,
+      y: currentY,
+      size: 10,
+      color: rgb(17 / 255, 24 / 255, 39 / 255),
+      maxWidth: contentWidth,
+    })
+    currentY -= 12
+
+    page.drawText('Sector-130, Noida – 201301', {
+      x: contentX,
+      y: currentY,
+      size: 10,
+      color: rgb(17 / 255, 24 / 255, 39 / 255),
+      maxWidth: contentWidth,
+    })
+    currentY -= 12
+
+    page.drawText('+91-9821224767', {
+      x: contentX,
+      y: currentY,
+      size: 9,
+      color: rgb(107 / 255, 114 / 255, 128 / 255),
+      maxWidth: contentWidth,
+    })
+    currentY -= 10
+
+    page.drawText('ayurshalapanchkarma@gmail.com', {
+      x: contentX,
+      y: currentY,
+      size: 9,
+      color: rgb(107 / 255, 114 / 255, 128 / 255),
+      maxWidth: contentWidth,
+    })
+    currentY -= 25
+
+    page.drawText(String(certType.name).toUpperCase(), {
+      x: contentX,
+      y: currentY,
+      size: 20,
+      color: rgb(249 / 255, 115 / 255, 22 / 255),
+      maxWidth: contentWidth,
+    })
+    currentY -= 35
+
     const narrative = getNarrative(certType.name, certificate)
+    const narrativeLines = wrapText(narrative, contentWidth - 20, 11)
 
-    const e = (type: any, props: any, ...children: any[]) =>
-      React.createElement(type, props, ...children.filter((c: any) => c != null))
+    for (const line of narrativeLines) {
+      page.drawText(line, {
+        x: contentX,
+        y: currentY,
+        size: 11,
+        color: rgb(17 / 255, 24 / 255, 39 / 255),
+        maxWidth: contentWidth,
+      })
+      currentY -= 16
+    }
 
-    const doc = e(Document, {},
-      e(Page, { size: 'A4', style: styles.page },
-        e(View, { style: styles.borderPage },
-          e(Image, { style: styles.logo, src: logoUrl }),
-          e(View, { style: styles.header },
-            e(Text, { style: styles.headerTitle }, 'AYURSHALA PANCHAKARMA CENTER'),
-            e(Text, { style: styles.headerText }, 'SP-28, Wajidpur,'),
-            e(Text, { style: styles.headerText }, 'Sector-130, Noida – 201301'),
-            e(Text, { style: styles.headerContact }, '+91-9821224767'),
-            e(Text, { style: styles.headerContact }, 'ayurshalapanchkarma@gmail.com')
-          ),
-          e(Text, { style: styles.certTitle }, String(certType.name)),
-          e(Text, { style: styles.body }, narrative),
-          e(View, { style: styles.signatureSection },
-            e(View, { style: styles.signatureBlock },
-              e(View, { style: styles.signatureLine },
-                e(Text, {}, 'Patient Signature')
-              )
-            ),
-            e(View, { style: styles.signatureBlock },
-              e(View, { style: styles.signatureLine },
-                e(Text, {}, 'Dr. ' + String(certificate.issued_by)),
-                e(Text, { style: styles.signatureSub }, 'Ayurshala Panchakarma Center')
-              )
-            )
-          ),
-          e(View, { style: styles.footer },
-            e(Text, {}, 'This certificate has been electronically generated by Ayurshala Panchakarma Center.'),
-            e(Text, {}, 'No physical signature is required.')
-          )
-        )
-      )
-    ) as any
+    currentY -= 15
 
-    const buffer = await renderToBuffer(doc)
+    const signLineY = currentY - 30
+    const sigWidth = (contentWidth - 40) / 2
 
-    return new NextResponse(buffer as any, {
+    page.drawLine({
+      start: { x: contentX, y: signLineY },
+      end: { x: contentX + sigWidth - 20, y: signLineY },
+      color: rgb(17 / 255, 24 / 255, 39 / 255),
+    })
+
+    page.drawText('Patient Signature', {
+      x: contentX,
+      y: signLineY - 15,
+      size: 10,
+      color: rgb(17 / 255, 24 / 255, 39 / 255),
+    })
+
+    page.drawLine({
+      start: { x: contentX + sigWidth + 20, y: signLineY },
+      end: { x: contentX + contentWidth - 40, y: signLineY },
+      color: rgb(17 / 255, 24 / 255, 39 / 255),
+    })
+
+    page.drawText('Dr. ' + String(certificate.issued_by), {
+      x: contentX + sigWidth + 20,
+      y: signLineY - 15,
+      size: 10,
+      color: rgb(17 / 255, 24 / 255, 39 / 255),
+    })
+
+    page.drawText('Ayurshala Panchakarma Center', {
+      x: contentX + sigWidth + 20,
+      y: signLineY - 28,
+      size: 9,
+      color: rgb(17 / 255, 24 / 255, 39 / 255),
+    })
+
+    const footerY = borderY + 10
+    page.drawText('This certificate has been electronically generated by Ayurshala Panchakarma Center.', {
+      x: contentX,
+      y: footerY + 8,
+      size: 8,
+      color: rgb(107 / 255, 114 / 255, 128 / 255),
+      maxWidth: contentWidth,
+    })
+
+    page.drawText('No physical signature is required.', {
+      x: contentX,
+      y: footerY - 2,
+      size: 8,
+      color: rgb(107 / 255, 114 / 255, 128 / 255),
+      maxWidth: contentWidth,
+    })
+
+    const pdfBytes = await pdfDoc.save()
+
+    return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
