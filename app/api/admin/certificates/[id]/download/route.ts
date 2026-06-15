@@ -144,6 +144,92 @@ function drawHeaderBlock(page: any, logo: any, certTitle: string): number {
   return y
 }
 
+function drawCertificationBlock(page: any, qr: any, doctorName: string, certY: number): void {
+  const SIGNATURE_WIDTH = 180
+  const QR_SIZE = 60
+
+  // Signature line Y
+  let y = certY
+
+  // Patient signature line (left)
+  const patientX = CONTENT_LEFT
+  page.drawLine({
+    start: { x: patientX, y: y },
+    end: { x: patientX + SIGNATURE_WIDTH, y: y },
+    color: BLACK,
+  })
+
+  // Doctor signature line (right)
+  const doctorX = PAGE_WIDTH - MARGIN - 20 - SIGNATURE_WIDTH
+  page.drawLine({
+    start: { x: doctorX, y: y },
+    end: { x: doctorX + SIGNATURE_WIDTH, y: y },
+    color: BLACK,
+  })
+
+  y -= 25
+
+  // Patient label (left)
+  page.drawText('Patient Signature', {
+    x: patientX,
+    y: y,
+    size: 10,
+    color: BLACK,
+  })
+
+  // Doctor label block (right)
+  page.drawText('Dr. ' + doctorName, {
+    x: doctorX,
+    y: y,
+    size: 10,
+    color: BLACK,
+  })
+
+  y -= 12
+
+  page.drawText('Ayurshala Panchakarma Center', {
+    x: doctorX,
+    y: y,
+    size: 9,
+    color: BLACK,
+  })
+
+  y -= 80
+
+  // QR - centered to doctor signature block
+  const doctorCenter = doctorX + SIGNATURE_WIDTH / 2
+  const qrX = doctorCenter - QR_SIZE / 2
+
+  page.drawImage(qr, {
+    x: qrX,
+    y: y - QR_SIZE,
+    width: QR_SIZE,
+    height: QR_SIZE,
+  })
+
+  y -= QR_SIZE + 15
+
+  // Scan text - centered
+  page.drawText('Scan to verify authenticity', {
+    x: PAGE_WIDTH / 2 - 70,
+    y: y,
+    size: 8,
+    color: GRAY,
+    maxWidth: 140,
+  })
+
+  y -= 25
+
+  // Electronic note - centered
+  page.drawText('Electronically generated certificate.\nNo physical signature required.', {
+    x: PAGE_WIDTH / 2 - 100,
+    y: y,
+    size: 8,
+    color: GRAY,
+    maxWidth: 200,
+  })
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: certificateId } = await params
@@ -223,84 +309,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       currentY -= lineHeight
     }
 
-    // Certification block - FINAL PAGE ONLY (single Y cursor flow)
+    // Certification block - FINAL PAGE ONLY
     const final = pages[pages.length - 1]
-    let certY = currentY - 50
-
-    const sigWidth = 70
-    const patientSigX = CONTENT_LEFT
-    const doctorSigX = CONTENT_LEFT + (CONTENT_WIDTH - 20) - sigWidth
-
-    // Patient signature line
-    final.drawLine({
-      start: { x: patientSigX, y: certY },
-      end: { x: patientSigX + sigWidth, y: certY },
-      color: BLACK,
-    })
-    final.drawText('Patient Signature', {
-      x: patientSigX,
-      y: certY - 16,
-      size: 10,
-      color: BLACK,
-    })
-
-    // Doctor signature line (parallel)
-    final.drawLine({
-      start: { x: doctorSigX, y: certY },
-      end: { x: doctorSigX + sigWidth, y: certY },
-      color: BLACK,
-    })
-
-    certY -= 40
-
-    // Doctor info block (right-aligned)
-    final.drawText('Dr. ' + String(certificate.issued_by), {
-      x: doctorSigX,
-      y: certY,
-      size: 10,
-      color: BLACK,
-    })
-    certY -= 12
-
-    final.drawText('Ayurshala Panchakarma Center', {
-      x: doctorSigX,
-      y: certY,
-      size: 9,
-      color: BLACK,
-    })
-    certY -= 25
-
-    // QR - centered using doctor block as reference
-    const qrSize = 60
-    const doctorBlockCenterX = doctorSigX + sigWidth / 2
-    const qrX = doctorBlockCenterX - qrSize / 2
-
-    final.drawImage(qr, {
-      x: qrX,
-      y: certY - qrSize,
-      width: qrSize,
-      height: qrSize,
-    })
-    certY -= qrSize + 12
-
-    // "Scan to verify authenticity" - centered
-    final.drawText('Scan to verify authenticity', {
-      x: PAGE_WIDTH / 2 - 70,
-      y: certY,
-      size: 8,
-      color: GRAY,
-      maxWidth: 140,
-    })
-    certY -= 15
-
-    // Electronic note - centered
-    final.drawText('Electronically generated certificate.\nNo physical signature required.', {
-      x: PAGE_WIDTH / 2 - 100,
-      y: certY,
-      size: 8,
-      color: GRAY,
-      maxWidth: 200,
-    })
+    drawCertificationBlock(final, qr, String(certificate.issued_by), currentY - 50)
 
     const pdfBytes = await pdfDoc.save()
 
