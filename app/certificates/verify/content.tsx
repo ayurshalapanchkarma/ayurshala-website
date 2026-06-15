@@ -108,25 +108,23 @@ export default function VerifyContent() {
             />
           </div>
 
-          {/* Meta Verified Badge */}
-          <div className="flex justify-center mb-6">
+          {/* Title with Meta Badge */}
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <h1 style={{ color: '#1D9BF0' }} className="text-4xl font-bold">
+              Certificate Verified
+            </h1>
             {badgeVisible && (
               <Image
                 src="/meta-verified.png"
-                alt="Verified Certificate"
-                width={64}
-                height={64}
-                className="w-16 md:w-20 h-auto object-contain"
+                alt="Verified"
+                width={42}
+                height={42}
+                className="object-contain"
                 priority
                 onError={() => setBadgeVisible(false)}
               />
             )}
           </div>
-
-          {/* Title */}
-          <h1 style={{ color: '#EA580C', fontFamily: 'Marcellus' }} className="text-4xl font-bold mb-8">
-            Certificate Verified
-          </h1>
 
           {/* Details Card */}
           <div className="backdrop-blur bg-white/30 border border-white/20 rounded-2xl p-6 md:p-8 mb-8 text-left space-y-5">
@@ -143,7 +141,7 @@ export default function VerifyContent() {
             <p style={{ color: '#6B7280' }} className="text-sm mb-4">
               Verified and digitally authenticated by
             </p>
-            <p style={{ color: '#EA580C', fontFamily: 'Marcellus' }} className="text-2xl font-bold mb-4">
+            <p style={{ color: '#EA580C' }} className="text-2xl font-bold mb-4">
               Ayurshala Panchakarma Center
             </p>
             <div style={{ color: '#6B7280' }} className="text-sm space-y-1">
@@ -183,7 +181,7 @@ export default function VerifyContent() {
           <div className="flex justify-center mb-6">
             <div style={{ color: '#EA580C' }} className="text-5xl">✗</div>
           </div>
-          <h1 style={{ color: '#EA580C', fontFamily: 'Marcellus' }} className="text-3xl font-bold mb-4">
+          <h1 style={{ color: '#EA580C' }} className="text-3xl font-bold mb-4">
             Invalid Certificate
           </h1>
           <p style={{ color: '#6B7280' }} className="mb-8">
@@ -217,7 +215,7 @@ export default function VerifyContent() {
           <div className="flex justify-center mb-6">
             <div style={{ color: '#EA580C' }} className="text-5xl">⚠</div>
           </div>
-          <h1 style={{ color: '#EA580C', fontFamily: 'Marcellus' }} className="text-3xl font-bold mb-4">
+          <h1 style={{ color: '#EA580C' }} className="text-3xl font-bold mb-4">
             Certificate Not Active
           </h1>
           <p style={{ color: '#6B7280' }} className="mb-8">

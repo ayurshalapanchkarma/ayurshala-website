@@ -105,21 +105,7 @@ function drawBorders(page: any, width: number, height: number) {
     width: outerW,
     height: outerH,
     borderColor: ORANGE,
-    borderWidth: 1.5,
-  })
-
-  const innerX = outerX + INNER_MARGIN
-  const innerY = outerY + INNER_MARGIN
-  const innerW = outerW - INNER_MARGIN * 2
-  const innerH = outerH - INNER_MARGIN * 2
-
-  page.drawRectangle({
-    x: innerX,
-    y: innerY,
-    width: innerW,
-    height: innerH,
-    borderColor: GREEN,
-    borderWidth: 1,
+    borderWidth: 2,
   })
 }
 
@@ -185,10 +171,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const contentX = MARGIN + CONTENT_MARGIN
     const contentWidth = pageWidth - (MARGIN + CONTENT_MARGIN) * 2
-    const bodyWidth = contentWidth * 0.85
+    const bodyWidth = contentWidth * 0.8
     const bodyX = pageWidth / 2 - bodyWidth / 2
     const bottomBoundary = MARGIN + CONTENT_MARGIN + 40
-    let currentY = pageHeight - MARGIN - CONTENT_MARGIN - 20
+    let currentY = pageHeight - MARGIN - CONTENT_MARGIN - 30
 
     // Logo - centered
     if (logoBytes) {
@@ -200,14 +186,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           width: 70,
           height: 70,
         })
-        currentY -= 90
+        currentY -= 70
       } catch (e) {
-        currentY -= 20
+        currentY -= 10
       }
     }
 
+    currentY -= 6
+
     // Header - centered
-    const headerWidth = 200
+    const headerWidth = 250
     currentPage.drawText('AYURSHALA PANCHAKARMA CENTER', {
       x: pageWidth / 2 - headerWidth / 2,
       y: currentY,
@@ -215,17 +203,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       color: BLACK,
       maxWidth: headerWidth,
     })
-    currentY -= 18
+    currentY -= 20
 
-    const addressWidth = 250
-    currentPage.drawText('SP-28, Wajidpur, Sector-130, Noida – 201301', {
+    const addressWidth = 280
+    currentPage.drawText('SP-28, Wajidpur,\nSector-130, Noida – 201301', {
       x: pageWidth / 2 - addressWidth / 2,
       y: currentY,
       size: 10,
       color: BLACK,
       maxWidth: addressWidth,
     })
-    currentY -= 14
+    currentY -= 28
 
     const contactWidth = 320
     currentPage.drawText('+91-9821224767 | ayurshalapanchkarma@gmail.com', {
@@ -235,7 +223,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       color: GRAY,
       maxWidth: contactWidth,
     })
-    currentY -= 28
+    currentY -= 24
 
     // Title - centered
     const titleWidth = 300
@@ -332,12 +320,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         height: qrSize,
       })
 
-      currentPage.drawText('Scan to verify\nauthenticity', {
-        x: qrX,
-        y: qrY - 20,
+      currentPage.drawText('Scan to verify authenticity', {
+        x: qrX - 15,
+        y: qrY - 15,
         size: 8,
         color: GRAY,
-        maxWidth: qrSize,
+        maxWidth: qrSize + 30,
       })
     } catch (e) {
       // QR embedding failed, continue without it
