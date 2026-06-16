@@ -146,8 +146,17 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 70 + 24
 
-  // All text elements use the same centering function
-  drawCenteredText(page, 'AYURSHALA PANCHAKARMA CENTER', y, 14, BLACK)
+  // Clinic name - independent calculation using border dimensions
+  const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
+  const clinicFontSize = 14
+  const clinicTextWidth = clinicText.length * clinicFontSize * 0.5
+  const clinicX = BORDER_LEFT + (BORDER_WIDTH - clinicTextWidth) / 2
+  page.drawText(clinicText, {
+    x: clinicX,
+    y: y,
+    size: clinicFontSize,
+    color: BLACK,
+  })
   y -= 14 + 14
 
   drawCenteredText(page, 'SP-28, Wajidpur,', y, 10, BLACK)
