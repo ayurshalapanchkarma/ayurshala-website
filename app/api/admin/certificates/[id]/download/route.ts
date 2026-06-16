@@ -60,28 +60,71 @@ function getNarrative(certType: string, cert: any) {
   const from = cert.valid_from ? formatDate(cert.valid_from) : 'date to be determined'
   const to = cert.valid_to ? formatDate(cert.valid_to) : 'date to be determined'
 
+  const sections: { [key: string]: string } = {}
+
   switch (certType.toUpperCase()) {
     case 'SICK LEAVE CERTIFICATE':
-      return `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) was examined at Ayurshala Panchakarma Center on ${issueDate}.\n\nBased on clinical assessment, the patient is advised complete medical rest from ${from} to ${to}.\n\nReason for leave: ${cert.diagnosis || 'Medical evaluation'}${cert.recommendations ? '\n\nRecommendations: ' + cert.recommendations : ''}${cert.restrictions ? '\nRestrictions: ' + cert.restrictions : ''}\n\nThe patient is advised to resume normal activities only after the completion of the recommended rest period or upon further consultation.`
+      sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) was examined at Ayurshala Panchakarma Center on ${issueDate}.`
+      sections['assessment'] = `Based on clinical assessment, the patient is advised complete medical rest from ${from} to ${to}.`
+      sections['Reason for leave'] = cert.diagnosis || 'Medical evaluation'
+      if (cert.recommendations) sections['Recommendations'] = cert.recommendations
+      if (cert.restrictions) sections['Restrictions'] = cert.restrictions
+      sections['conclusion'] = 'The patient is advised to resume normal activities only after the completion of the recommended rest period or upon further consultation.'
+      break
 
     case 'MEDICAL FITNESS CERTIFICATE':
-      return `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has undergone a comprehensive medical examination at Ayurshala Panchakarma Center on ${issueDate}.\n\nBased on the clinical assessment and medical evaluation, the patient is declared medically fit for ${cert.purpose || 'normal duties'}.${cert.diagnosis ? '\n\nClinical findings: ' + cert.diagnosis : ''}${cert.treatment_details ? '\nTreatment provided: ' + cert.treatment_details : ''}${cert.recommendations ? '\n\nRecommendations: ' + cert.recommendations : ''}\n\nThis certificate is valid from ${cert.valid_from ? formatDate(cert.valid_from) : 'date of issue'} to ${cert.valid_to ? formatDate(cert.valid_to) : 'date of review'}.`
+      sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has undergone a comprehensive medical examination at Ayurshala Panchakarma Center on ${issueDate}.`
+      sections['assessment'] = `Based on the clinical assessment and medical evaluation, the patient is declared medically fit for ${cert.purpose || 'normal duties'}.`
+      if (cert.diagnosis) sections['Clinical findings'] = cert.diagnosis
+      if (cert.treatment_details) sections['Treatment provided'] = cert.treatment_details
+      if (cert.recommendations) sections['Recommendations'] = cert.recommendations
+      sections['validity'] = `This certificate is valid from ${cert.valid_from ? formatDate(cert.valid_from) : 'date of issue'} to ${cert.valid_to ? formatDate(cert.valid_to) : 'date of review'}.`
+      break
 
     case 'CONSULTATION CERTIFICATE':
-      return `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) attended a consultation session at Ayurshala Panchakarma Center on ${issueDate}.\n\nPurpose of consultation: ${cert.purpose || 'Health evaluation'}\n\nClinical assessment: ${cert.diagnosis || 'Medical consultation'}${cert.treatment_details ? '\n\nTreatment recommendations: ' + cert.treatment_details : ''}${cert.recommendations ? '\nAdvised actions: ' + cert.recommendations : ''}${cert.restrictions ? '\nRestrictions to follow: ' + cert.restrictions : ''}\n\nThis certificate confirms the patient's participation in the consultation and the recommendations provided during the session.`
+      sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) attended a consultation session at Ayurshala Panchakarma Center on ${issueDate}.`
+      sections['Purpose'] = cert.purpose || 'Health evaluation'
+      sections['Clinical assessment'] = cert.diagnosis || 'Medical consultation'
+      if (cert.treatment_details) sections['Treatment recommendations'] = cert.treatment_details
+      if (cert.recommendations) sections['Advised actions'] = cert.recommendations
+      if (cert.restrictions) sections['Restrictions'] = cert.restrictions
+      sections['conclusion'] = 'This certificate confirms the patient\'s participation in the consultation and the recommendations provided during the session.'
+      break
 
     case 'PANCHAKARMA CERTIFICATE':
-      return `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has successfully completed Panchakarma treatment at Ayurshala Panchakarma Center from ${from} to ${to}.\n\nTreatment overview: ${cert.diagnosis || 'Panchakarma therapy'}${cert.treatment_details ? '\n\nTreatment procedures: ' + cert.treatment_details : ''}${cert.recommendations ? '\n\nPost-treatment recommendations: ' + cert.recommendations : ''}${cert.restrictions ? '\nLifestyle modifications advised: ' + cert.restrictions : ''}${cert.additional_notes ? '\nAdditional notes: ' + cert.additional_notes : ''}\n\nThe patient has completed the prescribed treatment protocol as per Ayurvedic principles.`
+      sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has successfully completed Panchakarma treatment at Ayurshala Panchakarma Center from ${from} to ${to}.`
+      sections['Treatment overview'] = cert.diagnosis || 'Panchakarma therapy'
+      if (cert.treatment_details) sections['Treatment procedures'] = cert.treatment_details
+      if (cert.recommendations) sections['Post-treatment recommendations'] = cert.recommendations
+      if (cert.restrictions) sections['Lifestyle modifications'] = cert.restrictions
+      if (cert.additional_notes) sections['Additional notes'] = cert.additional_notes
+      sections['conclusion'] = 'The patient has completed the prescribed treatment protocol as per Ayurvedic principles.'
+      break
 
     case 'TREATMENT CERTIFICATE':
-      return `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has undergone treatment at Ayurshala Panchakarma Center from ${from} to ${to}.\n\nTreatment type: ${cert.diagnosis || 'Therapeutic treatment'}${cert.treatment_details ? '\n\nDetails: ' + cert.treatment_details : ''}${cert.recommendations ? '\n\nFollow-up recommendations: ' + cert.recommendations : ''}${cert.restrictions ? '\nRestrictions: ' + cert.restrictions : ''}\n\nThe patient has completed the prescribed treatment course as recommended.`
+      sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has undergone treatment at Ayurshala Panchakarma Center from ${from} to ${to}.`
+      sections['Treatment type'] = cert.diagnosis || 'Therapeutic treatment'
+      if (cert.treatment_details) sections['Details'] = cert.treatment_details
+      if (cert.recommendations) sections['Follow-up recommendations'] = cert.recommendations
+      if (cert.restrictions) sections['Restrictions'] = cert.restrictions
+      sections['conclusion'] = 'The patient has completed the prescribed treatment course as recommended.'
+      break
 
     case 'DISCHARGE SUMMARY CERTIFICATE':
-      return `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has been evaluated and discharged from Ayurshala Panchakarma Center on ${issueDate}.\n\nPresenting condition: ${cert.diagnosis || 'Medical evaluation completed'}${cert.treatment_details ? '\n\nTreatment provided: ' + cert.treatment_details : ''}${cert.recommendations ? '\n\nDischarge recommendations: ' + cert.recommendations : ''}${cert.restrictions ? '\nActivity restrictions: ' + cert.restrictions : ''}${cert.additional_notes ? '\nAdditional instructions: ' + cert.additional_notes : ''}\n\nThe patient is discharged in stable condition with the above recommendations for continued care.`
+      sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has been evaluated and discharged from Ayurshala Panchakarma Center on ${issueDate}.`
+      sections['Presenting condition'] = cert.diagnosis || 'Medical evaluation completed'
+      if (cert.treatment_details) sections['Treatment provided'] = cert.treatment_details
+      if (cert.recommendations) sections['Discharge recommendations'] = cert.recommendations
+      if (cert.restrictions) sections['Activity restrictions'] = cert.restrictions
+      if (cert.additional_notes) sections['Additional instructions'] = cert.additional_notes
+      sections['conclusion'] = 'The patient is discharged in stable condition with the above recommendations for continued care.'
+      break
 
     default:
-      return `Certificate for ${name} (ID: ${id}) issued on ${issueDate}.`
+      sections['content'] = `Certificate for ${name} (ID: ${id}) issued on ${issueDate}.`
   }
+
+  return sections
 }
 
 function splitLines(text: string, maxWidth: number, fontSize: number): string[] {
@@ -343,20 +386,33 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const narrative = getNarrative(ct.name, certificate)
     
+    // Render body sections with consistent spacing
+    const bodyLines: string[] = []
+    for (const [key, value] of Object.entries(narrative)) {
+      if (!value?.trim()) continue
+      if (key === 'intro' || key === 'assessment' || key === 'conclusion') {
+        bodyLines.push(value)
+        bodyLines.push('')
+      } else if (key.charAt(0) === key.charAt(0).toUpperCase() && key !== key.toUpperCase()) {
+        bodyLines.push(`${key}:`)
+        bodyLines.push(value)
+        bodyLines.push('')
+      }
+    }
+    
     // Space optimization hierarchy
     const DEFAULT_CONTENT_FONT_SIZE = 11
     const MIN_CONTENT_FONT_SIZE = 9
     const AVAILABLE_HEIGHT = FOOTER_START_Y - HEADER_END_Y
     
     let contentFontSize = DEFAULT_CONTENT_FONT_SIZE
-    let footerSpacingMultiplier = 1.0 // 1.0 = full spacing, reduces to 0.5 for compact
-    let footerFontScale = 1.0 // 1.0 = normal, reduces to 0.88 for small
+    let footerSpacingMultiplier = 1.0
+    let footerFontScale = 1.0
     
-    // Priority 1: Adjust Block 2 font size
     for (let fontSize = DEFAULT_CONTENT_FONT_SIZE; fontSize >= MIN_CONTENT_FONT_SIZE; fontSize -= 0.5) {
-      const lines = splitLines(narrative, CONTENT_WIDTH, fontSize)
+      const testLines = splitLines(bodyLines.join('\n'), CONTENT_WIDTH, fontSize)
       const lineHeight = fontSize * 1.5
-      const block2Height = lines.length * lineHeight
+      const block2Height = testLines.length * lineHeight
       const block3Height = FOOTER_HEIGHT * footerSpacingMultiplier
       const totalHeight = block2Height + block3Height
       
@@ -366,22 +422,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
     
-    // Recalculate with optimized Block 2 font
-    let lines = splitLines(narrative, CONTENT_WIDTH, contentFontSize)
+    const lines = splitLines(bodyLines.join('\n'), CONTENT_WIDTH, contentFontSize)
     let contentLineHeight = contentFontSize * 1.5
     let block2Height = lines.length * contentLineHeight
     let remainingHeight = AVAILABLE_HEIGHT - block2Height
     
-    // Priority 2: Adjust Block 3 spacing if needed
     if (remainingHeight < FOOTER_HEIGHT) {
-      // Compact spacing: reduce from full to 50%
       footerSpacingMultiplier = Math.max(0.5, remainingHeight / FOOTER_HEIGHT)
-      remainingHeight = AVAILABLE_HEIGHT - block2Height
     }
     
-    // Priority 3: Adjust Block 3 fonts if still doesn't fit
     if (remainingHeight < FOOTER_HEIGHT * footerSpacingMultiplier) {
-      footerFontScale = 0.88 // Reduce footer fonts by 12%
+      footerFontScale = 0.88
     }
 
     let pages: any[] = []
