@@ -111,9 +111,8 @@ function splitLines(text: string, maxWidth: number, fontSize: number): string[] 
 }
 
 function drawCenteredText(page: any, text: string, y: number, fontSize: number, color: any): void {
-  // Use consistent character width calculation across all font sizes
-  const charWidth = 0.5 * fontSize
-  const textWidth = text.length * charWidth
+  // Consistent with header calculations: 0.55 * fontSize for Helvetica
+  const textWidth = text.length * 0.55 * fontSize
   const x = BORDER_CENTER_X - textWidth / 2
   page.drawText(text, {
     x: x,
