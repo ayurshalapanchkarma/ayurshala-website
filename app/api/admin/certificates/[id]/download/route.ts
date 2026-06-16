@@ -146,10 +146,11 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 70 + 24
 
-  // Clinic name - use Helvetica as default font for width calculation
+  // Clinic name - using helvetica standard font
   const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
   const clinicFontSize = 14
-  const clinicTextWidth = clinicText.length * clinicFontSize * 0.52
+  // For standard Helvetica: approximate width using string length and average char width
+  const clinicTextWidth = clinicText.length * 0.55 * clinicFontSize
   const clinicX = BORDER_LEFT + (BORDER_WIDTH - clinicTextWidth) / 2
   const clinicCenter = clinicX + clinicTextWidth / 2
   const clinicExpectedCenter = BORDER_LEFT + BORDER_WIDTH / 2
@@ -159,7 +160,7 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
     text: clinicText,
     fontSize: clinicFontSize,
     textWidth: clinicTextWidth,
-    calculatedX: clinicX,
+    x: clinicX,
     calculatedCenter: clinicCenter,
     expectedCenter: clinicExpectedCenter,
     centerDelta: clinicDelta,
@@ -185,7 +186,7 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   // Certificate title
   const titleText = certTitle.toUpperCase()
   const titleFontSize = 16
-  const titleTextWidth = titleText.length * titleFontSize * 0.52
+  const titleTextWidth = titleText.length * 0.55 * titleFontSize
   const titleX = BORDER_LEFT + (BORDER_WIDTH - titleTextWidth) / 2
   const titleCenter = titleX + titleTextWidth / 2
   const titleExpectedCenter = BORDER_LEFT + BORDER_WIDTH / 2
@@ -195,7 +196,7 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
     text: titleText,
     fontSize: titleFontSize,
     textWidth: titleTextWidth,
-    calculatedX: titleX,
+    x: titleX,
     calculatedCenter: titleCenter,
     expectedCenter: titleExpectedCenter,
     centerDelta: titleDelta,
