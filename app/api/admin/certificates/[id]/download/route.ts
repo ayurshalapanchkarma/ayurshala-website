@@ -110,6 +110,23 @@ function drawBorder(page: any) {
     borderColor: ORANGE,
     borderWidth: 1.5,
   })
+  
+  // DEBUG MARKER
+  page.drawRectangle({
+    x: BORDER_LEFT,
+    y: BORDER_BOTTOM,
+    width: BORDER_WIDTH,
+    height: BORDER_TOP - BORDER_BOTTOM,
+    borderColor: rgb(255, 0, 0),
+    borderWidth: 3,
+  })
+  
+  page.drawText('DEBUG BUILD 1', {
+    x: BORDER_RIGHT - 100,
+    y: BORDER_TOP - 20,
+    size: 12,
+    color: rgb(255, 0, 0),
+  })
 }
 
 function drawCenteredText(page: any, text: string, y: number, fontSize: number, color: any): number {
