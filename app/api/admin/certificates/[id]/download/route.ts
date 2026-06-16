@@ -386,19 +386,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const narrative = getNarrative(ct.name, certificate)
     
-    // Render body sections with consistent spacing
-    const bodyLines: string[] = []
+    // Build body text with inline labels (same as Sick Leave rendering)
+    const bodyText: string[] = []
     for (const [key, value] of Object.entries(narrative)) {
       if (!value?.trim()) continue
       if (key === 'intro' || key === 'assessment' || key === 'conclusion') {
-        bodyLines.push(value)
-        bodyLines.push('')
-      } else if (key.charAt(0) === key.charAt(0).toUpperCase() && key !== key.toUpperCase()) {
-        bodyLines.push(`${key}:`)
-        bodyLines.push(value)
-        bodyLines.push('')
+        bodyText.push(value)
+        bodyText.push('') // 20px spacing
+      } else {
+        // Inline label format: "Label: content text..."
+        bodyText.push(`${key}: ${value}`)
+        bodyText.push('') // 20px spacing
       }
     }
+    
+    const bodyLines = splitLines(bodyText.join('\n'), CONTENT_WIDTH, 11) // Use default font for initial split
     
     // Space optimization hierarchy
     const DEFAULT_CONTENT_FONT_SIZE = 11
@@ -462,7 +464,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       const pageStartLineIndex = lineIndex
       while (lineIndex < lines.length) {
         if (contentY - contentLineHeight < BORDER_BOTTOM + SAFETY_MARGIN) {
-          // Not enough space for next line, move to next page
           break
         }
 
