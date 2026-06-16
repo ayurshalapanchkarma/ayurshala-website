@@ -78,13 +78,13 @@ function getNarrative(certType: string, cert: any) {
       if (cert.diagnosis) sections['Clinical findings'] = cert.diagnosis
       if (cert.treatment_details) sections['Treatment provided'] = cert.treatment_details
       if (cert.recommendations) sections['Recommendations'] = cert.recommendations
-      sections['validity'] = `This certificate is valid from ${cert.valid_from ? formatDate(cert.valid_from) : 'date of issue'} to ${cert.valid_to ? formatDate(cert.valid_to) : 'date of review'}.`
+      sections['conclusion'] = `This certificate is valid from ${cert.valid_from ? formatDate(cert.valid_from) : 'date of issue'} to ${cert.valid_to ? formatDate(cert.valid_to) : 'date of review'}.`
       break
 
     case 'CONSULTATION CERTIFICATE':
       sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) attended a consultation session at Ayurshala Panchakarma Center on ${issueDate}.`
       sections['Purpose'] = cert.purpose || 'Health evaluation'
-      sections['Clinical assessment'] = cert.diagnosis || 'Medical consultation'
+      sections['assessment'] = cert.diagnosis || 'Medical consultation'
       if (cert.treatment_details) sections['Treatment recommendations'] = cert.treatment_details
       if (cert.recommendations) sections['Advised actions'] = cert.recommendations
       if (cert.restrictions) sections['Restrictions'] = cert.restrictions
@@ -93,7 +93,7 @@ function getNarrative(certType: string, cert: any) {
 
     case 'PANCHAKARMA CERTIFICATE':
       sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has successfully completed Panchakarma treatment at Ayurshala Panchakarma Center from ${from} to ${to}.`
-      sections['Treatment overview'] = cert.diagnosis || 'Panchakarma therapy'
+      sections['assessment'] = cert.diagnosis || 'Panchakarma therapy'
       if (cert.treatment_details) sections['Treatment procedures'] = cert.treatment_details
       if (cert.recommendations) sections['Post-treatment recommendations'] = cert.recommendations
       if (cert.restrictions) sections['Lifestyle modifications'] = cert.restrictions
@@ -103,7 +103,7 @@ function getNarrative(certType: string, cert: any) {
 
     case 'TREATMENT CERTIFICATE':
       sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has undergone treatment at Ayurshala Panchakarma Center from ${from} to ${to}.`
-      sections['Treatment type'] = cert.diagnosis || 'Therapeutic treatment'
+      sections['assessment'] = cert.diagnosis || 'Therapeutic treatment'
       if (cert.treatment_details) sections['Details'] = cert.treatment_details
       if (cert.recommendations) sections['Follow-up recommendations'] = cert.recommendations
       if (cert.restrictions) sections['Restrictions'] = cert.restrictions
@@ -112,7 +112,7 @@ function getNarrative(certType: string, cert: any) {
 
     case 'DISCHARGE SUMMARY CERTIFICATE':
       sections['intro'] = `This is to certify that Mr./Ms. ${name} (Patient ID: ${id}) has been evaluated and discharged from Ayurshala Panchakarma Center on ${issueDate}.`
-      sections['Presenting condition'] = cert.diagnosis || 'Medical evaluation completed'
+      sections['assessment'] = cert.diagnosis || 'Medical evaluation completed'
       if (cert.treatment_details) sections['Treatment provided'] = cert.treatment_details
       if (cert.recommendations) sections['Discharge recommendations'] = cert.recommendations
       if (cert.restrictions) sections['Activity restrictions'] = cert.restrictions
@@ -124,6 +124,7 @@ function getNarrative(certType: string, cert: any) {
       sections['content'] = `Certificate for ${name} (ID: ${id}) issued on ${issueDate}.`
   }
 
+  console.log(`[getNarrative] ${certType}:`, JSON.stringify(sections, null, 2))
   return sections
 }
 
