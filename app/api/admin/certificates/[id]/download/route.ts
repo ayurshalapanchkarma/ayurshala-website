@@ -348,7 +348,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const qr = await pdfDoc.embedPng(qrBuffer)
 
     const narrative = getNarrative(ct.name, certificate)
-    const lines = splitLines(narrative, CONTENT_WIDTH, 11)
     
     // Dynamic font sizing for Block 2
     const DEFAULT_CONTENT_FONT_SIZE = 11
@@ -356,20 +355,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const AVAILABLE_HEIGHT = FOOTER_START_Y - HEADER_END_Y
     
     let contentFontSize = DEFAULT_CONTENT_FONT_SIZE
-    let contentLineHeight = contentFontSize * 1.5
-    let totalContentHeight = 0
     
-    // Calculate total content height and reduce font size if needed
-    while (contentFontSize >= MIN_CONTENT_FONT_SIZE) {
-      contentLineHeight = contentFontSize * 1.5
-      totalContentHeight = lines.length * contentLineHeight
+    // Calculate optimal font size
+    for (let fontSize = DEFAULT_CONTENT_FONT_SIZE; fontSize >= MIN_CONTENT_FONT_SIZE; fontSize -= 0.5) {
+      const lines = splitLines(narrative, CONTENT_WIDTH, fontSize)
+      const lineHeight = fontSize * 1.5
+      const totalHeight = lines.length * lineHeight
       
-      if (totalContentHeight <= AVAILABLE_HEIGHT) {
+      if (totalHeight <= AVAILABLE_HEIGHT) {
+        contentFontSize = fontSize
         break
       }
-      
-      contentFontSize = Math.max(MIN_CONTENT_FONT_SIZE, contentFontSize - 0.5)
     }
+    
+    // Final line split at optimal font size
+    const lines = splitLines(narrative, CONTENT_WIDTH, contentFontSize)
+    const contentLineHeight = contentFontSize * 1.5
 
     let pages: any[] = []
     let lineIndex = 0
