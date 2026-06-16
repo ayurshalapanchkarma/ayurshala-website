@@ -146,10 +146,10 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 70 + 24
 
-  // Clinic name - using font.widthOfTextAtSize for accuracy
+  // Clinic name - use Helvetica as default font for width calculation
   const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
   const clinicFontSize = 14
-  const clinicTextWidth = page.getFont().widthOfTextAtSize(clinicText, clinicFontSize)
+  const clinicTextWidth = clinicText.length * clinicFontSize * 0.52
   const clinicX = BORDER_LEFT + (BORDER_WIDTH - clinicTextWidth) / 2
   const clinicCenter = clinicX + clinicTextWidth / 2
   const clinicExpectedCenter = BORDER_LEFT + BORDER_WIDTH / 2
@@ -182,10 +182,10 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   drawCenteredText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', y, 9, GRAY)
   y -= 9 + 28
 
-  // Certificate title - using font.widthOfTextAtSize for accuracy
+  // Certificate title
   const titleText = certTitle.toUpperCase()
   const titleFontSize = 16
-  const titleTextWidth = page.getFont().widthOfTextAtSize(titleText, titleFontSize)
+  const titleTextWidth = titleText.length * titleFontSize * 0.52
   const titleX = BORDER_LEFT + (BORDER_WIDTH - titleTextWidth) / 2
   const titleCenter = titleX + titleTextWidth / 2
   const titleExpectedCenter = BORDER_LEFT + BORDER_WIDTH / 2
