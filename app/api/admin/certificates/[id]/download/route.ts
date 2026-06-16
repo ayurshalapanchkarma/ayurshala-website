@@ -360,28 +360,38 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const lines = splitLines(narrative, CONTENT_WIDTH, 11)
     const lineHeight = 11 * 1.5
 
-    // Calculate content height
-    let contentHeight = 0
-    for (const line of lines) {
-      contentHeight += lineHeight
-    }
-
     let pages: any[] = []
-    let contentY = HEADER_END_Y
     let lineIndex = 0
+    let isFirstPage = true
 
     // Render pages
-    while (lineIndex < lines.length || lineIndex === 0) {
+    while (lineIndex < lines.length || isFirstPage) {
       const currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
       pages.push(currentPage)
       drawBorder(currentPage)
-      drawHeader(currentPage, logo, ct.name)
 
-      contentY = HEADER_END_Y
+      // Block 1: Header only on page 1
+      let contentY: number
+      if (isFirstPage) {
+        drawHeader(currentPage, logo, ct.name)
+        contentY = HEADER_END_Y
+        isFirstPage = false
+      } else {
+        // Continuation pages: start from top
+        contentY = BORDER_TOP - 40
+      }
+
+      // Block 2: Content
       const pageStartLineIndex = lineIndex
+      while (lineIndex < lines.length) {
+        // Reserve space for footer on last page
+        const spaceNeeded = lineIndex === lines.length - 1 ? FOOTER_HEIGHT + SAFETY_MARGIN : lineHeight
+        
+        if (contentY - spaceNeeded < BORDER_BOTTOM + SAFETY_MARGIN) {
+          // Not enough space, move to next page
+          break
+        }
 
-      // Fill page with content
-      while (lineIndex < lines.length && contentY - lineHeight > FOOTER_START_Y) {
         currentPage.drawText(lines[lineIndex], {
           x: CONTENT_LEFT,
           y: contentY,
@@ -393,13 +403,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         lineIndex++
       }
 
-      // If this is the last page (all content rendered), draw footer
+      // Block 3: Footer only when all content is rendered
       if (lineIndex >= lines.length) {
-        drawFooter(currentPage, qr, String(certificate.issued_by))
+        // Check if footer fits on current page
+        if (contentY - FOOTER_HEIGHT < BORDER_BOTTOM) {
+          // Not enough space, create new page for footer only
+          const footerPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
+          pages.push(footerPage)
+          drawBorder(footerPage)
+          drawFooter(footerPage, qr, String(certificate.issued_by))
+        } else {
+          // Footer fits on current page
+          drawFooter(currentPage, qr, String(certificate.issued_by))
+        }
       }
 
       // Prevent infinite loop
-      if (lineIndex === pageStartLineIndex) break
+      if (lineIndex === pageStartLineIndex && lineIndex < lines.length) break
     }
 
     const pdfBytes = await pdfDoc.save()
