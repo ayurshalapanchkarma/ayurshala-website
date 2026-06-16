@@ -18,6 +18,7 @@ const supabase = createClient(
 const ORANGE = rgb(249 / 255, 115 / 255, 22 / 255)
 const BLACK = rgb(17 / 255, 24 / 255, 39 / 255)
 const GRAY = rgb(107 / 255, 114 / 255, 128 / 255)
+const RED = rgb(1, 0, 0)
 
 const PAGE_WIDTH = 595
 const PAGE_HEIGHT = 842
@@ -31,10 +32,18 @@ const BORDER_BOTTOM = MARGIN
 const BORDER_WIDTH = BORDER_RIGHT - BORDER_LEFT
 const BORDER_CENTER_X = BORDER_LEFT + BORDER_WIDTH / 2
 
-const INNER_TOP = BORDER_TOP - 40
-const INNER_BOTTOM = BORDER_BOTTOM + 40
-const INNER_HEIGHT = INNER_TOP - INNER_BOTTOM
+const CONTENT_LEFT = BORDER_LEFT + 20
 const CONTENT_WIDTH = BORDER_WIDTH - 40
+const SAFETY_MARGIN = 20
+
+// Block dimensions (calculated once)
+const HEADER_START_Y = BORDER_TOP - 20
+const HEADER_HEIGHT = 70 + 24 + 14 + 14 + 10 + 10 + 10 + 14 + 9 + 28 + 16 + 30
+const HEADER_END_Y = HEADER_START_Y - HEADER_HEIGHT
+
+const FOOTER_HEIGHT = 25 + 25 + 12 + 80 + 60 + 20 + 8 + 20 + 16
+const FOOTER_START_Y = BORDER_BOTTOM + FOOTER_HEIGHT
+const AVAILABLE_HEIGHT = FOOTER_START_Y - HEADER_END_Y - SAFETY_MARGIN
 
 function formatDate(d: string | null) {
   if (!d) return ''
@@ -111,69 +120,29 @@ function drawBorder(page: any) {
     borderColor: ORANGE,
     borderWidth: 1.5,
   })
-  
+
   // DEBUG MARKER
   page.drawRectangle({
     x: BORDER_LEFT,
     y: BORDER_BOTTOM,
     width: BORDER_WIDTH,
     height: BORDER_TOP - BORDER_BOTTOM,
-    borderColor: rgb(1, 0, 0),
+    borderColor: RED,
     borderWidth: 3,
   })
-  
+
   page.drawText('DEBUG BUILD 1', {
     x: BORDER_RIGHT - 100,
     y: BORDER_TOP - 20,
     size: 12,
-    color: rgb(1, 0, 0),
+    color: RED,
   })
 }
 
-function drawCenteredText(page: any, text: string, y: number, fontSize: number, color: any): number {
-  const charWidth = fontSize * 0.5
-  const textWidth = text.length * charWidth
-  const x = BORDER_CENTER_X - textWidth / 2
+function drawHeader(page: any, logo: any, certTitle: string): void {
+  let y = HEADER_START_Y
 
-  page.drawText(text, {
-    x: x,
-    y: y,
-    size: fontSize,
-    color: color,
-  })
-
-  return y - fontSize
-}
-
-function calculateContentHeight(lines: string[]): number {
-  // Logo
-  let height = 70 + 24
-  // Clinic name
-  height += 14 + 14
-  // Address line 1
-  height += 10 + 10
-  // Address line 2
-  height += 10 + 14
-  // Contact
-  height += 9 + 28
-  // Certificate title
-  height += 16 + 30
-  // Body lines
-  height += lines.length * (11 * 1.5)
-  // Spacing before signatures
-  height += 50
-  // Signature lines + labels
-  height += 25 + 25 + 12 + 80
-  // QR section
-  height += 60 + 20 + 8 + 20 + 16
-  
-  return height
-}
-
-function drawHeader(page: any, logo: any, certTitle: string, startY: number): number {
-  let y = startY
-
-  // Logo - centered to border
+  // Logo - centered
   page.drawImage(logo, {
     x: BORDER_CENTER_X - 35,
     y: y - 70,
@@ -182,7 +151,7 @@ function drawHeader(page: any, logo: any, certTitle: string, startY: number): nu
   })
   y -= 70 + 24
 
-  // Clinic name - centered to border
+  // Clinic name - centered
   const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
   const clinicWidth = clinicText.length * 14 * 0.5
   page.drawText(clinicText, {
@@ -193,7 +162,7 @@ function drawHeader(page: any, logo: any, certTitle: string, startY: number): nu
   })
   y -= 14 + 14
 
-  // Address line 1 - centered to border
+  // Address 1 - centered
   const addr1Text = 'SP-28, Wajidpur,'
   const addr1Width = addr1Text.length * 10 * 0.5
   page.drawText(addr1Text, {
@@ -204,7 +173,7 @@ function drawHeader(page: any, logo: any, certTitle: string, startY: number): nu
   })
   y -= 10 + 10
 
-  // Address line 2 - centered to border
+  // Address 2 - centered
   const addr2Text = 'Sector-130, Noida – 201301'
   const addr2Width = addr2Text.length * 10 * 0.5
   page.drawText(addr2Text, {
@@ -215,7 +184,7 @@ function drawHeader(page: any, logo: any, certTitle: string, startY: number): nu
   })
   y -= 10 + 14
 
-  // Contact - centered to border
+  // Contact - centered
   const contactText = '+91-9821224767 | ayurshalapanchkarma@gmail.com'
   const contactWidth = contactText.length * 9 * 0.5
   page.drawText(contactText, {
@@ -226,7 +195,7 @@ function drawHeader(page: any, logo: any, certTitle: string, startY: number): nu
   })
   y -= 9 + 28
 
-  // Certificate title - centered to border
+  // Title - centered
   const titleText = certTitle.toUpperCase()
   const titleWidth = titleText.length * 16 * 0.5
   page.drawText(titleText, {
@@ -235,21 +204,17 @@ function drawHeader(page: any, logo: any, certTitle: string, startY: number): nu
     size: 16,
     color: ORANGE,
   })
-  y -= 16 + 30
-
-  return y
 }
 
-function drawCertificationBlock(page: any, qr: any, doctorName: string, currentY: number): void {
+function drawFooter(page: any, qr: any, doctorName: string): void {
   const SIG_WIDTH = 180
   const QR_SIZE = 60
 
-  // Signature positions relative to border
   const patientX = BORDER_LEFT + 40
   const doctorX = BORDER_RIGHT - 220
   const doctorCenterX = doctorX + SIG_WIDTH / 2
 
-  let y = currentY - 50
+  let y = FOOTER_START_Y
 
   // Signature lines
   page.drawLine({
@@ -292,7 +257,7 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, currentY
 
   y -= 80
 
-  // QR - centered to doctor block center
+  // QR - centered to doctor block
   const qrX = doctorCenterX - QR_SIZE / 2
 
   page.drawImage(qr, {
@@ -304,7 +269,7 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, currentY
 
   y -= QR_SIZE + 20
 
-  // Scan text - centered to doctor block center
+  // Scan text - centered to doctor block
   const scanText = 'Scan to verify authenticity'
   const scanWidth = scanText.length * 8 * 0.5
   page.drawText(scanText, {
@@ -316,7 +281,7 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, currentY
 
   y -= 20
 
-  // Electronic note - centered to doctor block center
+  // Electronic note - centered to doctor block
   const noteText1 = 'Electronically generated certificate.'
   const noteText2 = 'No physical signature required.'
   const noteWidth1 = noteText1.length * 8 * 0.5
@@ -392,37 +357,50 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const qr = await pdfDoc.embedPng(qrBuffer)
 
     const narrative = getNarrative(ct.name, certificate)
-    const lines = splitLines(narrative, CONTENT_WIDTH - 40, 11)
+    const lines = splitLines(narrative, CONTENT_WIDTH, 11)
     const lineHeight = 11 * 1.5
 
-    let pages: any[] = []
-    let currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-    pages.push(currentPage)
-    drawBorder(currentPage)
-
-    // Calculate total content height
-    const totalContentHeight = calculateContentHeight(lines)
-    
-    // Center vertically: position content block in middle of available space
-    const startY = INNER_TOP - (INNER_HEIGHT - totalContentHeight) / 2
-
-    let currentY = drawHeader(currentPage, logo, ct.name, startY)
-
-    // Draw body
+    // Calculate content height
+    let contentHeight = 0
     for (const line of lines) {
-      currentPage.drawText(line, {
-        x: BORDER_LEFT + 20,
-        y: currentY,
-        size: 11,
-        color: BLACK,
-        maxWidth: BORDER_WIDTH - 40,
-      })
-      currentY -= lineHeight
+      contentHeight += lineHeight
     }
 
-    // Certification block on final page only
-    const final = pages[pages.length - 1]
-    drawCertificationBlock(final, qr, String(certificate.issued_by), currentY)
+    let pages: any[] = []
+    let contentY = HEADER_END_Y
+    let lineIndex = 0
+
+    // Render pages
+    while (lineIndex < lines.length || lineIndex === 0) {
+      const currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
+      pages.push(currentPage)
+      drawBorder(currentPage)
+      drawHeader(currentPage, logo, ct.name)
+
+      contentY = HEADER_END_Y
+      const pageStartLineIndex = lineIndex
+
+      // Fill page with content
+      while (lineIndex < lines.length && contentY - lineHeight > FOOTER_START_Y) {
+        currentPage.drawText(lines[lineIndex], {
+          x: CONTENT_LEFT,
+          y: contentY,
+          size: 11,
+          color: BLACK,
+          maxWidth: CONTENT_WIDTH,
+        })
+        contentY -= lineHeight
+        lineIndex++
+      }
+
+      // If this is the last page (all content rendered), draw footer
+      if (lineIndex >= lines.length) {
+        drawFooter(currentPage, qr, String(certificate.issued_by))
+      }
+
+      // Prevent infinite loop
+      if (lineIndex === pageStartLineIndex) break
+    }
 
     const pdfBytes = await pdfDoc.save()
 
