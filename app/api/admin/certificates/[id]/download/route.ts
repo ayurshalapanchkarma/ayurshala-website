@@ -146,11 +146,25 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 70 + 24
 
-  // Clinic name - independent calculation using border dimensions
+  // Clinic name - using font.widthOfTextAtSize for accuracy
   const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
   const clinicFontSize = 14
-  const clinicTextWidth = clinicText.length * clinicFontSize * 0.5
+  const clinicTextWidth = page.getFont().widthOfTextAtSize(clinicText, clinicFontSize)
   const clinicX = BORDER_LEFT + (BORDER_WIDTH - clinicTextWidth) / 2
+  const clinicCenter = clinicX + clinicTextWidth / 2
+  const clinicExpectedCenter = BORDER_LEFT + BORDER_WIDTH / 2
+  const clinicDelta = clinicCenter - clinicExpectedCenter
+  
+  console.log('[CLINIC NAME]', {
+    text: clinicText,
+    fontSize: clinicFontSize,
+    textWidth: clinicTextWidth,
+    calculatedX: clinicX,
+    calculatedCenter: clinicCenter,
+    expectedCenter: clinicExpectedCenter,
+    centerDelta: clinicDelta,
+  })
+  
   page.drawText(clinicText, {
     x: clinicX,
     y: y,
@@ -168,7 +182,31 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   drawCenteredText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', y, 9, GRAY)
   y -= 9 + 28
 
-  drawCenteredText(page, certTitle.toUpperCase(), y, 16, ORANGE)
+  // Certificate title - using font.widthOfTextAtSize for accuracy
+  const titleText = certTitle.toUpperCase()
+  const titleFontSize = 16
+  const titleTextWidth = page.getFont().widthOfTextAtSize(titleText, titleFontSize)
+  const titleX = BORDER_LEFT + (BORDER_WIDTH - titleTextWidth) / 2
+  const titleCenter = titleX + titleTextWidth / 2
+  const titleExpectedCenter = BORDER_LEFT + BORDER_WIDTH / 2
+  const titleDelta = titleCenter - titleExpectedCenter
+  
+  console.log('[CERTIFICATE TITLE]', {
+    text: titleText,
+    fontSize: titleFontSize,
+    textWidth: titleTextWidth,
+    calculatedX: titleX,
+    calculatedCenter: titleCenter,
+    expectedCenter: titleExpectedCenter,
+    centerDelta: titleDelta,
+  })
+  
+  page.drawText(titleText, {
+    x: titleX,
+    y: y,
+    size: titleFontSize,
+    color: ORANGE,
+  })
 }
 
 function drawFooter(page: any, qr: any, doctorName: string, startY: number): void {
