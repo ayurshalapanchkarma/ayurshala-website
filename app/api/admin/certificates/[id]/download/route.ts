@@ -18,7 +18,6 @@ const supabase = createClient(
 const ORANGE = rgb(249 / 255, 115 / 255, 22 / 255)
 const BLACK = rgb(17 / 255, 24 / 255, 39 / 255)
 const GRAY = rgb(107 / 255, 114 / 255, 128 / 255)
-const RED = rgb(1, 0, 0)
 
 const PAGE_WIDTH = 595
 const PAGE_HEIGHT = 842
@@ -132,31 +131,6 @@ function drawBorder(page: any) {
     height: BORDER_TOP - BORDER_BOTTOM,
     borderColor: ORANGE,
     borderWidth: 1.5,
-  })
-
-  // DEBUG MARKER
-  page.drawRectangle({
-    x: BORDER_LEFT,
-    y: BORDER_BOTTOM,
-    width: BORDER_WIDTH,
-    height: BORDER_TOP - BORDER_BOTTOM,
-    borderColor: RED,
-    borderWidth: 3,
-  })
-
-  page.drawText('DEBUG BUILD 1', {
-    x: BORDER_RIGHT - 100,
-    y: BORDER_TOP - 20,
-    size: 12,
-    color: RED,
-  })
-
-  // DEBUG CENTER LINE
-  page.drawLine({
-    start: { x: BORDER_CENTER_X, y: BORDER_BOTTOM },
-    end: { x: BORDER_CENTER_X, y: BORDER_TOP },
-    color: RED,
-    width: 0.5,
   })
 }
 
