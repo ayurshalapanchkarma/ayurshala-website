@@ -167,10 +167,10 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   y -= 14 + 14
 
   drawCenteredText(page, 'SP-28, Wajidpur,', y, 10, BLACK)
-  y -= 10 + 10
+  y -= 10 + 6
 
   drawCenteredText(page, 'Sector-130, Noida – 201301', y, 10, BLACK)
-  y -= 10 + 14
+  y -= 10 + 6
 
   drawCenteredText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', y, 9, GRAY)
   y -= 9 + 28
@@ -349,7 +349,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const narrative = getNarrative(ct.name, certificate)
     const lines = splitLines(narrative, CONTENT_WIDTH, 11)
-    const lineHeight = 11 * 1.5
+    
+    // Dynamic font sizing for Block 2
+    const DEFAULT_CONTENT_FONT_SIZE = 11
+    const MIN_CONTENT_FONT_SIZE = 9
+    const AVAILABLE_HEIGHT = FOOTER_START_Y - HEADER_END_Y
+    
+    let contentFontSize = DEFAULT_CONTENT_FONT_SIZE
+    let contentLineHeight = contentFontSize * 1.5
+    let totalContentHeight = 0
+    
+    // Calculate total content height and reduce font size if needed
+    while (contentFontSize >= MIN_CONTENT_FONT_SIZE) {
+      contentLineHeight = contentFontSize * 1.5
+      totalContentHeight = lines.length * contentLineHeight
+      
+      if (totalContentHeight <= AVAILABLE_HEIGHT) {
+        break
+      }
+      
+      contentFontSize = Math.max(MIN_CONTENT_FONT_SIZE, contentFontSize - 0.5)
+    }
 
     let pages: any[] = []
     let lineIndex = 0
@@ -377,7 +397,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       // Block 2: Content
       const pageStartLineIndex = lineIndex
       while (lineIndex < lines.length) {
-        if (contentY - lineHeight < BORDER_BOTTOM + SAFETY_MARGIN) {
+        if (contentY - contentLineHeight < BORDER_BOTTOM + SAFETY_MARGIN) {
           // Not enough space for next line, move to next page
           break
         }
@@ -385,11 +405,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         currentPage.drawText(lines[lineIndex], {
           x: CONTENT_LEFT,
           y: contentY,
-          size: 11,
+          size: contentFontSize,
           color: BLACK,
           maxWidth: CONTENT_WIDTH,
         })
-        contentY -= lineHeight
+        contentY -= contentLineHeight
         lineIndex++
       }
 
