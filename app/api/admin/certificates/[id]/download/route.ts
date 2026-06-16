@@ -117,7 +117,7 @@ function drawBorder(page: any) {
     y: BORDER_BOTTOM,
     width: BORDER_WIDTH,
     height: BORDER_TOP - BORDER_BOTTOM,
-    borderColor: rgb(255, 0, 0),
+    borderColor: rgb(1, 0, 0),
     borderWidth: 3,
   })
   
@@ -125,7 +125,7 @@ function drawBorder(page: any) {
     x: BORDER_RIGHT - 100,
     y: BORDER_TOP - 20,
     size: 12,
-    color: rgb(255, 0, 0),
+    color: rgb(1, 0, 0),
   })
 }
 
