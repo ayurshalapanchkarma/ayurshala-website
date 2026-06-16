@@ -111,6 +111,17 @@ function splitLines(text: string, maxWidth: number, fontSize: number): string[] 
   return lines
 }
 
+function drawCenteredText(page: any, text: string, y: number, fontSize: number, color: any): void {
+  const textWidth = text.length * fontSize * 0.55
+  const x = BORDER_CENTER_X - textWidth / 2
+  page.drawText(text, {
+    x: x,
+    y: y,
+    size: fontSize,
+    color: color,
+  })
+}
+
 function drawBorder(page: any) {
   page.drawRectangle({
     x: BORDER_LEFT,
@@ -137,6 +148,14 @@ function drawBorder(page: any) {
     size: 12,
     color: RED,
   })
+
+  // DEBUG CENTER LINE
+  page.drawLine({
+    start: { x: BORDER_CENTER_X, y: BORDER_BOTTOM },
+    end: { x: BORDER_CENTER_X, y: BORDER_TOP },
+    color: RED,
+    width: 0.5,
+  })
 }
 
 function drawHeader(page: any, logo: any, certTitle: string): void {
@@ -151,59 +170,20 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 70 + 24
 
-  // Clinic name - mathematically centered
-  const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
-  const clinicWidth = clinicText.length * 14 * 0.55
-  page.drawText(clinicText, {
-    x: BORDER_CENTER_X - clinicWidth / 2,
-    y: y,
-    size: 14,
-    color: BLACK,
-  })
+  // All text elements use the same centering function
+  drawCenteredText(page, 'AYURSHALA PANCHAKARMA CENTER', y, 14, BLACK)
   y -= 14 + 14
 
-  // Address 1 - mathematically centered
-  const addr1Text = 'SP-28, Wajidpur,'
-  const addr1Width = addr1Text.length * 10 * 0.55
-  page.drawText(addr1Text, {
-    x: BORDER_CENTER_X - addr1Width / 2,
-    y: y,
-    size: 10,
-    color: BLACK,
-  })
+  drawCenteredText(page, 'SP-28, Wajidpur,', y, 10, BLACK)
   y -= 10 + 10
 
-  // Address 2 - mathematically centered
-  const addr2Text = 'Sector-130, Noida – 201301'
-  const addr2Width = addr2Text.length * 10 * 0.55
-  page.drawText(addr2Text, {
-    x: BORDER_CENTER_X - addr2Width / 2,
-    y: y,
-    size: 10,
-    color: BLACK,
-  })
+  drawCenteredText(page, 'Sector-130, Noida – 201301', y, 10, BLACK)
   y -= 10 + 14
 
-  // Contact - mathematically centered
-  const contactText = '+91-9821224767 | ayurshalapanchkarma@gmail.com'
-  const contactWidth = contactText.length * 9 * 0.55
-  page.drawText(contactText, {
-    x: BORDER_CENTER_X - contactWidth / 2,
-    y: y,
-    size: 9,
-    color: GRAY,
-  })
+  drawCenteredText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', y, 9, GRAY)
   y -= 9 + 28
 
-  // Title - mathematically centered
-  const titleText = certTitle.toUpperCase()
-  const titleWidth = titleText.length * 16 * 0.55
-  page.drawText(titleText, {
-    x: BORDER_CENTER_X - titleWidth / 2,
-    y: y,
-    size: 16,
-    color: ORANGE,
-  })
+  drawCenteredText(page, certTitle.toUpperCase(), y, 16, ORANGE)
 }
 
 function drawFooter(page: any, qr: any, doctorName: string, startY: number): void {
