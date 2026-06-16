@@ -196,7 +196,7 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
 }
 
-function drawFooter(page: any, qr: any, doctorName: string, startY: number): void {
+function drawFooter(page: any, qr: any, doctorName: string, startY: number, spacingMultiplier: number = 1.0, fontScale: number = 1.0): void {
   const SIG_WIDTH = 180
   const QR_SIZE = 60
 
@@ -206,7 +206,6 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
 
   let y = startY
 
-  // Row 1: Signature lines
   page.drawLine({
     start: { x: patientX, y: y },
     end: { x: patientX + SIG_WIDTH, y: y },
@@ -221,7 +220,6 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
 
   y -= 25
 
-  // Signature labels
   page.drawText('Patient Signature', {
     x: patientX,
     y: y,
@@ -232,7 +230,7 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
   page.drawText('Dr. ' + doctorName, {
     x: doctorX,
     y: y,
-    size: 10,
+    size: 10 * fontScale,
     color: BLACK,
   })
 
@@ -241,14 +239,12 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
   page.drawText('Ayurshala Panchakarma Center', {
     x: doctorX,
     y: y,
-    size: 9,
+    size: 9 * fontScale,
     color: BLACK,
   })
 
-  // Reduced spacing before QR (30-40pt)
-  y -= 35
+  y -= 35 * spacingMultiplier + 5
 
-  // Row 2: QR Block - anchored to doctor block, not page center
   const qrX = doctorX + (SIG_WIDTH - QR_SIZE) / 2
 
   page.drawImage(qr, {
@@ -258,37 +254,35 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
     height: QR_SIZE,
   })
 
-  y -= QR_SIZE + 12
+  y -= QR_SIZE + 12 * spacingMultiplier
 
-  // Scan text - aligned to QR center (doctor block anchor)
   const scanText = 'Scan to verify authenticity'
-  const scanWidth = scanText.length * 8 * 0.55
+  const scanWidth = scanText.length * (8 * fontScale) * 0.55
   page.drawText(scanText, {
     x: doctorCenterX - scanWidth / 2,
     y: y,
-    size: 8,
+    size: 8 * fontScale,
     color: GRAY,
   })
 
-  y -= 16
+  y -= 16 * spacingMultiplier
 
-  // Electronic note - aligned to QR center (doctor block anchor)
   const noteText1 = 'Electronically generated certificate.'
   const noteText2 = 'No physical signature required.'
-  const noteWidth1 = noteText1.length * 8 * 0.55
-  const noteWidth2 = noteText2.length * 8 * 0.55
+  const noteWidth1 = noteText1.length * (8 * fontScale) * 0.55
+  const noteWidth2 = noteText2.length * (8 * fontScale) * 0.55
 
   page.drawText(noteText1, {
     x: doctorCenterX - noteWidth1 / 2,
     y: y,
-    size: 8,
+    size: 8 * fontScale,
     color: GRAY,
   })
 
   page.drawText(noteText2, {
     x: doctorCenterX - noteWidth2 / 2,
     y: y - 10,
-    size: 8,
+    size: 8 * fontScale,
     color: GRAY,
   })
 }
@@ -349,18 +343,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const narrative = getNarrative(ct.name, certificate)
     
-    // Dynamic font sizing for Block 2
+    // Space optimization hierarchy
     const DEFAULT_CONTENT_FONT_SIZE = 11
     const MIN_CONTENT_FONT_SIZE = 9
     const AVAILABLE_HEIGHT = FOOTER_START_Y - HEADER_END_Y
     
     let contentFontSize = DEFAULT_CONTENT_FONT_SIZE
+    let footerSpacingMultiplier = 1.0 // 1.0 = full spacing, reduces to 0.5 for compact
+    let footerFontScale = 1.0 // 1.0 = normal, reduces to 0.88 for small
     
-    // Calculate optimal font size
+    // Priority 1: Adjust Block 2 font size
     for (let fontSize = DEFAULT_CONTENT_FONT_SIZE; fontSize >= MIN_CONTENT_FONT_SIZE; fontSize -= 0.5) {
       const lines = splitLines(narrative, CONTENT_WIDTH, fontSize)
       const lineHeight = fontSize * 1.5
-      const totalHeight = lines.length * lineHeight
+      const block2Height = lines.length * lineHeight
+      const block3Height = FOOTER_HEIGHT * footerSpacingMultiplier
+      const totalHeight = block2Height + block3Height
       
       if (totalHeight <= AVAILABLE_HEIGHT) {
         contentFontSize = fontSize
@@ -368,9 +366,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
     
-    // Final line split at optimal font size
-    const lines = splitLines(narrative, CONTENT_WIDTH, contentFontSize)
-    const contentLineHeight = contentFontSize * 1.5
+    // Recalculate with optimized Block 2 font
+    let lines = splitLines(narrative, CONTENT_WIDTH, contentFontSize)
+    let contentLineHeight = contentFontSize * 1.5
+    let block2Height = lines.length * contentLineHeight
+    let remainingHeight = AVAILABLE_HEIGHT - block2Height
+    
+    // Priority 2: Adjust Block 3 spacing if needed
+    if (remainingHeight < FOOTER_HEIGHT) {
+      // Compact spacing: reduce from full to 50%
+      footerSpacingMultiplier = Math.max(0.5, remainingHeight / FOOTER_HEIGHT)
+      remainingHeight = AVAILABLE_HEIGHT - block2Height
+    }
+    
+    // Priority 3: Adjust Block 3 fonts if still doesn't fit
+    if (remainingHeight < FOOTER_HEIGHT * footerSpacingMultiplier) {
+      footerFontScale = 0.88 // Reduce footer fonts by 12%
+    }
 
     let pages: any[] = []
     let lineIndex = 0
@@ -423,14 +435,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Block 3: Footer placement - check if it fits on last content page
     const remainingSpace = lastContentY - BORDER_BOTTOM
-    if (remainingSpace >= FOOTER_HEIGHT + SAFETY_MARGIN) {
+    if (remainingSpace >= FOOTER_HEIGHT * footerSpacingMultiplier) {
       // Footer fits on last content page
-      drawFooter(lastContentPage, qr, String(certificate.issued_by), lastContentY - SAFETY_MARGIN)
+      drawFooter(lastContentPage, qr, String(certificate.issued_by), lastContentY - SAFETY_MARGIN, footerSpacingMultiplier, footerFontScale)
     } else {
       // Create dedicated footer page
       const footerPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
       drawBorder(footerPage)
-      drawFooter(footerPage, qr, String(certificate.issued_by), BORDER_TOP - 40)
+      drawFooter(footerPage, qr, String(certificate.issued_by), BORDER_TOP - 40, 1.0, 1.0)
     }
 
     const pdfBytes = await pdfDoc.save()
