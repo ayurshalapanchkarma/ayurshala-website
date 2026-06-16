@@ -31,9 +31,10 @@ const BORDER_BOTTOM = MARGIN
 const BORDER_WIDTH = BORDER_RIGHT - BORDER_LEFT
 const BORDER_CENTER_X = BORDER_LEFT + BORDER_WIDTH / 2
 
-const INNER_PADDING = 20
-const CONTENT_LEFT = BORDER_LEFT + INNER_PADDING
-const CONTENT_WIDTH = BORDER_WIDTH - INNER_PADDING * 2
+const INNER_TOP = BORDER_TOP - 40
+const INNER_BOTTOM = BORDER_BOTTOM + 40
+const INNER_HEIGHT = INNER_TOP - INNER_BOTTOM
+const CONTENT_WIDTH = BORDER_WIDTH - 40
 
 function formatDate(d: string | null) {
   if (!d) return ''
@@ -144,8 +145,33 @@ function drawCenteredText(page: any, text: string, y: number, fontSize: number, 
   return y - fontSize
 }
 
-function drawHeader(page: any, logo: any, certTitle: string): number {
-  let y = BORDER_TOP - 20
+function calculateContentHeight(lines: string[]): number {
+  // Logo
+  let height = 70 + 24
+  // Clinic name
+  height += 14 + 14
+  // Address line 1
+  height += 10 + 10
+  // Address line 2
+  height += 10 + 14
+  // Contact
+  height += 9 + 28
+  // Certificate title
+  height += 16 + 30
+  // Body lines
+  height += lines.length * (11 * 1.5)
+  // Spacing before signatures
+  height += 50
+  // Signature lines + labels
+  height += 25 + 25 + 12 + 80
+  // QR section
+  height += 60 + 20 + 8 + 20 + 16
+  
+  return height
+}
+
+function drawHeader(page: any, logo: any, certTitle: string, startY: number): number {
+  let y = startY
 
   // Logo - centered to border
   page.drawImage(logo, {
@@ -157,29 +183,64 @@ function drawHeader(page: any, logo: any, certTitle: string): number {
   y -= 70 + 24
 
   // Clinic name - centered to border
-  y = drawCenteredText(page, 'AYURSHALA PANCHAKARMA CENTER', y, 14, BLACK)
-  y -= 14
+  const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
+  const clinicWidth = clinicText.length * 14 * 0.5
+  page.drawText(clinicText, {
+    x: BORDER_CENTER_X - clinicWidth / 2,
+    y: y,
+    size: 14,
+    color: BLACK,
+  })
+  y -= 14 + 14
 
   // Address line 1 - centered to border
-  y = drawCenteredText(page, 'SP-28, Wajidpur,', y, 10, BLACK)
-  y -= 10
+  const addr1Text = 'SP-28, Wajidpur,'
+  const addr1Width = addr1Text.length * 10 * 0.5
+  page.drawText(addr1Text, {
+    x: BORDER_CENTER_X - addr1Width / 2,
+    y: y,
+    size: 10,
+    color: BLACK,
+  })
+  y -= 10 + 10
 
   // Address line 2 - centered to border
-  y = drawCenteredText(page, 'Sector-130, Noida – 201301', y, 10, BLACK)
-  y -= 14
+  const addr2Text = 'Sector-130, Noida – 201301'
+  const addr2Width = addr2Text.length * 10 * 0.5
+  page.drawText(addr2Text, {
+    x: BORDER_CENTER_X - addr2Width / 2,
+    y: y,
+    size: 10,
+    color: BLACK,
+  })
+  y -= 10 + 14
 
   // Contact - centered to border
-  y = drawCenteredText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', y, 9, GRAY)
-  y -= 28
+  const contactText = '+91-9821224767 | ayurshalapanchkarma@gmail.com'
+  const contactWidth = contactText.length * 9 * 0.5
+  page.drawText(contactText, {
+    x: BORDER_CENTER_X - contactWidth / 2,
+    y: y,
+    size: 9,
+    color: GRAY,
+  })
+  y -= 9 + 28
 
   // Certificate title - centered to border
-  y = drawCenteredText(page, certTitle.toUpperCase(), y, 16, ORANGE)
-  y -= 30
+  const titleText = certTitle.toUpperCase()
+  const titleWidth = titleText.length * 16 * 0.5
+  page.drawText(titleText, {
+    x: BORDER_CENTER_X - titleWidth / 2,
+    y: y,
+    size: 16,
+    color: ORANGE,
+  })
+  y -= 16 + 30
 
   return y
 }
 
-function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: number): void {
+function drawCertificationBlock(page: any, qr: any, doctorName: string, currentY: number): void {
   const SIG_WIDTH = 180
   const QR_SIZE = 60
 
@@ -188,7 +249,7 @@ function drawCertificationBlock(page: any, qr: any, doctorName: string, startY: 
   const doctorX = BORDER_RIGHT - 220
   const doctorCenterX = doctorX + SIG_WIDTH / 2
 
-  let y = startY
+  let y = currentY - 50
 
   // Signature lines
   page.drawLine({
@@ -333,38 +394,35 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const narrative = getNarrative(ct.name, certificate)
     const lines = splitLines(narrative, CONTENT_WIDTH - 40, 11)
     const lineHeight = 11 * 1.5
-    const certificationHeight = 220
 
     let pages: any[] = []
     let currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
     pages.push(currentPage)
     drawBorder(currentPage)
 
-    let currentY = drawHeader(currentPage, logo, ct.name)
+    // Calculate total content height
+    const totalContentHeight = calculateContentHeight(lines)
+    
+    // Center vertically: position content block in middle of available space
+    const startY = INNER_TOP - (INNER_HEIGHT - totalContentHeight) / 2
+
+    let currentY = drawHeader(currentPage, logo, ct.name, startY)
 
     // Draw body
     for (const line of lines) {
-      if (currentY - lineHeight - certificationHeight < BORDER_BOTTOM) {
-        // Certification block won't fit, move to next page
-        currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-        pages.push(currentPage)
-        drawBorder(currentPage)
-        currentY = BORDER_TOP - 20
-      }
-
       currentPage.drawText(line, {
-        x: CONTENT_LEFT,
+        x: BORDER_LEFT + 20,
         y: currentY,
         size: 11,
         color: BLACK,
-        maxWidth: CONTENT_WIDTH,
+        maxWidth: BORDER_WIDTH - 40,
       })
       currentY -= lineHeight
     }
 
     // Certification block on final page only
     const final = pages[pages.length - 1]
-    drawCertificationBlock(final, qr, String(certificate.issued_by), currentY - 50)
+    drawCertificationBlock(final, qr, String(certificate.issued_by), currentY)
 
     const pdfBytes = await pdfDoc.save()
 
