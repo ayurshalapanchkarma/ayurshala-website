@@ -151,9 +151,9 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 70 + 24
 
-  // Clinic name - centered
+  // Clinic name - mathematically centered
   const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
-  const clinicWidth = clinicText.length * 14 * 0.5
+  const clinicWidth = clinicText.length * 14 * 0.55
   page.drawText(clinicText, {
     x: BORDER_CENTER_X - clinicWidth / 2,
     y: y,
@@ -162,9 +162,9 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 14 + 14
 
-  // Address 1 - centered
+  // Address 1 - mathematically centered
   const addr1Text = 'SP-28, Wajidpur,'
-  const addr1Width = addr1Text.length * 10 * 0.5
+  const addr1Width = addr1Text.length * 10 * 0.55
   page.drawText(addr1Text, {
     x: BORDER_CENTER_X - addr1Width / 2,
     y: y,
@@ -173,9 +173,9 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 10 + 10
 
-  // Address 2 - centered
+  // Address 2 - mathematically centered
   const addr2Text = 'Sector-130, Noida – 201301'
-  const addr2Width = addr2Text.length * 10 * 0.5
+  const addr2Width = addr2Text.length * 10 * 0.55
   page.drawText(addr2Text, {
     x: BORDER_CENTER_X - addr2Width / 2,
     y: y,
@@ -184,9 +184,9 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 10 + 14
 
-  // Contact - centered
+  // Contact - mathematically centered
   const contactText = '+91-9821224767 | ayurshalapanchkarma@gmail.com'
-  const contactWidth = contactText.length * 9 * 0.5
+  const contactWidth = contactText.length * 9 * 0.55
   page.drawText(contactText, {
     x: BORDER_CENTER_X - contactWidth / 2,
     y: y,
@@ -195,9 +195,9 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
   y -= 9 + 28
 
-  // Title - centered
+  // Title - mathematically centered
   const titleText = certTitle.toUpperCase()
-  const titleWidth = titleText.length * 16 * 0.5
+  const titleWidth = titleText.length * 16 * 0.55
   page.drawText(titleText, {
     x: BORDER_CENTER_X - titleWidth / 2,
     y: y,
@@ -206,7 +206,7 @@ function drawHeader(page: any, logo: any, certTitle: string): void {
   })
 }
 
-function drawFooter(page: any, qr: any, doctorName: string): void {
+function drawFooter(page: any, qr: any, doctorName: string, startY: number): void {
   const SIG_WIDTH = 180
   const QR_SIZE = 60
 
@@ -214,7 +214,7 @@ function drawFooter(page: any, qr: any, doctorName: string): void {
   const doctorX = BORDER_RIGHT - 220
   const doctorCenterX = doctorX + SIG_WIDTH / 2
 
-  let y = FOOTER_START_Y
+  let y = startY
 
   // Signature lines
   page.drawLine({
@@ -271,7 +271,7 @@ function drawFooter(page: any, qr: any, doctorName: string): void {
 
   // Scan text - centered to doctor block
   const scanText = 'Scan to verify authenticity'
-  const scanWidth = scanText.length * 8 * 0.5
+  const scanWidth = scanText.length * 8 * 0.55
   page.drawText(scanText, {
     x: doctorCenterX - scanWidth / 2,
     y: y,
@@ -284,8 +284,8 @@ function drawFooter(page: any, qr: any, doctorName: string): void {
   // Electronic note - centered to doctor block
   const noteText1 = 'Electronically generated certificate.'
   const noteText2 = 'No physical signature required.'
-  const noteWidth1 = noteText1.length * 8 * 0.5
-  const noteWidth2 = noteText2.length * 8 * 0.5
+  const noteWidth1 = noteText1.length * 8 * 0.55
+  const noteWidth2 = noteText2.length * 8 * 0.55
 
   page.drawText(noteText1, {
     x: doctorCenterX - noteWidth1 / 2,
@@ -363,6 +363,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     let pages: any[] = []
     let lineIndex = 0
     let isFirstPage = true
+    let lastContentPage: any = null
+    let lastContentY = 0
 
     // Render pages
     while (lineIndex < lines.length || isFirstPage) {
@@ -384,11 +386,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       // Block 2: Content
       const pageStartLineIndex = lineIndex
       while (lineIndex < lines.length) {
-        // Reserve space for footer on last page
-        const spaceNeeded = lineIndex === lines.length - 1 ? FOOTER_HEIGHT + SAFETY_MARGIN : lineHeight
-        
-        if (contentY - spaceNeeded < BORDER_BOTTOM + SAFETY_MARGIN) {
-          // Not enough space, move to next page
+        if (contentY - lineHeight < BORDER_BOTTOM + SAFETY_MARGIN) {
+          // Not enough space for next line, move to next page
           break
         }
 
@@ -403,23 +402,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         lineIndex++
       }
 
-      // Block 3: Footer only when all content is rendered
-      if (lineIndex >= lines.length) {
-        // Check if footer fits on current page
-        if (contentY - FOOTER_HEIGHT < BORDER_BOTTOM) {
-          // Not enough space, create new page for footer only
-          const footerPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-          pages.push(footerPage)
-          drawBorder(footerPage)
-          drawFooter(footerPage, qr, String(certificate.issued_by))
-        } else {
-          // Footer fits on current page
-          drawFooter(currentPage, qr, String(certificate.issued_by))
-        }
-      }
+      lastContentPage = currentPage
+      lastContentY = contentY
 
       // Prevent infinite loop
       if (lineIndex === pageStartLineIndex && lineIndex < lines.length) break
+    }
+
+    // Block 3: Footer placement - check if it fits on last content page
+    const remainingSpace = lastContentY - BORDER_BOTTOM
+    if (remainingSpace >= FOOTER_HEIGHT + SAFETY_MARGIN) {
+      // Footer fits on last content page
+      drawFooter(lastContentPage, qr, String(certificate.issued_by), lastContentY - SAFETY_MARGIN)
+    } else {
+      // Create dedicated footer page
+      const footerPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
+      drawBorder(footerPage)
+      drawFooter(footerPage, qr, String(certificate.issued_by), BORDER_TOP - 40)
     }
 
     const pdfBytes = await pdfDoc.save()
