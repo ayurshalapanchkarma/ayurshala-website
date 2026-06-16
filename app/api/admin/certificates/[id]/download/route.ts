@@ -386,21 +386,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const narrative = getNarrative(ct.name, certificate)
     
-    // Build body text with inline labels (same as Sick Leave rendering)
-    const bodyText: string[] = []
+    // Build inline label:value format
+    const bodyParagraphs: string[] = []
     for (const [key, value] of Object.entries(narrative)) {
       if (!value?.trim()) continue
       if (key === 'intro' || key === 'assessment' || key === 'conclusion') {
-        bodyText.push(value)
-        bodyText.push('') // 20px spacing
+        bodyParagraphs.push(value)
       } else {
         // Inline label format: "Label: content text..."
-        bodyText.push(`${key}: ${value}`)
-        bodyText.push('') // 20px spacing
+        bodyParagraphs.push(`${key}: ${value}`)
       }
     }
     
-    const bodyLines = splitLines(bodyText.join('\n'), CONTENT_WIDTH, 11) // Use default font for initial split
+    // Split each paragraph into wrapped lines
+    const bodyLines: string[] = []
+    for (const para of bodyParagraphs) {
+      const wrapped = splitLines(para, CONTENT_WIDTH, 11)
+      bodyLines.push(...wrapped)
+      bodyLines.push('') // 20px spacing between sections
+    }
+    
+    console.log('Certificate body lines:', bodyLines)
     
     // Space optimization hierarchy
     const DEFAULT_CONTENT_FONT_SIZE = 11
