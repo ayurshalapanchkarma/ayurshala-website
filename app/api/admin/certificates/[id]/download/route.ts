@@ -41,7 +41,7 @@ const HEADER_START_Y = BORDER_TOP - 20
 const HEADER_HEIGHT = 70 + 24 + 14 + 14 + 10 + 10 + 10 + 14 + 9 + 28 + 16 + 30
 const HEADER_END_Y = HEADER_START_Y - HEADER_HEIGHT
 
-const FOOTER_HEIGHT = 25 + 25 + 12 + 80 + 60 + 20 + 8 + 20 + 16
+const FOOTER_HEIGHT = 25 + 25 + 12 + 35 + 60 + 12 + 8 + 16 + 16
 const FOOTER_START_Y = BORDER_BOTTOM + FOOTER_HEIGHT
 const AVAILABLE_HEIGHT = FOOTER_START_Y - HEADER_END_Y - SAFETY_MARGIN
 
@@ -216,7 +216,7 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
 
   let y = startY
 
-  // Signature lines
+  // Row 1: Signature lines
   page.drawLine({
     start: { x: patientX, y: y },
     end: { x: patientX + SIG_WIDTH, y: y },
@@ -231,7 +231,7 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
 
   y -= 25
 
-  // Labels
+  // Signature labels
   page.drawText('Patient Signature', {
     x: patientX,
     y: y,
@@ -255,10 +255,11 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
     color: BLACK,
   })
 
-  y -= 80
+  // Reduced spacing before QR (30-40pt)
+  y -= 35
 
-  // QR - centered to doctor block
-  const qrX = doctorCenterX - QR_SIZE / 2
+  // Row 2: QR Block - anchored to doctor block, not page center
+  const qrX = doctorX + (SIG_WIDTH - QR_SIZE) / 2
 
   page.drawImage(qr, {
     x: qrX,
@@ -267,9 +268,9 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
     height: QR_SIZE,
   })
 
-  y -= QR_SIZE + 20
+  y -= QR_SIZE + 12
 
-  // Scan text - centered to doctor block
+  // Scan text - aligned to QR center (doctor block anchor)
   const scanText = 'Scan to verify authenticity'
   const scanWidth = scanText.length * 8 * 0.55
   page.drawText(scanText, {
@@ -279,9 +280,9 @@ function drawFooter(page: any, qr: any, doctorName: string, startY: number): voi
     color: GRAY,
   })
 
-  y -= 20
+  y -= 16
 
-  // Electronic note - centered to doctor block
+  // Electronic note - aligned to QR center (doctor block anchor)
   const noteText1 = 'Electronically generated certificate.'
   const noteText2 = 'No physical signature required.'
   const noteWidth1 = noteText1.length * 8 * 0.55
