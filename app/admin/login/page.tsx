@@ -6,6 +6,7 @@ import GlassBackground from '@/components/GlassBackground'
 import { useTheme } from 'next-themes'
 import { ShieldCheck } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
+import { getOAuthRedirectUrl } from '@/lib/auth-config'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +22,7 @@ export default function AdminLogin() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.ayurshalapanchakarma.com'}/auth/callback?admin=true`,
+        redirectTo: `${getOAuthRedirectUrl()}?admin=true`,
       },
     })
     if (error) {
@@ -54,8 +55,12 @@ export default function AdminLogin() {
           </div>
           <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-14 w-auto mx-auto mb-4" />
           <h1 className="font-serif text-2xl mb-1 text-orange-700 dark:text-orange-400">Administrator Access</h1>
-          <p className="font-sans text-xs text-stone-600 dark:text-stone-400">Continue with your authorized Google account.</p>
+          <p className="font-sans text-xs text-stone-600 dark:text-stone-400 mb-6">Continue with your authorized Google account.</p>
         </div>
+
+        <p className="font-sans text-xs text-stone-500 dark:text-stone-400 mb-4 px-2 py-3 rounded-lg bg-stone-50 dark:bg-stone-900/30">
+          Sign in securely using your Google account to access your appointments, medical records, prescriptions, and treatment certificates.
+        </p>
 
         <button
           onClick={handleGoogleLogin}

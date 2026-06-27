@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
+import PatientPortal from '@/components/PatientPortal'
 import Stats from '@/components/Stats'
 import About from '@/components/About'
 import Treatments from '@/components/Treatments'
@@ -34,6 +35,7 @@ export default function Home() {
       <GlassBackground />
       <Navbar />
       <Hero />
+      <PatientPortal />
       <Stats />
       <About />
       <Treatments />

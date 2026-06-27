@@ -28,6 +28,16 @@ export default function Hero() {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="font-serif text-2xl sm:text-3xl md:text-4xl font-light mb-8 sm:mb-12"
+          style={{ color: '#E8621A' }}
+        >
+          Ayurshala Panchakarma Center
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.2 }}
           className="font-serif italic text-stone-400 text-xs sm:text-sm md:text-base mb-6 sm:mb-8 tracking-wide"
         >

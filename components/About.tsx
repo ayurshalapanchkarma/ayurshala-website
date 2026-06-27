@@ -78,6 +78,17 @@ export default function About() {
         </div>
 
         <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.35 }}
+          className="glass-card rounded-2xl p-8 md:p-10 mb-16 max-w-3xl mx-auto"
+        >
+          <p className="font-sans text-stone-600 dark:text-stone-300 text-sm md:text-base leading-relaxed">
+            Our online patient portal allows registered patients to securely manage appointments, access medical records, download certificates, and communicate with our healthcare team from anywhere.
+          </p>
+        </motion.div>
+
+        <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={inView ? { opacity: 1, scale: 1 } : {}}
           transition={{ duration: 0.9, delay: 0.4 }}
