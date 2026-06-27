@@ -2,6 +2,8 @@
 
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { ArrowUp, ArrowDown, Users, Calendar, TrendingUp, Activity } from 'lucide-react'
+import { InventoryCard } from '@/components/InventoryCard'
+import { canAccessInventory } from '@/lib/inventory-permission'
 
 // Simple inline button to avoid import issues
 function Button({ children, ...props }: any) {
@@ -64,6 +66,9 @@ function ChartCard({ title, children }: any) {
 }
 
 export default function Dashboard() {
+  // Get user role from session/context (TODO: connect to auth)
+  const userRole = 'ADMIN' // This would come from useAuth() or similar
+
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-8">Dashboard</h1>
@@ -75,6 +80,12 @@ export default function Dashboard() {
         <StatCard label="Monthly Revenue" value="₹67,000" change={15.8} icon={TrendingUp} />
         <StatCard label="Treatments" value="342" change={-2.1} icon={Activity} />
       </div>
+
+      {/* Inventory Card */}
+      {canAccessInventory(userRole) && <InventoryCard canAccess={true} />}
+
+      {/* Inventory Card */}
+      {canAccessInventory(userRole) && <InventoryCard canAccess={true} />}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
