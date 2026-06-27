@@ -29,7 +29,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1 }}
-          className="font-serif text-2xl sm:text-3xl md:text-4xl font-light mb-8 sm:mb-12"
+          className="font-serif text-2xl sm:text-3xl md:text-4xl font-light mb-2"
           style={{ color: '#E8621A' }}
         >
           Ayurshala Panchakarma Center
@@ -38,10 +38,10 @@ export default function Hero() {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.2 }}
-          className="font-serif italic text-stone-400 text-xs sm:text-sm md:text-base mb-6 sm:mb-8 tracking-wide"
+          transition={{ duration: 0.8, delay: 0.15 }}
+          className="font-sans text-xs sm:text-sm text-stone-500 mb-6 sm:mb-8"
         >
-          समदोषः समाग्निश्च समधातु मलःक्रियाः
+          Official website and secure patient portal for managing appointments, treatment records, and medical certificates
         </motion.p>
 
         <motion.div

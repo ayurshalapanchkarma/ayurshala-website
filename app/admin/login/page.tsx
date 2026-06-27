@@ -54,13 +54,9 @@ export default function AdminLogin() {
             <ShieldCheck className="w-8 h-8" style={{ color: '#E8621A' }} />
           </div>
           <Image src="/ayurshala_text.png" alt="Ayurshala" width={200} height={56} className="object-contain h-14 w-auto mx-auto mb-4" />
-          <h1 className="font-serif text-2xl mb-1 text-orange-700 dark:text-orange-400">Administrator Access</h1>
-          <p className="font-sans text-xs text-stone-600 dark:text-stone-400 mb-6">Continue with your authorized Google account.</p>
+          <h1 className="font-serif text-2xl mb-1" style={{ color: dark ? '#f5f0e8' : '#1a1008' }}>Secure Administrator Login</h1>
+          <p className="font-sans text-xs text-stone-600 dark:text-stone-400 mb-6">Google authentication is used to securely verify authorized clinic staff before accessing the administration portal.</p>
         </div>
-
-        <p className="font-sans text-xs text-stone-500 dark:text-stone-400 mb-4 px-2 py-3 rounded-lg bg-stone-50 dark:bg-stone-900/30">
-          Sign in securely using your Google account to access your appointments, medical records, prescriptions, and treatment certificates.
-        </p>
 
         <button
           onClick={handleGoogleLogin}

@@ -12,14 +12,14 @@ export default function PatientPortal() {
   const dark = mounted && theme === 'dark'
 
   const features = [
-    { icon: Calendar, text: 'Book appointments' },
-    { icon: Lock, text: 'Sign in securely with Google' },
-    { icon: Calendar, text: 'View upcoming appointments' },
-    { icon: FileText, text: 'Access treatment history' },
-    { icon: FileText, text: 'Download treatment certificates' },
-    { icon: FileText, text: 'Download medical certificates' },
-    { icon: FileText, text: 'View prescriptions' },
-    { icon: User, text: 'Update profile information' },
+    { icon: Calendar, text: 'Book Appointments' },
+    { icon: Calendar, text: 'View Upcoming Appointments' },
+    { icon: Calendar, text: 'View Appointment History' },
+    { icon: FileText, text: 'Download Medical Certificates' },
+    { icon: FileText, text: 'Access Treatment Records' },
+    { icon: User, text: 'Manage Patient Profile' },
+    { icon: Calendar, text: 'Receive Appointment Updates' },
+    { icon: Lock, text: 'Secure Google Authentication' },
   ]
 
   return (
@@ -53,7 +53,7 @@ export default function PatientPortal() {
           }}
         >
           <p className="text-base sm:text-lg leading-relaxed mb-8" style={{ color: dark ? 'rgba(245,240,232,0.8)' : 'rgba(26,16,8,0.8)' }}>
-            Ayurshala Panchakarma Center provides a secure online patient portal that allows patients to:
+            Ayurshala Panchakarma Center provides a secure patient portal where patients can sign in using Google to manage their healthcare services online.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
@@ -74,7 +74,7 @@ export default function PatientPortal() {
 
           <div className="border-t pt-8" style={{ borderColor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
             <p className="text-sm sm:text-base italic" style={{ color: dark ? 'rgba(245,240,232,0.6)' : 'rgba(26,16,8,0.6)' }}>
-              Google Sign-In is used only to securely authenticate patients and provide access to their personal healthcare information.
+              Google Sign-In is used only for secure patient authentication. It allows patients to securely access appointments, medical certificates, treatment records, and personal healthcare information.
             </p>
           </div>
         </motion.div>

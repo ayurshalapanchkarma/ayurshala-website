@@ -84,7 +84,7 @@ export default function About() {
           className="glass-card rounded-2xl p-8 md:p-10 mb-16 max-w-3xl mx-auto"
         >
           <p className="font-sans text-stone-600 dark:text-stone-300 text-sm md:text-base leading-relaxed">
-            Our online patient portal allows registered patients to securely manage appointments, access medical records, download certificates, and communicate with our healthcare team from anywhere.
+            Ayurshala Panchakarma Center is a modern Ayurveda and Panchakarma clinic providing authentic treatments together with a secure online patient portal where patients can book appointments, access treatment records, download medical certificates, and manage their healthcare using Google Sign-In.
           </p>
         </motion.div>
 

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import PatientPortal from '@/components/PatientPortal'
+import WhyGoogleSignIn from '@/components/WhyGoogleSignIn'
 import Stats from '@/components/Stats'
 import About from '@/components/About'
 import Treatments from '@/components/Treatments'
@@ -36,6 +37,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <PatientPortal />
+      <WhyGoogleSignIn />
       <Stats />
       <About />
       <Treatments />

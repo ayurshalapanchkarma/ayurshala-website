@@ -1,0 +1,12 @@
+import { HRMSService } from '@/lib/inventory'
+import { handleApiError, successResponse, parseBody } from '@/lib/inventory/api-helper'
+
+export async function POST(request: Request) {
+  try {
+    const body = await parseBody(request)
+    const attendance = await HRMSService.logAttendance(body as any)
+    return successResponse(attendance, 201)
+  } catch (error) {
+    return handleApiError(error)
+  }
+}

@@ -4,14 +4,14 @@ import { Providers } from './providers'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Ayurshala — Panchakarma ERP Platform',
-  description: 'Ayurshala Panchakarma ERP - Modern healthcare platform for clinics',
-  keywords: 'Panchakarma, Ayurveda, ERP, Healthcare',
+  title: 'Ayurshala Panchakarma Center | Secure Patient Portal',
+  description: 'Official website of Ayurshala Panchakarma Center. Book appointments, access treatment records, download medical certificates, and securely manage your healthcare using Google Sign-In.',
+  keywords: 'Panchakarma, Ayurveda, Patient Portal, Medical Certificates, Appointments, Healthcare',
   openGraph: {
-    title: 'Ayurshala — Panchakarma ERP Platform',
-    description: 'Ayurshala Panchakarma ERP - Modern healthcare platform for clinics',
+    title: 'Ayurshala Panchakarma Center | Secure Patient Portal',
+    description: 'Book appointments, access treatment records, and manage your healthcare securely.',
     url: 'https://app.ayurshalapanchakarma.com',
-    siteName: 'Ayurshala',
+    siteName: 'Ayurshala Panchakarma Center',
     locale: 'en_IN',
     type: 'website',
   },
