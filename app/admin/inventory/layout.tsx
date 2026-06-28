@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AdminGuard } from '@/components/AdminGuard'
-import { ChevronDown, Menu, X, Package, Settings, FileText, AlertCircle, TrendingUp, ShoppingCart, Truck, BarChart3, Home } from 'lucide-react'
+import { ChevronDown, Menu, X, Package, Settings, FileText, AlertCircle, TrendingUp, ShoppingCart, Truck, BarChart3, Home, Search, Plus, Bell, User } from 'lucide-react'
 
 interface NavSection {
   label: string
@@ -25,7 +25,7 @@ const navSections: NavSection[] = [
     ]
   },
   {
-    label: 'Procurement',
+    label: 'Operations',
     icon: <ShoppingCart className="w-4 h-4" />,
     items: [
       { label: 'Purchase Orders', href: '/admin/inventory/purchase-orders' },
@@ -72,18 +72,15 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
   const pathname = usePathname()
 
-  // Load sidebar state from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('inventory-sidebar-expanded')
     if (saved) {
       setExpandedSections(JSON.parse(saved))
     } else {
-      // Default: expand first section
       setExpandedSections({ Masters: true })
     }
   }, [])
 
-  // Save sidebar state
   const toggleSection = (section: string) => {
     const newState = { ...expandedSections, [section]: !expandedSections[section] }
     setExpandedSections(newState)
@@ -92,15 +89,24 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
 
   const isActive = (href: string) => pathname === href
 
+  const getBreadcrumb = () => {
+    const segments = pathname.split('/').filter(Boolean)
+    if (segments.length <= 2) return null
+    
+    const lastSegment = segments[segments.length - 1]
+    const formatted = lastSegment.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    return formatted
+  }
+
   return (
     <AdminGuard>
       <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
         {/* Sidebar */}
-        <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 transition-all duration-300 flex flex-col overflow-hidden`}>
+        <div className={`${sidebarOpen ? 'w-60' : 'w-16'} bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 transition-all duration-300 flex flex-col overflow-hidden fixed h-screen z-40`}>
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
             {sidebarOpen && <h2 className="font-semibold text-slate-900 dark:text-white text-sm">📦 Inventory</h2>}
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition">
               {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
@@ -108,34 +114,34 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-2">
             {/* Home link */}
-            <Link href="/admin/inventory" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition mb-2 ${isActive('/admin/inventory') ? 'bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'}`}>
+            <Link href="/admin/inventory" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition mb-1 ${isActive('/admin/inventory') ? 'bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'}`}>
               <Home className="w-4 h-4 flex-shrink-0" />
               {sidebarOpen && <span>Overview</span>}
             </Link>
 
             {/* Section navigation */}
             {navSections.map(section => (
-              <div key={section.label} className="mb-1">
+              <div key={section.label}>
                 <button
                   onClick={() => toggleSection(section.label)}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition"
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition ${expandedSections[section.label] ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'} hover:bg-gray-100 dark:hover:bg-slate-800`}
                 >
                   {section.icon}
                   {sidebarOpen && (
                     <>
-                      <span className="flex-1 text-left">{section.label}</span>
-                      <ChevronDown className={`w-4 h-4 transition ${expandedSections[section.label] ? 'rotate-180' : ''}`} />
+                      <span className="flex-1 text-left text-xs">{section.label}</span>
+                      <ChevronDown className={`w-3 h-3 transition ${expandedSections[section.label] ? 'rotate-180' : ''}`} />
                     </>
                   )}
                 </button>
 
                 {(sidebarOpen && expandedSections[section.label]) && (
-                  <div className="ml-2 mt-1 space-y-0.5">
+                  <div className="ml-2 mt-0.5 space-y-0.5">
                     {section.items.map(item => (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`block px-3 py-2 rounded-lg text-xs transition ${isActive(item.href) ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
+                        className={`block px-3 py-1.5 rounded text-xs transition ${isActive(item.href) ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
                       >
                         {item.label}
                       </Link>
@@ -148,11 +154,26 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
           {/* Top bar */}
-          <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4 flex-1">
-              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Inventory Management</h1>
+          <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              {getBreadcrumb() && <span className="text-sm text-gray-600 dark:text-gray-400">{getBreadcrumb()}</span>}
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="relative hidden sm:block w-48">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input placeholder="Search..." className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+              </div>
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition">
+                <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition relative">
+                <Bell className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition">
+                <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              </button>
             </div>
           </div>
 

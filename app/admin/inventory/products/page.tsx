@@ -131,39 +131,49 @@ export default function ProductsPage() {
   }
 
   if (loading) {
-    return <div className="p-8 flex justify-center items-center min-h-screen"><Loader className="animate-spin w-12 h-12 text-primary-600" /></div>
+    return <div className="h-screen flex items-center justify-center"><Loader className="animate-spin w-8 h-8 text-orange-600" /></div>
   }
 
+  const actionButton = (
+    <Link href="/admin/inventory/products/create" className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium transition">
+      <Plus size={16} />
+      Add Product
+    </Link>
+  )
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Products</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage your product catalog</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={exportCSV} disabled={filteredProducts.length === 0} className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 text-sm transition">
-            <Download size={16} />
-          </button>
-          <Link href="/admin/inventory/products/create" className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm transition">
-            <Plus size={16} />
-            Add Product
-          </Link>
+    <div className="h-full flex flex-col">
+      {/* Page Header */}
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Products</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage your product catalog</p>
+          </div>
+          {actionButton}
         </div>
       </div>
 
-      {error && <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-lg"><p className="text-red-900 dark:text-red-100 text-sm mb-2">{error}</p><button onClick={loadData} className="text-xs text-red-700 hover:underline">Retry</button></div>}
+      {/* Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-6 space-y-4">
+          {error && <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg"><p className="text-red-900 dark:text-red-100 text-sm mb-2">{error}</p><button onClick={loadData} className="text-xs text-red-700 hover:underline">Retry</button></div>}
 
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="relative md:col-span-2">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-          <input type="text" placeholder="Search by name or SKU..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1) }} className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
-        </div>
-        <select value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1) }} className="px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 outline-none">
-          <option value="">All Categories</option>
-          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="relative md:col-span-2">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <input type="text" placeholder="Search by name or SKU..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1) }} className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
+            </div>
+            <div className="flex gap-2">
+              <select value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1) }} className="flex-1 px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                <option value="">All Categories</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <button onClick={exportCSV} disabled={filteredProducts.length === 0} className="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 text-sm transition" title="Export CSV">
+                <Download size={16} />
+              </button>
+            </div>
+          </div>
 
       {filteredProducts.length === 0 ? <div className="text-center py-16"><h3 className="text-lg font-semibold mb-2">No products found</h3><p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Get started by creating your first product</p><Link href="/admin/inventory/products/create" className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"><Plus size={16} />Create Product</Link></div> : <>
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-auto">
@@ -225,6 +235,8 @@ export default function ProductsPage() {
             <span>{t.message}</span>
           </div>
         ))}
+      </div>
+        </div>
       </div>
     </div>
   )
