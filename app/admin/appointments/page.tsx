@@ -11,7 +11,6 @@ import SmartFilterBar from '@/components/SmartFilterBar'
 import TodaysQueue from '@/components/TodaysQueue'
 import AppointmentTable from '@/components/AppointmentTable'
 import RowDetailsDrawer from '@/components/RowDetailsDrawer'
-import { generateInvoicePDF } from '@/lib/invoice-generator'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -305,7 +304,16 @@ export default function AdminAppointmentsPage() {
               if (!selectedRow) return
               setDrawerLoading(true)
               try {
-                await generateInvoicePDF(selectedRow)
+                const res = await fetch(`/api/admin/invoices/${selectedRow.booking_id}/download`)
+                if (!res.ok) throw new Error('Download failed')
+                
+                const blob = await res.blob()
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `invoice-${selectedRow.booking_id}.pdf`
+                a.click()
+                window.URL.revokeObjectURL(url)
               } finally {
                 setDrawerLoading(false)
               }
