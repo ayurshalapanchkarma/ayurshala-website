@@ -8,6 +8,8 @@
 -- Run this ONCE in Supabase SQL Editor to set up
 -- the complete Inventory system.
 --
+-- CRITICAL: All CREATE TABLE statements come first,
+-- then all CREATE INDEX statements, then CREATE VIEW.
 -- ============================================================
 
 -- PHASE 1: FOUNDATION — Categories, Products, Suppliers, Units, Manufacturers
@@ -127,13 +129,6 @@ CREATE TABLE IF NOT EXISTS inventory_audit_logs (
   changed_by            UUID,
   changed_at            TIMESTAMPTZ DEFAULT now()
 );
-
--- Create indexes
-CREATE INDEX IF NOT EXISTS idx_inv_categories_slug ON inventory_categories(slug);
-CREATE INDEX IF NOT EXISTS idx_inv_products_sku ON inventory_products(sku);
-CREATE INDEX IF NOT EXISTS idx_inv_products_category ON inventory_products(category_id);
-CREATE INDEX IF NOT EXISTS idx_inv_suppliers_gstin ON inventory_suppliers(gstin);
-CREATE INDEX IF NOT EXISTS idx_product_suppliers ON product_suppliers(product_id, supplier_id);
 
 -- PHASE 2: PURCHASE MANAGEMENT
 -- ============================================================
@@ -257,7 +252,22 @@ CREATE TABLE IF NOT EXISTS adjustment_items (
   created_at            TIMESTAMPTZ DEFAULT now()
 );
 
--- PHASE 9: REPORTING (Views)
+-- PHASE 10: SETTINGS
+-- ============================================================
+
+-- TABLE: inventory_settings
+CREATE TABLE IF NOT EXISTS inventory_settings (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  setting_key           TEXT UNIQUE NOT NULL,
+  setting_value         TEXT,
+  setting_type          TEXT,
+  description           TEXT,
+  created_at            TIMESTAMPTZ DEFAULT now(),
+  updated_at            TIMESTAMPTZ DEFAULT now()
+);
+
+-- ============================================================
+-- PHASE 9: REPORTING (Views - after all tables exist)
 -- ============================================================
 
 -- Current Stock View
@@ -278,24 +288,15 @@ LEFT JOIN stock_transactions st ON p.id = st.product_id
 WHERE p.is_deleted = false
 GROUP BY p.id, p.sku, p.name, p.category_id, p.reorder_level;
 
--- PHASE 10: SETTINGS
+-- ============================================================
+-- ALL INDEXES (after all tables created)
 -- ============================================================
 
--- TABLE: inventory_settings
-CREATE TABLE IF NOT EXISTS inventory_settings (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  setting_key           TEXT UNIQUE NOT NULL,
-  setting_value         TEXT,
-  setting_type          TEXT,
-  description           TEXT,
-  created_at            TIMESTAMPTZ DEFAULT now(),
-  updated_at            TIMESTAMPTZ DEFAULT now()
-);
-
--- ============================================================
--- INDEXES FOR PERFORMANCE
--- ============================================================
-
+CREATE INDEX IF NOT EXISTS idx_inv_categories_slug ON inventory_categories(slug);
+CREATE INDEX IF NOT EXISTS idx_inv_products_sku ON inventory_products(sku);
+CREATE INDEX IF NOT EXISTS idx_inv_products_category ON inventory_products(category_id);
+CREATE INDEX IF NOT EXISTS idx_inv_suppliers_gstin ON inventory_suppliers(gstin);
+CREATE INDEX IF NOT EXISTS idx_product_suppliers ON product_suppliers(product_id, supplier_id);
 CREATE INDEX IF NOT EXISTS idx_purchase_orders_supplier ON purchase_orders(supplier_id);
 CREATE INDEX IF NOT EXISTS idx_purchase_orders_status ON purchase_orders(status);
 CREATE INDEX IF NOT EXISTS idx_grn_supplier ON goods_receipt_notes(supplier_id);
@@ -312,6 +313,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_table ON inventory_audit_logs(table_name);
 -- ============================================================
 -- MIGRATION COMPLETE
 -- ============================================================
--- All tables for the Inventory module are now created.
--- This is sufficient for all 17 Inventory pages.
+-- All 16 tables for the Inventory module are now created.
+-- All indexes created for performance optimization.
+-- View created for stock reporting.
 -- ============================================================
