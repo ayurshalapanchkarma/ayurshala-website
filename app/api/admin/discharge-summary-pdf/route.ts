@@ -13,12 +13,18 @@ function sanitize(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  const RENDERER_VERSION = '68d69bc'
+  
   try {
     const data = await req.json()
 
     if (!data.doctor_name) {
       return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
     }
+
+    console.log(`[DISCHARGE-PDF] Renderer Version: ${RENDERER_VERSION}`)
+    console.log(`[DISCHARGE-PDF] Using FlowDocument from lib/flow-document.ts`)
+    console.log(`[DISCHARGE-PDF] Patient: ${data.patient_uhid}`)
 
     const pdfDoc = await PDFDocument.create()
     const doc = new FlowDocument(pdfDoc)
