@@ -26,8 +26,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/png" href="/ayurshala.png" />
-        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-JDJFTB5DDK" />
-        <Script id="google-analytics">
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-JDJFTB5DDK" strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
           {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
