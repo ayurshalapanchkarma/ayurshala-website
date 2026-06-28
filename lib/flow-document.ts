@@ -318,7 +318,7 @@ export class FlowDocument {
   private drawDocumentHeader(page: PDFPage) {
     let y = PAGE_HEIGHT - MARGIN
 
-    // Logo
+    // Logo - centered
     page.drawImage(this.logoImage!, {
       x: CENTER_X - 35,
       y: y - 70,
@@ -327,44 +327,40 @@ export class FlowDocument {
     })
     y -= 70 + 12
 
-    // Clinic name
+    // Clinic name - centered at font size 12
     const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
-    const clinicWidth = clinicText.length * 3.5
     page.drawText(clinicText, {
-      x: CENTER_X - clinicWidth / 2,
+      x: CENTER_X - clinicText.length * 3.6,
       y,
       size: 12,
       color: BLACK,
     })
     y -= 14 + 6
 
-    // Address
+    // Address - centered at font size 9
     const addr = 'SP-28, Wajidpur, Sector-130, Noida – 201301'
-    const addrWidth = addr.length * 2.2
     page.drawText(addr, {
-      x: CENTER_X - addrWidth / 2,
+      x: CENTER_X - addr.length * 2.7,
       y,
       size: 9,
       color: GRAY,
     })
     y -= 12 + 6
 
-    // Contact
+    // Contact - centered at font size 9
     const contact = '+91-9821224767 | ayurshalapanchkarma@gmail.com'
-    const contactWidth = contact.length * 2.2
     page.drawText(contact, {
-      x: CENTER_X - contactWidth / 2,
+      x: CENTER_X - contact.length * 2.7,
       y,
       size: 9,
       color: GRAY,
     })
     y -= 12 + 12
 
-    // Title
+    // Title - centered at font size 16
     const titleText = 'DISCHARGE SUMMARY'
-    const titleWidth = titleText.length * 4
     page.drawText(titleText, {
-      x: CENTER_X - titleWidth / 2,
+      x: CENTER_X - titleText.length * 4.8,
       y,
       size: 16,
       color: ORANGE,
@@ -388,7 +384,8 @@ export class FlowDocument {
     if (!this.headerDrawn) {
       this.drawDocumentHeader(page)
       this.headerDrawn = true
-      this.currentY = PAGE_HEIGHT - MARGIN - 240
+      // Header: Logo(70) + gap(12) + clinic(14) + gap(6) + addr(12) + gap(6) + contact(12) + gap(12) + title(16) + gap(15) + line(0) + gap(20) = 195
+      this.currentY = PAGE_HEIGHT - MARGIN - 195
     } else {
       this.currentY = PAGE_HEIGHT - MARGIN - 20
     }
