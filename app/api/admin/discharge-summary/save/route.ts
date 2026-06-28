@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
 
-    // Insert with proper error handling
+    // Try to insert into discharge_summaries table
     const { data: saved, error } = await supabase
       .from('discharge_summaries')
       .insert([{
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         nationality: data.nationality,
         address: data.address,
         diagnosis: data.diagnosis,
-        complaints: JSON.stringify(data.complaints),
+        complaints: data.complaints || [],
         history_present_complaints: data.history_present_complaints,
         history_days: data.history_days,
         past_history_medical: data.past_history_medical,
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         past_history_details: data.past_history_details,
         medication_administered: data.medication_administered,
         day_of_therapy: data.day_of_therapy,
-        pradhan_vedna: JSON.stringify(data.pradhan_vedna),
+        pradhan_vedna: data.pradhan_vedna || [],
         vitals_bp: data.vitals_bp,
         vitals_hr: data.vitals_hr,
         vitals_nadi: data.vitals_nadi,
@@ -45,13 +45,13 @@ export async function POST(req: NextRequest) {
         oe_jihwa: data.oe_jihwa,
         oe_shuda: data.oe_shuda,
         oe_nidra: data.oe_nidra,
-        therapies: JSON.stringify(data.therapies),
+        therapies: data.therapies || [],
         investigations: data.investigations,
         findings_discharge: data.findings_discharge,
         condition_discharge: data.condition_discharge,
         advice_discharge: data.advice_discharge,
         medicine_discharge: data.medicine_discharge,
-        medicines: JSON.stringify(data.medicines),
+        medicines: data.medicines || [],
         cautions: data.cautions,
         pathya: data.pathya,
         apathya: data.apathya,
@@ -61,6 +61,12 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('Database error:', error)
+      // If table doesn't exist, return more helpful message
+      if (error.message?.includes('Could not find the table')) {
+        return NextResponse.json({ 
+          error: 'Database table not yet provisioned. Please contact administrator. Migration: migrations/discharge_summaries_001.sql' 
+        }, { status: 503 })
+      }
       throw new Error(`Database insert failed: ${error.message}`)
     }
 
@@ -71,4 +77,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+
 
