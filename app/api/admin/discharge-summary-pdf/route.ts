@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
     y -= 12
     addText(page, `Mobile: ${data.doctor_mobile || '_______________'}`, leftMargin, y, 10)
     y -= 12
-    addText(page, `Email: ${data.clinic_email || '_______________'}`, leftMargin, y, 10)
+    addText(page, `Email: ayurshalapanchkarma@gmail.com`, leftMargin, y, 10)
 
     const pdfBytes = await pdfDoc.save()
     return new NextResponse(Buffer.from(pdfBytes), {
