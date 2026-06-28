@@ -1,16 +1,16 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
-import Link from 'next/link'
+import { Plus, Trash2 } from 'lucide-react'
 import { DischargeSummaryHeader } from '@/components/DischargeSummaryHeader'
 
 export default function DischargeSummaryPage() {
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [bookingId, setBookingId] = useState<string | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [validationError, setValidationError] = useState('')
   const DOCTOR_MOBILE = '+91-9821224767'
-  const CLINIC_EMAIL = 'ayurshalapanchkarma@gmail.com'
   const doctors = [
     { id: 1, name: 'Dr. Farha Naqvi', mobile: DOCTOR_MOBILE },
     { id: 2, name: 'Dr. Sanjay Yadav', mobile: DOCTOR_MOBILE }
@@ -120,6 +120,7 @@ export default function DischargeSummaryPage() {
 
   function updateForm(key: string, value: any) {
     setForm(prev => ({ ...prev, [key]: value } as any))
+    setHasUnsavedChanges(true)
     validateDates()
   }
 
@@ -130,6 +131,12 @@ export default function DischargeSummaryPage() {
   }
 
   async function downloadPDF() {
+    if (hasUnsavedChanges) {
+      const action = confirm('You have unsaved changes.\n\nSave before downloading?\n\nOK = Save & Download\nCancel = Download Anyway')
+      if (action) {
+        await saveDischargeSummary()
+      }
+    }
     if (!validateDates()) return
     setLoading(true)
     try {
@@ -153,20 +160,39 @@ export default function DischargeSummaryPage() {
     }
   }
 
+  async function saveDischargeSummary() {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/admin/discharge-summary/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          patient_uuid: bookingId ? 'booking_' + bookingId : undefined,
+          booking_uuid: bookingId,
+        }),
+      })
+      if (!res.ok) throw new Error('Save failed')
+      setHasUnsavedChanges(false)
+      alert('Discharge summary saved successfully')
+    } catch (error) {
+      alert('Failed to save: ' + error)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (!mounted) return null
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <DischargeSummaryHeader onDownloadPDF={downloadPDF} isLoading={loading} />
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <Link href="/admin/appointments" className="inline-flex items-center gap-2 text-blue-600 mb-6">
-          <ArrowLeft className="w-4 h-4" /> Back to Appointments
-        </Link>
+      <DischargeSummaryHeader onSave={saveDischargeSummary} onDownloadPDF={downloadPDF} isLoading={loading} isSaving={saving} />
+      <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow">
-          <div className="p-8 border-b">
-            <h2 className="text-2xl font-semibold">Patient Discharge Information</h2>
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-semibold">Patient Discharge Information</h2>
           </div>
-          <form className="p-8 space-y-8">
+          <form className="p-6 space-y-6">
             {validationError && <div className="p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded">{validationError}</div>}
 
             {/* Patient Info */}
