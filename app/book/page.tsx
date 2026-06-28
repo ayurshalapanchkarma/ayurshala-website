@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -46,6 +46,9 @@ export default function BookPage() {
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [editingBookingId, setEditingBookingId] = useState<string | null>(null)
+  const [doctor, setDoctor] = useState<string>('')
+  const router = useRouter()
 
   const dark = mounted && theme === 'dark'
   const today = new Date().toISOString().split('T')[0]
@@ -102,7 +105,7 @@ export default function BookPage() {
 
   useEffect(() => {
     setMounted(true)
-    
+
     async function init() {
       await supabase.auth.refreshSession()
       const { data: { session } } = await supabase.auth.getSession()
@@ -130,6 +133,15 @@ export default function BookPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!mounted) return
+    const bookingId = new URLSearchParams(window.location.search).get('booking_id')
+    if (bookingId) {
+      setEditingBookingId(bookingId)
+      loadBooking(bookingId)
+    }
+  }, [mounted])
+
   async function loadOrCreatePatient(u: AuthUser) {
     const res = await fetch(`/api/patient?email=${encodeURIComponent(u.email!)}`)
     const { patient: existing } = await res.json()
@@ -140,6 +152,36 @@ export default function BookPage() {
     })
     const { patient: newP } = await createRes.json()
     setPatient(newP)
+  }
+
+  async function loadBooking(bookingId: string) {
+    try {
+      const res = await fetch(`/api/admin/bookings?booking_id=${bookingId}`)
+      const data = await res.json()
+      const booking = data.bookings?.[0]
+      if (!booking) return
+
+      setDate(booking.preferred_date)
+      setTime(booking.preferred_time)
+      const treatments = booking.treatments ? booking.treatments.split(', ').filter((t: string) => t !== '—') : []
+      setSelectedTreatments(treatments.filter((t: string) => t !== 'Consultation'))
+      setIsConsultation(treatments.includes('Consultation'))
+      setConcern(booking.notes || '')
+      setPaymentMethod(booking.payment_method || 'ONLINE')
+      setDoctor(booking.doctor_name || booking.doctor || '')
+
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('patient_id', booking.patient_id)
+        .single()
+      if (patient) {
+        setPatient(patient)
+        setPhone(patient.phone || '')
+      }
+    } catch (error) {
+      console.error('Failed to load booking:', error)
+    }
   }
 
   async function checkGuestEmail(email: string) {
@@ -194,14 +236,28 @@ export default function BookPage() {
       ]
       const frontendBookingType = isConsultation && selectedTreatments.length > 0 ? 'consultation_and_therapy' : isConsultation ? 'consultation' : 'therapy'
       
-      // STEP 1: Frontend logging
-      console.log('[BOOKING FORM]', {
-        consultationSelected: isConsultation,
-        selectedTherapies: selectedTreatments,
-        frontendBookingType,
-        treatmentsArray: treatments,
-      })
-      
+      // If editing, update existing booking
+      if (editingBookingId) {
+        const updateRes = await fetch('/api/book', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            booking_id: editingBookingId,
+            treatments,
+            preferred_date: date,
+            preferred_time: time,
+            concern: concern.trim(),
+            booking_type: frontendBookingType,
+            payment_method: paymentMethod,
+          }),
+        })
+        const updateData = await updateRes.json()
+        if (!updateRes.ok) { setStatus('error'); setErrorMsg(updateData.error || 'Failed to update booking.'); return }
+        router.push('/admin/appointments')
+        return
+      }
+
+      // Create new booking
       const orderRes = await fetch('/api/book', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

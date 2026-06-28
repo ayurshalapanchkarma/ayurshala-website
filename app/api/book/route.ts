@@ -456,6 +456,66 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const { booking_id, treatments, preferred_date, preferred_time, concern, booking_type, payment_method } = await req.json()
+
+    if (!booking_id) return NextResponse.json({ error: 'booking_id required' }, { status: 400 })
+
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings_new')
+      .select('*')
+      .eq('booking_id', booking_id)
+      .single()
+
+    if (bookingError || !booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
+
+    if (booking.status === 'CANCELLED' || booking.status === 'COMPLETED') {
+      return NextResponse.json({ error: `Cannot edit ${booking.status.toLowerCase()} booking` }, { status: 409 })
+    }
+
+    // Update booking details
+    await supabase
+      .from('bookings_new')
+      .update({
+        preferred_date,
+        preferred_time: preferred_time || booking.preferred_time,
+        booking_type: booking_type || booking.booking_type,
+        notes: concern || booking.notes,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('booking_id', booking_id)
+
+    // Update treatments
+    await supabase
+      .from('booking_treatments_v2')
+      .delete()
+      .eq('booking_uuid', booking.id)
+
+    if (treatments && treatments.length > 0) {
+      const treatmentInserts = treatments.map((t: string) => ({
+        booking_uuid: booking.id,
+        treatment_name: t,
+      }))
+      await supabase
+        .from('booking_treatments_v2')
+        .insert(treatmentInserts)
+    }
+
+    await auditLog(booking.id, booking.patient_uuid, 'BOOKING_UPDATED', 
+      { date: booking.preferred_date, time: booking.preferred_time }, 
+      { date: preferred_date, time: preferred_time }
+    )
+
+    return NextResponse.json({ success: true, booking_id })
+  } catch (error) {
+    console.error('Edit booking error:', error)
+    return NextResponse.json({ error: 'Failed to update booking' }, { status: 500 })
+  }
+}
+
 function sendTelegram(text: string) {
   fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
