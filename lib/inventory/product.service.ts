@@ -254,6 +254,18 @@ export class ProductService {
   }
 
   /**
+   * Restore a deleted product
+   */
+  static async restoreProduct(id: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('inventory_products')
+      .update({ is_deleted: false })
+      .eq('id', id)
+
+    if (error) throw new Error(`Failed to restore product: ${error.message}`)
+  }
+
+  /**
    * Get suppliers for a product
    */
   static async getProductSuppliers(productId: string): Promise<ProductSupplier[]> {
