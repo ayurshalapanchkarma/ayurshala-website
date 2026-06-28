@@ -1,38 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PDFDocument, rgb } from 'pdf-lib'
+import { PDFDocument } from 'pdf-lib'
+import { PDFLayoutEngine } from '@/lib/pdf-layout-engine'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const ORANGE = rgb(249 / 255, 115 / 255, 22 / 255)
-const BLACK = rgb(17 / 255, 24 / 255, 39 / 255)
-const GRAY = rgb(107 / 255, 114 / 255, 128 / 255)
+const SECTION_SPACING = 12
 
-const PAGE_WIDTH = 595
-const PAGE_HEIGHT = 842
-const MARGIN = 40
-const CONTENT_WIDTH = PAGE_WIDTH - 2 * MARGIN
+async function measureSectionHeight(text: string, fontSize: number = 10): Promise<number> {
+  const charWidth = fontSize * 0.5
+  const maxWidth = 515 - 40
+  const words = text.split(' ')
+  let lines = 1
+  let currentLine = ''
 
-function sanitizeText(text: string): string {
-  if (!text) return text
-  return text.replace(/₂/g, '2').replace(/₃/g, '3').replace(/SpO₂/g, 'SpO2').replace(/CO₂/g, 'CO2').replace(/O₂/g, 'O2')
-}
-
-function addText(page: any, text: string, x: number, y: number, size: number = 10) {
-  page.drawText(sanitizeText(text || ''), { x, y, size })
-}
-
-function drawOrangeBorder(page: any) {
-  page.drawRectangle({
-    x: MARGIN,
-    y: MARGIN,
-    width: CONTENT_WIDTH,
-    height: PAGE_HEIGHT - 2 * MARGIN,
-    borderColor: ORANGE,
-    borderWidth: 1.5,
+  words.forEach(word => {
+    const testLine = currentLine ? currentLine + ' ' + word : word
+    if (testLine.length * charWidth <= maxWidth) {
+      currentLine = testLine
+    } else {
+      lines++
+      currentLine = word
+    }
   })
+
+  return lines * 14 + SECTION_SPACING
 }
 
 export async function POST(req: NextRequest) {
@@ -40,145 +34,172 @@ export async function POST(req: NextRequest) {
     const data = await req.json()
 
     if (!data.doctor_name) {
-      return NextResponse.json({ error: 'Doctor name is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
     }
 
     const pdfDoc = await PDFDocument.create()
-    let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-    drawOrangeBorder(page)
+    const engine = new PDFLayoutEngine(pdfDoc)
 
-    let y = PAGE_HEIGHT - MARGIN
+    // Load and embed logo
+    const logoPath = join(process.cwd(), 'public', 'ayurshala_text.png')
+    const logoBuffer = readFileSync(logoPath)
+    const logoImage = await pdfDoc.embedPng(logoBuffer)
 
-    // Header
-    try {
-      const logoPath = join(process.cwd(), 'public', 'ayurshala_text.png')
-      const logoBuffer = readFileSync(logoPath)
-      const logoImage = await pdfDoc.embedPng(logoBuffer)
+    await engine.init(logoImage)
 
-      page.drawImage(logoImage, {
-        x: PAGE_WIDTH / 2 - 35,
-        y: y - 70,
-        width: 70,
-        height: 70,
-      })
-      y -= 100
+    // BLOCK 1: Patient Information
+    let height = 14
+    await engine.ensureSpace(height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('PATIENT INFORMATION'))
 
-      const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
-      const clinicWidth = clinicText.length * 0.55 * 14
-      page.drawText(clinicText, { x: PAGE_WIDTH / 2 - clinicWidth / 2, y, size: 14, color: BLACK })
-      y -= 20
+    height = 14 * 4 + SECTION_SPACING
+    await engine.ensureSpace(height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawLabel('Patient UHID:', data.patient_uhid || ''))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawLabel('Patient Name:', data.patient_name || ''))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawLabel('Age:', `${data.age || ''} / ${data.sex || ''}`))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawLabel('Nationality:', data.nationality || ''))
 
-      addText(page, 'SP-28, Wajidpur, Sector-130, Noida – 201301', PAGE_WIDTH / 2 - 120, y, 10)
-      y -= 15
-      addText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', PAGE_WIDTH / 2 - 135, y, 9)
-      y -= 25
+    // BLOCK 2: Diagnosis
+    height = await measureSectionHeight(data.diagnosis || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('DIAGNOSIS'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.diagnosis || ''))
 
-      page.drawLine({ start: { x: MARGIN + 20, y }, end: { x: PAGE_WIDTH - MARGIN - 20, y }, thickness: 1, color: ORANGE })
-      y -= 20
-
-      const titleText = 'DISCHARGE SUMMARY'
-      const titleWidth = titleText.length * 0.55 * 16
-      page.drawText(titleText, { x: PAGE_WIDTH / 2 - titleWidth / 2, y, size: 16, color: ORANGE })
-      y -= 30
-
-      page.drawLine({ start: { x: MARGIN + 20, y }, end: { x: PAGE_WIDTH - MARGIN - 20, y }, thickness: 1, color: ORANGE })
-      y -= 20
-    } catch (e) {
-      console.error('Header error:', e)
+    // BLOCK 3: Complaints
+    if (data.complaints && data.complaints.length > 0) {
+      const complaintItems = data.complaints.slice(0, 10)
+      let complaintHeight = 14 + complaintItems.length * 14 + SECTION_SPACING
+      await engine.ensureSpace(complaintHeight)
+      engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('COMPLAINTS ON ADMISSION'))
+      engine.setCurrentY(engine.getCurrentY() - engine.drawNumberedList(complaintItems))
     }
 
-    // Content
-    const leftMargin = MARGIN + 20
+    // BLOCK 4: History
+    height = await measureSectionHeight(data.history_present_complaints || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('HISTORY OF PRESENT COMPLAINTS'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.history_present_complaints || ''))
 
-    addText(page, `Patient UHID: ${data.patient_uhid || ''}`, leftMargin, y, 10)
-    y -= 15
-    addText(page, `Patient Name: ${data.patient_name || ''}`, leftMargin, y, 10)
-    y -= 15
-    addText(page, `Age: ${data.age || ''} Sex: ${data.sex || ''} Nationality: ${data.nationality || ''}`, leftMargin, y, 10)
-    y -= 15
-    addText(page, `DOA: ${data.doa_date || ''} ${data.doa_time || ''} | DOD: ${data.dod_date || ''} ${data.dod_time || ''}`, leftMargin, y, 10)
-    y -= 20
+    // BLOCK 5: Past History
+    height = 14 + SECTION_SPACING
+    await engine.ensureSpace(height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('PAST HISTORY'))
+    engine.setCurrentY(
+      engine.getCurrentY() -
+        engine.drawLabel(
+          'Medical/Surgical:',
+          `${data.past_history_medical || ''} / ${data.past_history_surgical || ''}`
+        )
+    )
 
-    addText(page, `Diagnosis: ${data.diagnosis || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 6: Medication Administered
+    height = await measureSectionHeight(data.medication_administered || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('MEDICATION ADMINISTERED'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.medication_administered || ''))
 
-    addText(page, 'Complaints on Admission:', leftMargin, y, 11)
-    y -= 12
-    data.complaints?.slice(0, 5).forEach((c: string, i: number) => {
-      addText(page, `${i + 1}. ${c || ''}`, leftMargin + 20, y, 10)
-      y -= 12
-    })
-    y -= 8
+    // BLOCK 7: Day of Therapy
+    height = 14 + SECTION_SPACING
+    await engine.ensureSpace(height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('DAY OF THERAPY'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawLabel('Days:', data.day_of_therapy || ''))
 
-    addText(page, `History: ${data.history_present_complaints || ''} (${data.history_days || ''} days)`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 8: Pradhan Vedna
+    if (data.pradhan_vedna && data.pradhan_vedna.length > 0) {
+      const vednaItems = data.pradhan_vedna.slice(0, 10)
+      let vednaHeight = 14 + vednaItems.length * 14 + SECTION_SPACING
+      await engine.ensureSpace(vednaHeight)
+      engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('PRADHAN VEDNA'))
+      engine.setCurrentY(engine.getCurrentY() - engine.drawNumberedList(vednaItems))
+    }
 
-    addText(page, `Past History - Medical: ${data.past_history_medical || ''} Surgical: ${data.past_history_surgical || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 9: Vitals
+    height = 14 + SECTION_SPACING
+    await engine.ensureSpace(height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('VITALS ON ADMISSION'))
+    engine.setCurrentY(
+      engine.getCurrentY() - engine.drawLabel('BP/HR/Nadi:', `${data.vitals_bp || ''} / ${data.vitals_hr || ''} / ${data.vitals_nadi || ''}`)
+    )
 
-    addText(page, `Medication Administered: ${data.medication_administered || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 10: O/E
+    height = 14 + 14 * 2 + SECTION_SPACING
+    await engine.ensureSpace(height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('EXAMINATION (O/E)'))
+    engine.setCurrentY(
+      engine.getCurrentY() - engine.drawLabel('Mala/Mutra/Jihwa:', `${data.oe_mala || ''} / ${data.oe_mutra || ''} / ${data.oe_jihwa || ''}`)
+    )
+    engine.setCurrentY(
+      engine.getCurrentY() - engine.drawLabel('Shuda/Nidra:', `${data.oe_shuda || ''} / ${data.oe_nidra || ''}`)
+    )
 
-    addText(page, `Day of Therapy: ${data.day_of_therapy || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 11: Therapies
+    if (data.therapies && data.therapies.length > 0) {
+      const therapyItems = data.therapies.slice(0, 10)
+      let therapyHeight = 14 + therapyItems.length * 14 + SECTION_SPACING
+      await engine.ensureSpace(therapyHeight)
+      engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('THERAPIES/PROCEDURES'))
+      engine.setCurrentY(engine.getCurrentY() - engine.drawNumberedList(therapyItems))
+    }
 
-    addText(page, 'Pradhan Vedna:', leftMargin, y, 11)
-    y -= 12
-    data.pradhan_vedna?.slice(0, 3).forEach((v: string, i: number) => {
-      addText(page, `${i + 1}. ${v || ''}`, leftMargin + 20, y, 10)
-      y -= 12
-    })
-    y -= 8
+    // BLOCK 12: Investigations
+    height = await measureSectionHeight(data.investigations || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('INVESTIGATIONS'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.investigations || ''))
 
-    addText(page, `Vitals: BP ${data.vitals_bp || ''} HR ${data.vitals_hr || ''} Nadi ${data.vitals_nadi || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 13: Findings
+    height = await measureSectionHeight(data.findings_discharge || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('FINDINGS ON DISCHARGE'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.findings_discharge || ''))
 
-    addText(page, 'O/E:', leftMargin, y, 11)
-    y -= 12
-    addText(page, `Mala: ${data.oe_mala || ''} Mutra: ${data.oe_mutra || ''} Jihwa: ${data.oe_jihwa || ''}`, leftMargin + 20, y, 10)
-    y -= 12
-    addText(page, `Shuda: ${data.oe_shuda || ''} Nidra: ${data.oe_nidra || ''}`, leftMargin + 20, y, 10)
-    y -= 15
+    // BLOCK 14: Condition at Discharge
+    height = await measureSectionHeight(data.condition_discharge || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('CONDITION AT DISCHARGE'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.condition_discharge || ''))
 
-    addText(page, 'Therapy/Procedures:', leftMargin, y, 11)
-    y -= 12
-    data.therapies?.slice(0, 3).forEach((t: string, i: number) => {
-      addText(page, `${i + 1}. ${t || ''}`, leftMargin + 20, y, 10)
-      y -= 12
-    })
-    y -= 8
+    // BLOCK 15: Advice on Discharge
+    height = await measureSectionHeight(data.advice_discharge || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('ADVICE ON DISCHARGE'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.advice_discharge || ''))
 
-    addText(page, `Investigations: ${data.investigations || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 16: Medicine Table
+    if (data.medicines && data.medicines.length > 0) {
+      const headers = ['Medication', 'Dosage', 'Instructions', 'Schedule', 'Duration']
+      const rows = data.medicines.map((m: any) => [m.name || '', m.dosage || '', m.instructions || '', m.schedule || '', m.duration || ''])
+      const tableHeight = (rows.length + 1) * 18 + SECTION_SPACING
 
-    addText(page, `Findings: ${data.findings_discharge || ''}`, leftMargin, y, 10)
-    y -= 15
+      await engine.ensureSpace(14 + tableHeight)
+      engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('MEDICINES'))
+      await engine.drawTable(headers, rows)
+    }
 
-    addText(page, `Condition at Discharge: ${data.condition_discharge || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 17: Cautions
+    height = await measureSectionHeight(data.cautions || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('CAUTIONS'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.cautions || ''))
 
-    addText(page, `Advice: ${data.advice_discharge || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 18: Pathya
+    height = await measureSectionHeight(data.pathya || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('PATHYA (RECOMMENDED)'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.pathya || ''))
 
-    addText(page, `Cautions: ${data.cautions || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 19: Apathya
+    height = await measureSectionHeight(data.apathya || '')
+    await engine.ensureSpace(14 + height)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawHeading('APATHYA (CONTRAINDICATED)'))
+    engine.setCurrentY(engine.getCurrentY() - engine.drawWrappedText(data.apathya || ''))
 
-    addText(page, `Pathya: ${data.pathya || ''}`, leftMargin, y, 10)
-    y -= 15
+    // BLOCK 20: Signature Block (atomic - no split)
+    const signatureBlockHeight = 14 * 3 + SECTION_SPACING
+    await engine.ensureSpace(signatureBlockHeight + 20)
+    engine.setCurrentY(engine.getCurrentY() - engine.drawSignatureBlock(data.doctor_name))
 
-    addText(page, `Apathya: ${data.apathya || ''}`, leftMargin, y, 10)
-    y -= 25
-
-    addText(page, `Dr. ${data.doctor_name || ''}`, leftMargin, y, 11)
-    y -= 12
-    addText(page, 'Mobile: +91-9821224767', leftMargin, y, 10)
-    y -= 12
-    addText(page, 'Email: ayurshalapanchkarma@gmail.com', leftMargin, y, 10)
-
-    // Page number
-    page.drawText(`Page 1 of 1`, { x: PAGE_WIDTH / 2 - 20, y: MARGIN + 5, size: 9, color: GRAY })
-
-    const pdfBytes = await pdfDoc.save()
+    const pdfBytes = await engine.save()
     return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {
@@ -188,7 +209,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    console.error('PDF error:', message)
+    console.error('PDF error:', message, error)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
