@@ -1,204 +1,96 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Plus, TrendingUp, Package, AlertTriangle, Clock, CheckCircle, XCircle, ShoppingCart } from 'lucide-react'
-
-// Mock data - connect to real API later
-const inventoryData = {
-  kpis: [
-    { label: 'Total Products', value: 450, change: 5.2, icon: Package },
-    { label: 'Inventory Value', value: '₹2.4L', change: 12.8, icon: TrendingUp },
-    { label: 'Available Stock', value: '12,840 units', change: 8.3, icon: CheckCircle },
-    { label: 'Low Stock', value: 34, change: -15.2, icon: AlertTriangle },
-    { label: 'Out of Stock', value: 8, change: -100, icon: XCircle },
-    { label: 'Expiring (30d)', value: 12, change: 3.1, icon: Clock },
-    { label: 'Expired Stock', value: 0, change: 0, icon: AlertTriangle },
-    { label: 'Pending POs', value: 5, change: 0, icon: ShoppingCart },
-    { label: 'Pending GRNs', value: 3, change: 0, icon: Package },
-  ],
-  valuetrend: [
-    { month: 'Jan', value: 180000 },
-    { month: 'Feb', value: 195000 },
-    { month: 'Mar', value: 185000 },
-    { month: 'Apr', value: 210000 },
-    { month: 'May', value: 225000 },
-    { month: 'Jun', value: 240000 },
-  ],
-  topProducts: [
-    { name: 'Ashwagandha', sales: 450 },
-    { name: 'Brahmi', sales: 380 },
-    { name: 'Turmeric Powder', sales: 320 },
-    { name: 'Sesame Oil', sales: 280 },
-    { name: 'Ghee (Organic)', sales: 250 },
-  ],
-  categories: [
-    { name: 'Herbal Powders', value: 35, fill: '#22c55e' },
-    { name: 'Oils & Ghee', value: 28, fill: '#f59e0b' },
-    { name: 'Pastes & Tablets', value: 22, fill: '#3b82f6' },
-    { name: 'Others', value: 15, fill: '#8b5cf6' },
-  ],
-}
-
-function KPICard({ label, value, change, icon: Icon }: any) {
-  const isPositive = change >= 0
-  return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4 hover:shadow-md transition">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">{label}</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{value}</p>
-        </div>
-        <div className="bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg">
-          <Icon size={20} className="text-amber-600 dark:text-amber-400" />
-        </div>
-      </div>
-      {change !== 0 && (
-        <p className={`text-xs flex items-center gap-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-          {isPositive ? '↑' : '↓'} {Math.abs(change)}% vs last month
-        </p>
-      )}
-    </div>
-  )
-}
-
-function ChartCard({ title, children }: any) {
-  return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">{title}</h3>
-      {children}
-    </div>
-  )
-}
+import { Package, Layers, Users, TrendingUp, AlertTriangle, Clock, ShoppingCart, Truck, Plus } from 'lucide-react'
 
 export default function InventoryDashboard() {
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Inventory Dashboard</h1>
-        <div className="flex gap-3">
-          <Link
-            href="/admin/inventory/products/create"
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            <Plus size={20} /> Product
-          </Link>
-          <Link
-            href="/admin/inventory/purchase-orders/create"
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={20} /> PO
-          </Link>
-          <Link
-            href="/admin/inventory/grn/create"
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-          >
-            <Plus size={20} /> GRN
-          </Link>
-        </div>
-      </div>
-
+    <div className="p-6 space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {inventoryData.kpis.map((kpi) => (
-          <KPICard key={kpi.label} {...kpi} />
-        ))}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Products', value: '0', icon: Package, color: 'blue' },
+          { label: 'Categories', value: '0', icon: Layers, color: 'purple' },
+          { label: 'Suppliers', value: '0', icon: Users, color: 'green' },
+          { label: 'Stock Value', value: '₹0', icon: TrendingUp, color: 'amber' },
+          { label: 'Low Stock', value: '0', icon: AlertTriangle, color: 'red' },
+          { label: 'Expiring Soon', value: '0', icon: Clock, color: 'orange' },
+          { label: 'Pending POs', value: '0', icon: ShoppingCart, color: 'indigo' },
+          { label: 'Today\'s GRN', value: '0', icon: Truck, color: 'cyan' },
+        ].map((kpi, i) => {
+          const Icon = kpi.icon
+          const colorMap: Record<string, string> = {
+            blue: 'bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400',
+            purple: 'bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400',
+            green: 'bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400',
+            amber: 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400',
+            red: 'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400',
+            orange: 'bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400',
+            indigo: 'bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400',
+            cyan: 'bg-cyan-50 dark:bg-cyan-950/20 text-cyan-600 dark:text-cyan-400',
+          }
+          return (
+            <div key={i} className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
+              <div className={`w-10 h-10 rounded-lg ${colorMap[kpi.color]} flex items-center justify-center mb-3`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{kpi.label}</p>
+              <p className="text-2xl font-semibold text-slate-900 dark:text-white">{kpi.value}</p>
+            </div>
+          )
+        })}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2">
-          <ChartCard title="Inventory Value Trend">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={inventoryData.valuetrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-                <XAxis stroke="rgba(0,0,0,0.5)" />
-                <YAxis stroke="rgba(0,0,0,0.5)" />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: 'none', borderRadius: 8 }} />
-                <Line type="monotone" dataKey="value" stroke="#f59e0b" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-
-        <div>
-          <ChartCard title="Category Distribution">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={inventoryData.categories} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={2} dataKey="value">
-                  {inventoryData.categories.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <ChartCard title="Top Moving Products">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={inventoryData.topProducts}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-              <XAxis dataKey="name" stroke="rgba(0,0,0,0.5)" />
-              <YAxis stroke="rgba(0,0,0,0.5)" />
-              <Tooltip contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: 'none', borderRadius: 8 }} />
-              <Bar dataKey="sales" fill="#22c55e" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
-          <div className="space-y-2">
-            <Link
-              href="/admin/inventory/products"
-              className="block p-3 bg-gray-50 dark:bg-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition text-sm font-medium"
-            >
-              Manage Products
-            </Link>
-            <Link
-              href="/admin/inventory/purchase-orders"
-              className="block p-3 bg-gray-50 dark:bg-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition text-sm font-medium"
-            >
-              Purchase Orders
-            </Link>
-            <Link
-              href="/admin/inventory/current-stock"
-              className="block p-3 bg-gray-50 dark:bg-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition text-sm font-medium"
-            >
-              Current Stock
-            </Link>
-            <Link
-              href="/admin/inventory/reports"
-              className="block p-3 bg-gray-50 dark:bg-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition text-sm font-medium"
-            >
-              Reports
-            </Link>
-          </div>
+      {/* Quick Actions */}
+      <div>
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Quick Actions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'Create Product', href: '/admin/inventory/products/create', icon: Package },
+            { label: 'Create PO', href: '/admin/inventory/purchase-orders', icon: ShoppingCart },
+            { label: 'Receive GRN', href: '/admin/inventory/grn', icon: Truck },
+            { label: 'Adjust Stock', href: '/admin/inventory/adjustments', icon: TrendingUp },
+          ].map((action, i) => {
+            const Icon = action.icon
+            return (
+              <Link key={i} href={action.href} className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 transition text-center">
+                <div className="bg-orange-50 dark:bg-orange-950/20 w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                  <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <p className="text-xs font-medium text-slate-900 dark:text-white">{action.label}</p>
+              </Link>
+            )
+          })}
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Recent Activity</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
-            <span className="text-sm text-gray-600 dark:text-gray-300">Product Added: Brahmi Extract</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">2 hours ago</span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
-            <span className="text-sm text-gray-600 dark:text-gray-300">GRN Received: PO-2024-001</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">5 hours ago</span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
-            <span className="text-sm text-gray-600 dark:text-gray-300">Low Stock Alert: Turmeric Powder</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">1 day ago</span>
-          </div>
+      {/* Inventory Modules */}
+      <div>
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Inventory Modules</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[
+            { label: 'Masters', items: 5, color: 'blue' },
+            { label: 'Procurement', items: 3, color: 'green' },
+            { label: 'Stock', items: 4, color: 'purple' },
+            { label: 'Monitoring', items: 2, color: 'amber' },
+            { label: 'Reports', items: 1, color: 'indigo' },
+            { label: 'Settings', items: 1, color: 'gray' },
+          ].map((module, i) => {
+            const colorMap: Record<string, string> = {
+              blue: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50',
+              green: 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900/50',
+              purple: 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-900/50',
+              amber: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50',
+              indigo: 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/50',
+              gray: 'bg-gray-50 dark:bg-gray-950/20 border-gray-200 dark:border-gray-900/50',
+            }
+            return (
+              <div key={i} className={`${colorMap[module.color]} rounded-lg p-4 border cursor-pointer hover:shadow-md transition`}>
+                <p className="font-medium text-slate-900 dark:text-white">{module.label}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{module.items} items</p>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>

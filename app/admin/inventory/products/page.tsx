@@ -135,44 +135,45 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-start mb-8">
+    <div className="p-6">
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Products</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage catalog</p>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Products</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage your product catalog</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={exportCSV} disabled={filteredProducts.length === 0} className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-slate-700 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 disabled:opacity-50">
-            <Download size={18} />
+        <div className="flex gap-2">
+          <button onClick={exportCSV} disabled={filteredProducts.length === 0} className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 text-sm transition">
+            <Download size={16} />
           </button>
-          <Link href="/admin/inventory/products/create" className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
-            <Plus size={18} />
+          <Link href="/admin/inventory/products/create" className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm transition">
+            <Plus size={16} />
+            Add Product
           </Link>
         </div>
       </div>
 
-      {error && <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-lg"><p className="text-red-900 dark:text-red-100 mb-2">{error}</p><button onClick={loadData} className="text-sm text-red-700 hover:underline">Retry</button></div>}
+      {error && <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-lg"><p className="text-red-900 dark:text-red-100 text-sm mb-2">{error}</p><button onClick={loadData} className="text-xs text-red-700 hover:underline">Retry</button></div>}
 
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-          <input type="text" placeholder="Search..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1) }} className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="relative md:col-span-2">
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+          <input type="text" placeholder="Search by name or SKU..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1) }} className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
         </div>
-        <select value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1) }} className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
-          <option value="">All</option>
+        <select value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1) }} className="px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+          <option value="">All Categories</option>
           {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
 
-      {filteredProducts.length === 0 ? <div className="text-center py-16"><h3 className="text-lg font-semibold mb-2">No products</h3><Link href="/admin/inventory/products/create" className="inline-flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg"><Plus size={18} /></Link></div> : <>
+      {filteredProducts.length === 0 ? <div className="text-center py-16"><h3 className="text-lg font-semibold mb-2">No products found</h3><p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Get started by creating your first product</p><Link href="/admin/inventory/products/create" className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"><Plus size={16} />Create Product</Link></div> : <>
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-slate-900">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold cursor-pointer" onClick={() => { setSortBy('sku'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>SKU</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold cursor-pointer" onClick={() => { setSortBy('name'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>Name</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Category</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold cursor-pointer" onClick={() => { setSortBy('sale_price'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>Price</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => { setSortBy('sku'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>SKU</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => { setSortBy('name'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>Name</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Category</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => { setSortBy('sale_price'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>Price</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">MRP</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Actions</th>
               </tr>
