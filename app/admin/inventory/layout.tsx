@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AdminGuard } from '@/components/AdminGuard'
-import { ChevronDown, Menu, X, Package, Settings, FileText, AlertCircle, TrendingUp, ShoppingCart, Truck, BarChart3, Home, Search, Plus, Bell, User } from 'lucide-react'
+import { ChevronDown, Menu, X, Package, Settings, FileText, AlertCircle, TrendingUp, ShoppingCart, Truck, BarChart3, Home, Search, Plus, Bell, User, ChevronLeft } from 'lucide-react'
 
 interface NavSection {
   label: string
@@ -158,6 +158,10 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
           {/* Top bar */}
           <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
             <div className="flex items-center gap-4 flex-1 min-w-0">
+              <Link href="/admin" className="flex items-center gap-1 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </Link>
               {getBreadcrumb() && <span className="text-sm text-gray-600 dark:text-gray-400">{getBreadcrumb()}</span>}
             </div>
             <div className="flex items-center gap-3">

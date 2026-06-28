@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { AdminGuard } from '@/components/AdminGuard'
+import { AdminBackButton } from '@/components/AdminBackButton'
 import { LogOut, Moon, Sun, Plus, Search, Filter, Download, Clock, CheckCircle, FileText } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 
@@ -42,6 +43,9 @@ export default function DischargeSummaryPage() {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Back Button */}
+          <AdminBackButton dark={dark} />
+
           {/* Page Header */}
           <div className="flex items-center justify-between mb-6">
             <div>

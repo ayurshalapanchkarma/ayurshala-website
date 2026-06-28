@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import GlassBackground from '@/components/GlassBackground'
 import { AdminGuard } from '@/components/AdminGuard'
+import { AdminBackButton } from '@/components/AdminBackButton'
 import { useTheme } from 'next-themes'
 import { Home, LogOut, Clock, Moon, Sun, Calendar, Clock as ClockIcon, Wallet, TrendingUp, FileText, Package } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
@@ -461,6 +462,11 @@ export default function AdminPage() {
         <GlassBackground />
       
       <div className="max-w-7xl mx-auto relative">
+        {/* Back Button */}
+        <div className="px-4 pt-4 mb-4">
+          <AdminBackButton dark={dark} />
+        </div>
+
         {/* Header */}
         <div className="rounded-2xl p-4 mb-5" style={cardStyle}>
           <div className="flex items-center justify-between gap-4">
@@ -531,24 +537,6 @@ export default function AdminPage() {
               </div>
             )
           })}
-        </div>
-
-        {/* Inventory Management Card */}
-        <div className="mb-5">
-          <Link href="/admin/inventory" className="block rounded-2xl p-6 transition hover:shadow-lg" style={{...cardStyle, background: dark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.08)'}}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-500/20 rounded-lg">
-                  <Package className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <h2 className={`text-xl font-semibold ${dark ? 'text-white' : 'text-slate-900'}`}>Inventory Management</h2>
-                  <p className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>Manage products, stock, and orders</p>
-                </div>
-              </div>
-              <div className="text-green-600 dark:text-green-400">→</div>
-            </div>
-          </Link>
         </div>
 
         {/* Tabs */}
