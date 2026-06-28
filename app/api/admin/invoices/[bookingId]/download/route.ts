@@ -51,7 +51,7 @@ export async function GET(
     const { bookingId } = await params
 
     const { data: booking, error } = await supabase
-      .from('bookings')
+      .from('bookings_new')
       .select('*')
       .eq('booking_id', bookingId)
       .single()
@@ -62,6 +62,32 @@ export async function GET(
         { status: 404 }
       )
     }
+
+    // Fetch patient data
+    const { data: patient } = await supabase
+      .from('patients')
+      .select('full_name, patient_id, phone, email')
+      .eq('id', booking.patient_uuid)
+      .single()
+
+    // Fetch treatments
+    const { data: treatments } = await supabase
+      .from('booking_treatments_v2')
+      .select('treatment_name')
+      .eq('booking_uuid', booking.id)
+
+    // Fetch payment amount
+    const { data: payment } = await supabase
+      .from('payments')
+      .select('amount')
+      .eq('booking_uuid', booking.id)
+      .single()
+
+    const patient_name = patient?.full_name || booking.patient_name || 'Patient'
+    const patient_phone = patient?.phone || booking.patient_phone || ''
+    const patient_email = patient?.email || booking.patient_email || ''
+    const treatments_str = treatments?.map(t => t.treatment_name).join(', ') || 'Consultation'
+    const amount = payment?.amount || booking.amount || 0
 
     const logoPath = path.join(process.cwd(), 'public', 'ayurshala_text.png')
     if (!fs.existsSync(logoPath)) {
@@ -125,19 +151,19 @@ export async function GET(
     // Patient details
     drawText(page, 'PATIENT DETAILS', CONTENT_LEFT, y, 11, BLACK)
     y -= 14
-    drawText(page, `Name: ${booking.patient_name}`, CONTENT_LEFT, y, 10, BLACK)
+    drawText(page, `Name: ${patient_name}`, CONTENT_LEFT, y, 10, BLACK)
     y -= 12
-    drawText(page, `Phone: ${booking.patient_phone}`, CONTENT_LEFT, y, 10, BLACK)
+    drawText(page, `Phone: ${patient_phone}`, CONTENT_LEFT, y, 10, BLACK)
     y -= 12
-    drawText(page, `Email: ${booking.patient_email}`, CONTENT_LEFT, y, 10, BLACK)
+    drawText(page, `Email: ${patient_email}`, CONTENT_LEFT, y, 10, BLACK)
     y -= 20
 
     // Appointment details
     drawText(page, 'APPOINTMENT DETAILS', CONTENT_LEFT, y, 11, BLACK)
     y -= 14
-    drawText(page, `Doctor: ${booking.doctor_name || booking.doctor || 'Not Assigned'}`, CONTENT_LEFT, y, 10, BLACK)
+    drawText(page, `Doctor: ${booking.doctor_name || booking.doctor || 'Not Selected'}`, CONTENT_LEFT, y, 10, BLACK)
     y -= 12
-    drawText(page, `Treatment: ${booking.treatments}`, CONTENT_LEFT, y, 10, BLACK)
+    drawText(page, `Treatment: ${treatments_str}`, CONTENT_LEFT, y, 10, BLACK)
     y -= 12
     const apptDate = new Date(booking.preferred_date).toLocaleDateString('en-IN')
     drawText(page, `Date & Time: ${apptDate} ${booking.preferred_time}`, CONTENT_LEFT, y, 10, BLACK)
@@ -148,7 +174,6 @@ export async function GET(
     y -= 14
 
     // Amount
-    const amount = booking.amount || 0
     drawText(page, 'Consultation Charges', CONTENT_LEFT, y, 10, BLACK)
     drawText(page, `₹${amount}`, BORDER_RIGHT - 80, y, 10, BLACK)
     y -= 18

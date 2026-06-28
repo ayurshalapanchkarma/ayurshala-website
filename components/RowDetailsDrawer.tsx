@@ -138,7 +138,7 @@ export default function RowDetailsDrawer({
               Assigned Doctor
             </p>
             <p className={`text-sm ${dark ? 'text-gray-200' : 'text-stone-700'}`}>
-              {booking.doctor_name || booking.doctor || 'Doctor Not Assigned'}
+              {booking.doctor_name || booking.doctor || 'Not Selected'}
             </p>
           </div>
 

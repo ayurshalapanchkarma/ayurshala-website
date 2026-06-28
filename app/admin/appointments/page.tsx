@@ -282,10 +282,10 @@ export default function AdminAppointmentsPage() {
               if (!selectedRow) return
               setDrawerLoading(true)
               try {
-                const res = await fetch('/api/admin/confirm', {
+                const res = await fetch('/api/admin/checkin', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ booking_id: selectedRow.booking_id, action: 'confirm' }),
+                  body: JSON.stringify({ booking_id: selectedRow.booking_id }),
                 })
                 if (res.ok) {
                   await fetchBookings()
