@@ -11,6 +11,7 @@ import SmartFilterBar from '@/components/SmartFilterBar'
 import TodaysQueue from '@/components/TodaysQueue'
 import AppointmentTable from '@/components/AppointmentTable'
 import RowDetailsDrawer from '@/components/RowDetailsDrawer'
+import { generateInvoicePDF } from '@/lib/invoice-generator'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,6 +39,9 @@ type Booking = {
   patient_email: string
   treatments: string
   rescheduled_at?: string
+  doctor_name?: string
+  doctor?: string
+  notes?: string
 }
 
 type Tab = 'today' | 'upcoming' | 'week' | 'completed' | 'cancelled' | 'rescheduled' | 'followups' | 'history'
@@ -65,13 +69,13 @@ export default function AdminAppointmentsPage() {
   })
   const [selectedRow, setSelectedRow] = useState<Booking | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [drawerLoading, setDrawerLoading] = useState(false)
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const dark = mounted && theme === 'dark'
 
   useEffect(() => setMounted(true), [])
 
-  // Clock update
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date()
@@ -88,7 +92,6 @@ export default function AdminAppointmentsPage() {
     return () => clearInterval(timer)
   }, [])
 
-  // Fetch bookings
   useEffect(() => {
     fetchBookings()
   }, [activeTab, searchQuery])
@@ -99,8 +102,6 @@ export default function AdminAppointmentsPage() {
       const res = await fetch('/api/admin/bookings?payment=ALL')
       const data = await res.json()
       const allBookings = data.bookings || []
-
-      // Filter by tab
       let filtered = allBookings
       const now = new Date()
 
@@ -115,7 +116,6 @@ export default function AdminAppointmentsPage() {
         filtered = allBookings.filter((b: Booking) => b.status === 'CANCELLED')
       }
 
-      // Apply search
       if (searchQuery) {
         filtered = filtered.filter(
           (b: Booking) =>
@@ -124,7 +124,6 @@ export default function AdminAppointmentsPage() {
         )
       }
 
-      // Calculate stats
       const todayBookings = allBookings.filter((b: Booking) => {
         const bDate = new Date(b.preferred_date)
         return bDate.toDateString() === now.toDateString()
@@ -152,41 +151,21 @@ export default function AdminAppointmentsPage() {
 
   const getStatusBadge = (booking: Booking) => {
     const { status, rescheduled_at } = booking
-    if (status === 'PAYMENT_PENDING') {
-      return { label: 'Payment Pending', cls: 'bg-amber-100/80 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200' }
-    }
-    if (status === 'PENDING_CONFIRMATION') {
-      return { label: 'Pending', cls: 'bg-yellow-100/80 text-yellow-900 dark:bg-yellow-950/50 dark:text-yellow-200' }
-    }
-    if (status === 'CONFIRMED' && rescheduled_at) {
-      return { label: 'Rescheduled', cls: 'bg-orange-100/80 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200' }
-    }
-    if (status === 'CONFIRMED') {
-      return { label: 'Confirmed', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
-    }
-    if (status === 'CANCELLED') {
-      return { label: 'Cancelled', cls: 'bg-red-100/80 text-red-900 dark:bg-red-950/50 dark:text-red-200' }
-    }
-    if (status === 'COMPLETED') {
-      return { label: 'Completed', cls: 'bg-blue-100/80 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200' }
-    }
-    if (status === 'IN_PROGRESS') {
-      return { label: 'In Progress', cls: 'bg-purple-100/80 text-purple-900 dark:bg-purple-950/50 dark:text-purple-200' }
-    }
+    if (status === 'PAYMENT_PENDING') return { label: 'Payment Pending', cls: 'bg-amber-100/80 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200' }
+    if (status === 'PENDING_CONFIRMATION') return { label: 'Pending', cls: 'bg-yellow-100/80 text-yellow-900 dark:bg-yellow-950/50 dark:text-yellow-200' }
+    if (status === 'CONFIRMED' && rescheduled_at) return { label: 'Rescheduled', cls: 'bg-orange-100/80 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200' }
+    if (status === 'CONFIRMED') return { label: 'Confirmed', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
+    if (status === 'CANCELLED') return { label: 'Cancelled', cls: 'bg-red-100/80 text-red-900 dark:bg-red-950/50 dark:text-red-200' }
+    if (status === 'COMPLETED') return { label: 'Completed', cls: 'bg-blue-100/80 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200' }
+    if (status === 'IN_PROGRESS') return { label: 'In Progress', cls: 'bg-purple-100/80 text-purple-900 dark:bg-purple-950/50 dark:text-purple-200' }
     return { label: status, cls: 'bg-gray-100/80 text-gray-900 dark:bg-gray-950/50 dark:text-gray-200' }
   }
 
   const getPaymentBadge = (booking: Booking) => {
     const { payment_status } = booking
-    if (payment_status === 'PAID' || payment_status === 'SUCCESS') {
-      return { label: 'Paid', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
-    }
-    if (payment_status === 'PENDING' || payment_status === 'COD_PENDING') {
-      return { label: 'Cash Pending', cls: 'bg-orange-100/80 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200' }
-    }
-    if (payment_status === 'REFUND_PENDING') {
-      return { label: 'Refund Pending', cls: 'bg-indigo-100/80 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200' }
-    }
+    if (payment_status === 'PAID' || payment_status === 'SUCCESS') return { label: 'Paid', cls: 'bg-green-100/80 text-green-900 dark:bg-green-950/50 dark:text-green-200' }
+    if (payment_status === 'PENDING' || payment_status === 'COD_PENDING') return { label: 'Cash Pending', cls: 'bg-orange-100/80 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200' }
+    if (payment_status === 'REFUND_PENDING') return { label: 'Refund Pending', cls: 'bg-indigo-100/80 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200' }
     return { label: payment_status || 'Unknown', cls: 'bg-gray-100/80 text-gray-900 dark:bg-gray-950/50 dark:text-gray-200' }
   }
 
@@ -199,9 +178,13 @@ export default function AdminAppointmentsPage() {
     return []
   }
 
-  const bg = dark
-    ? 'linear-gradient(135deg,#1a2015,#2a1f10)'
-    : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)'
+  const getDoctorName = (booking: Booking) => {
+    if (booking.doctor_name) return booking.doctor_name
+    if (booking.doctor) return booking.doctor
+    return 'Doctor Not Assigned'
+  }
+
+  const bg = dark ? 'linear-gradient(135deg,#1a2015,#2a1f10)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)'
 
   const todayAppointments = bookings
     .filter((b) => {
@@ -217,7 +200,6 @@ export default function AdminAppointmentsPage() {
         <GlassBackground />
 
         <div className="max-w-7xl mx-auto relative">
-          {/* Header */}
           <AppointmentPageHeader
             dark={dark}
             currentTime={currentTime}
@@ -229,10 +211,8 @@ export default function AdminAppointmentsPage() {
             onNewAppointment={() => router.push('/book')}
           />
 
-          {/* KPI Summary */}
           <KPISummary dark={dark} stats={stats} />
 
-          {/* Smart Filter Bar */}
           <SmartFilterBar
             dark={dark}
             activeTab={activeTab}
@@ -252,7 +232,6 @@ export default function AdminAppointmentsPage() {
             onNewAppointment={() => router.push('/book')}
           />
 
-          {/* Today's Queue */}
           {activeTab === 'today' && (
             <TodaysQueue
               dark={dark}
@@ -262,7 +241,8 @@ export default function AdminAppointmentsPage() {
                 time: b.preferred_time,
                 patientName: b.patient_name,
                 treatment: b.treatments,
-                doctor: 'Dr. Sharma',
+                doctor: getDoctorName(b),
+                appointmentStatus: b.status,
                 status: (
                   b.status === 'IN_PROGRESS'
                     ? 'in-treatment'
@@ -275,7 +255,6 @@ export default function AdminAppointmentsPage() {
             />
           )}
 
-          {/* Appointments Table */}
           <AppointmentTable
             dark={dark}
             bookings={bookings}
@@ -293,11 +272,11 @@ export default function AdminAppointmentsPage() {
             getAvailableActions={getAvailableActions}
           />
 
-          {/* Row Details Drawer */}
           <RowDetailsDrawer
             dark={dark}
             booking={selectedRow}
             isOpen={isDrawerOpen}
+            loading={drawerLoading}
             onClose={() => {
               setIsDrawerOpen(false)
               setSelectedRow(null)
@@ -305,20 +284,54 @@ export default function AdminAppointmentsPage() {
             onEdit={() => {
               if (selectedRow) router.push(`/book?booking_id=${selectedRow.booking_id}`)
             }}
-            onCheckIn={() => {
-              if (selectedRow) {
-                fetch('/api/admin/confirm', {
+            onCheckIn={async () => {
+              if (!selectedRow) return
+              setDrawerLoading(true)
+              try {
+                const res = await fetch('/api/admin/confirm', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ booking_id: selectedRow.booking_id, action: 'confirm' }),
-                }).then(() => {
-                  fetchBookings()
-                  setIsDrawerOpen(false)
                 })
+                if (res.ok) {
+                  await fetchBookings()
+                  setIsDrawerOpen(false)
+                }
+              } finally {
+                setDrawerLoading(false)
               }
             }}
-            onInvoice={() => {
-              if (selectedRow) router.push(`/admin/invoice?booking_id=${selectedRow.booking_id}`)
+            onInvoice={async () => {
+              if (!selectedRow) return
+              setDrawerLoading(true)
+              try {
+                await generateInvoicePDF(selectedRow)
+              } finally {
+                setDrawerLoading(false)
+              }
+            }}
+            onReschedule={() => {
+              if (selectedRow) router.push(`/book?booking_id=${selectedRow.booking_id}&action=reschedule`)
+            }}
+            onCancel={async () => {
+              if (!selectedRow) return
+              setDrawerLoading(true)
+              try {
+                const res = await fetch('/api/admin/cancel', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ booking_id: selectedRow.booking_id, action: 'cancel' }),
+                })
+                if (res.ok) {
+                  await fetchBookings()
+                  setIsDrawerOpen(false)
+                }
+              } finally {
+                setDrawerLoading(false)
+              }
+            }}
+            onDischarge={() => {
+              if (selectedRow) router.push(`/admin/discharge-summary?booking_id=${selectedRow.booking_id}`)
             }}
             getStatusBadge={getStatusBadge}
             getPaymentBadge={getPaymentBadge}

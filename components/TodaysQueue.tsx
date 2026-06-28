@@ -8,6 +8,7 @@ interface AppointmentQueueCard {
   treatment: string
   doctor: string
   status: 'confirmed' | 'checked-in' | 'in-treatment' | 'waiting' | 'completed'
+  appointmentStatus: string
   onQuickAction: (action: string) => void
 }
 
