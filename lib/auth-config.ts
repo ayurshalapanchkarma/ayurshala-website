@@ -1,10 +1,9 @@
 /**
- * Authentication Configuration
- * DEPRECATED: Use lib/url.ts instead for centralized URL configuration
- * This file kept for backward compatibility during migration
+ * DEPRECATED: Use lib/url.ts instead
+ * Kept for backward compatibility only
  */
 
-import { getBaseUrl, getAuthCallbackUrl as getAuthCallbackUrlFromUrl } from './url'
+import { getBaseUrl } from './url'
 
 export function getAppUrl(): string {
   return getBaseUrl()
@@ -15,7 +14,9 @@ export function getSiteUrl(): string {
 }
 
 export function getAuthCallbackUrl(path: string = '/auth/callback'): string {
-  return getAuthCallbackUrlFromUrl(path)
+  const baseUrl = getBaseUrl()
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `${baseUrl}${cleanPath}`
 }
 
 export function getOAuthRedirectUrl(nextPath: string = ''): string {
