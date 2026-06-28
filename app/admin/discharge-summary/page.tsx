@@ -132,10 +132,14 @@ export default function DischargeSummaryPage() {
 
   async function downloadPDF() {
     if (hasUnsavedChanges) {
-      const action = confirm('You have unsaved changes.\n\nSave before downloading?\n\nOK = Save & Download\nCancel = Download Anyway')
-      if (action) {
+      const choice = confirm('You have unsaved changes.\n\nSave before downloading?\n\nOK = Save & Download\nCancel = Download Anyway')
+      if (choice) {
         await saveDischargeSummary()
       }
+    }
+    if (!form.doctor_name) {
+      alert('Please select a doctor before downloading')
+      return
     }
     if (!validateDates()) return
     setLoading(true)
@@ -145,22 +149,33 @@ export default function DischargeSummaryPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (!res.ok) throw new Error('PDF generation failed')
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'PDF generation failed')
+      }
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
       a.download = `Discharge_Summary_${form.patient_uhid || 'PATIENT'}.pdf`
+      document.body.appendChild(a)
       a.click()
+      document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      alert('Failed to generate PDF')
+      const message = error instanceof Error ? error.message : String(error)
+      console.error('PDF error:', message)
+      alert(`Failed to generate PDF: ${message}`)
     } finally {
       setLoading(false)
     }
   }
 
   async function saveDischargeSummary() {
+    if (!form.doctor_name) {
+      alert('Please select a doctor')
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch('/api/admin/discharge-summary/save', {
@@ -168,15 +183,17 @@ export default function DischargeSummaryPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          patient_uuid: bookingId ? 'booking_' + bookingId : undefined,
           booking_uuid: bookingId,
         }),
       })
-      if (!res.ok) throw new Error('Save failed')
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Save failed')
       setHasUnsavedChanges(false)
       alert('Discharge summary saved successfully')
     } catch (error) {
-      alert('Failed to save: ' + error)
+      const message = error instanceof Error ? error.message : String(error)
+      console.error('Save error:', message)
+      alert(`Failed to save: ${message}`)
     } finally {
       setSaving(false)
     }

@@ -14,6 +14,11 @@ function addText(page: any, text: string, x: number, y: number, size: number = 1
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
+
+    if (!data.doctor_name) {
+      return NextResponse.json({ error: 'Doctor name is required' }, { status: 400 })
+    }
+
     const pdfDoc = await PDFDocument.create()
     let page = pdfDoc.addPage([595, 842])
 
@@ -26,8 +31,8 @@ export async function POST(req: NextRequest) {
       const logoImage = await pdfDoc.embedPng(logoBuffer)
       y = drawClinicHeader(page, logoImage, 'DISCHARGE SUMMARY')
     } catch (e) {
-      console.error('Header error:', e)
-      y = 750
+      console.error('Header render error:', e)
+      return NextResponse.json({ error: `Template render failed: ${e}` }, { status: 500 })
     }
 
     const leftMargin = 40
@@ -174,7 +179,8 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('PDF error:', error)
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('PDF error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

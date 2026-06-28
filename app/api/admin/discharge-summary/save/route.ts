@@ -9,13 +9,13 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
-    
-    // Save to discharge_summaries table
+
+    // Insert with proper error handling
     const { data: saved, error } = await supabase
       .from('discharge_summaries')
-      .insert({
-        patient_uuid: data.patient_uuid,
-        booking_uuid: data.booking_uuid,
+      .insert([{
+        patient_id: data.patient_uhid,
+        booking_id: data.booking_uuid,
         doctor_name: data.doctor_name,
         patient_uhid: data.patient_uhid,
         patient_name: data.patient_name,
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         nationality: data.nationality,
         address: data.address,
         diagnosis: data.diagnosis,
-        complaints: data.complaints,
+        complaints: JSON.stringify(data.complaints),
         history_present_complaints: data.history_present_complaints,
         history_days: data.history_days,
         past_history_medical: data.past_history_medical,
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         past_history_details: data.past_history_details,
         medication_administered: data.medication_administered,
         day_of_therapy: data.day_of_therapy,
-        pradhan_vedna: data.pradhan_vedna,
+        pradhan_vedna: JSON.stringify(data.pradhan_vedna),
         vitals_bp: data.vitals_bp,
         vitals_hr: data.vitals_hr,
         vitals_nadi: data.vitals_nadi,
@@ -45,25 +45,30 @@ export async function POST(req: NextRequest) {
         oe_jihwa: data.oe_jihwa,
         oe_shuda: data.oe_shuda,
         oe_nidra: data.oe_nidra,
-        therapies: data.therapies,
+        therapies: JSON.stringify(data.therapies),
         investigations: data.investigations,
         findings_discharge: data.findings_discharge,
         condition_discharge: data.condition_discharge,
         advice_discharge: data.advice_discharge,
         medicine_discharge: data.medicine_discharge,
-        medicines: data.medicines,
+        medicines: JSON.stringify(data.medicines),
         cautions: data.cautions,
         pathya: data.pathya,
         apathya: data.apathya,
-      })
+      }])
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Database error:', error)
+      throw new Error(`Database insert failed: ${error.message}`)
+    }
 
     return NextResponse.json({ success: true, id: saved.id }, { status: 201 })
   } catch (error) {
-    console.error('Error saving discharge summary:', error)
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('Save error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+
