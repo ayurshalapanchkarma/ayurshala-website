@@ -60,10 +60,16 @@ export function handleApiError(error: unknown): NextResponse {
 }
 
 /**
- * Return success response
+ * Return success response with standardized format
  */
 export function successResponse<T>(data: T, status = 200): NextResponse {
-  return NextResponse.json(data, { status })
+  return NextResponse.json(
+    {
+      success: true,
+      data,
+    },
+    { status },
+  )
 }
 
 /**
