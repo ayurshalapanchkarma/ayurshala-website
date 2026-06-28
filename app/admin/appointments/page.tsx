@@ -183,8 +183,6 @@ export default function AdminAppointmentsPage() {
     return 'Doctor Not Assigned'
   }
 
-  const bg = dark ? 'linear-gradient(135deg,#1a2015,#2a1f10)' : 'linear-gradient(135deg,#fdf6ee,#ffecd2,#fff8f0)'
-
   const todayAppointments = bookings
     .filter((b) => {
       const bDate = new Date(b.preferred_date)
@@ -195,10 +193,8 @@ export default function AdminAppointmentsPage() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen px-4 sm:px-6 py-6 relative overflow-hidden" style={{ background: bg }}>
-        <GlassBackground />
-
-        <div className="max-w-7xl mx-auto relative">
+      <div className={`min-h-screen ${dark ? 'bg-gray-950' : 'bg-gray-50'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <AppointmentPageHeader
             dark={dark}
             currentTime={currentTime}
@@ -207,7 +203,6 @@ export default function AdminAppointmentsPage() {
               await supabase.auth.signOut()
               router.push('/')
             }}
-            onNewAppointment={() => router.push('/book')}
           />
 
           <KPISummary dark={dark} stats={stats} />
