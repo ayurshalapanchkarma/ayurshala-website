@@ -145,7 +145,7 @@ export default function ProductsPage() {
           <button onClick={exportCSV} disabled={filteredProducts.length === 0} className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-slate-700 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 disabled:opacity-50">
             <Download size={18} />
           </button>
-          <Link href="/dashboard/inventory/products/create" className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+          <Link href="/admin/inventory/products/create" className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
             <Plus size={18} />
           </Link>
         </div>
@@ -164,7 +164,7 @@ export default function ProductsPage() {
         </select>
       </div>
 
-      {filteredProducts.length === 0 ? <div className="text-center py-16"><h3 className="text-lg font-semibold mb-2">No products</h3><Link href="/dashboard/inventory/products/create" className="inline-flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg"><Plus size={18} /></Link></div> : <>
+      {filteredProducts.length === 0 ? <div className="text-center py-16"><h3 className="text-lg font-semibold mb-2">No products</h3><Link href="/admin/inventory/products/create" className="inline-flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg"><Plus size={18} /></Link></div> : <>
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-auto">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-slate-900">
@@ -186,8 +186,8 @@ export default function ProductsPage() {
                   <td className="px-6 py-4 text-sm font-semibold">₹{p.sale_price}</td>
                   <td className="px-6 py-4 text-sm">₹{p.mrp}</td>
                   <td className="px-6 py-4 text-sm flex gap-2">
-                    <Link href={`/dashboard/inventory/products/${p.id}`} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"><Eye size={16} /></Link>
-                    <Link href={`/dashboard/inventory/products/${p.id}/edit`} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"><Edit size={16} className="text-blue-600" /></Link>
+                    <Link href={`/admin/inventory/products/${p.id}`} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"><Eye size={16} /></Link>
+                    <Link href={`/admin/inventory/products/${p.id}/edit`} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"><Edit size={16} className="text-blue-600" /></Link>
                     <button onClick={() => setDeleteId(p.id)} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"><Trash2 size={16} className="text-red-600" /></button>
                   </td>
                 </tr>

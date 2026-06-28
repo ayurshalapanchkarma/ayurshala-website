@@ -9,7 +9,7 @@ export default function ReceptionDashboard() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push(user ? '/dashboard' : '/login')
+      router.push(user ? '/admin' : '/login')
     }
   }, [loading, user, router])
 

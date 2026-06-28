@@ -3,21 +3,17 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Plus, Search, Edit, Trash2, Eye, Loader } from 'lucide-react'
-import { SupplierService } from '@/lib/inventory'
+import { CategoryService } from '@/lib/inventory'
 
-interface Supplier {
+interface Category {
   id: string
-  supplier_name: string
-  email?: string
-  mobile?: string
-  address?: string
-  city?: string
-  state?: string
+  name: string
+  description?: string
   is_deleted: boolean
 }
 
-export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+export default function CategoriesPage() {
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -25,35 +21,35 @@ export default function SuppliersPage() {
   const pageSize = 10
 
   useEffect(() => {
-    loadSuppliers()
+    loadCategories()
   }, [])
 
-  async function loadSuppliers() {
+  async function loadCategories() {
     try {
       setLoading(true)
-      const data = await SupplierService.getSuppliers()
-      setSuppliers(data)
+      const data = await CategoryService.getCategories()
+      setCategories(data)
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load suppliers')
-      setSuppliers([])
+      setError(err instanceof Error ? err.message : 'Failed to load categories')
+      setCategories([])
     } finally {
       setLoading(false)
     }
   }
 
-  async function deleteSupplier(id: string) {
-    if (!confirm('Delete this supplier?')) return
+  async function deleteCategory(id: string) {
+    if (!confirm('Delete this category?')) return
     try {
-      await SupplierService.deleteSupplier(id)
-      setSuppliers(suppliers.filter(s => s.id !== id))
+      await CategoryService.deleteCategory(id)
+      setCategories(categories.filter(c => c.id !== id))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete')
     }
   }
 
-  const filtered = suppliers.filter(
-    s => !s.is_deleted && s.supplier_name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = categories.filter(
+    c => !c.is_deleted && c.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
   const totalPages = Math.ceil(filtered.length / pageSize)
@@ -69,12 +65,12 @@ export default function SuppliersPage() {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Suppliers</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Categories</h1>
         <Link
-          href="/dashboard/inventory/suppliers/create"
+          href="/admin/inventory/categories/create"
           className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
         >
-          <Plus size={20} /> Add Supplier
+          <Plus size={20} /> Add Category
         </Link>
       </div>
 
@@ -89,7 +85,7 @@ export default function SuppliersPage() {
           <Search size={20} className="text-gray-400" />
           <input
             type="text"
-            placeholder="Search suppliers..."
+            placeholder="Search categories..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value)
@@ -102,45 +98,39 @@ export default function SuppliersPage() {
 
       {filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-12 text-center">
-          <p className="text-gray-600 dark:text-gray-400">No suppliers found</p>
+          <p className="text-gray-600 dark:text-gray-400">No categories found</p>
         </div>
       ) : (
         <>
           <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-slate-700 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left font-semibold">Name</th>
-                    <th className="px-6 py-3 text-left font-semibold">Email</th>
-                    <th className="px-6 py-3 text-left font-semibold">Phone</th>
-                    <th className="px-6 py-3 text-left font-semibold">City</th>
-                    <th className="px-6 py-3 text-center font-semibold">Actions</th>
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-slate-700 border-b">
+                <tr>
+                  <th className="px-6 py-3 text-left font-semibold">Name</th>
+                  <th className="px-6 py-3 text-left font-semibold">Description</th>
+                  <th className="px-6 py-3 text-center font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                {paginated.map((cat) => (
+                  <tr key={cat.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{cat.name}</td>
+                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{cat.description || '-'}</td>
+                    <td className="px-6 py-4 text-center flex items-center justify-center gap-3">
+                      <Link href={`/admin/inventory/categories/${cat.id}`} className="text-blue-600 hover:text-blue-700">
+                        <Eye size={18} />
+                      </Link>
+                      <Link href={`/admin/inventory/categories/${cat.id}/edit`} className="text-amber-600 hover:text-amber-700">
+                        <Edit size={18} />
+                      </Link>
+                      <button onClick={() => deleteCategory(cat.id)} className="text-red-600 hover:text-red-700">
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-                  {paginated.map((supplier) => (
-                    <tr key={supplier.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{supplier.supplier_name}</td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{supplier.email || '-'}</td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{supplier.mobile || '-'}</td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{supplier.city || '-'}</td>
-                      <td className="px-6 py-4 text-center flex items-center justify-center gap-3">
-                        <Link href={`/dashboard/inventory/suppliers/${supplier.id}`} className="text-blue-600 hover:text-blue-700">
-                          <Eye size={18} />
-                        </Link>
-                        <Link href={`/dashboard/inventory/suppliers/${supplier.id}/edit`} className="text-amber-600 hover:text-amber-700">
-                          <Edit size={18} />
-                        </Link>
-                        <button onClick={() => deleteSupplier(supplier.id)} className="text-red-600 hover:text-red-700">
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <div className="mt-6 flex items-center justify-between">

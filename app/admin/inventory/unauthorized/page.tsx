@@ -18,10 +18,10 @@ export default function AccessDenied() {
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-500 mb-8">Error 403 - Forbidden</p>
         <Link
-          href="/dashboard"
+          href="/admin"
           className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium"
         >
-          Return to Dashboard
+          Return to Admin
         </Link>
       </div>
     </div>

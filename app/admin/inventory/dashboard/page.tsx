@@ -79,19 +79,19 @@ export default function InventoryDashboard() {
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Inventory Dashboard</h1>
         <div className="flex gap-3">
           <Link
-            href="/dashboard/inventory/products/create"
+            href="/admin/inventory/products/create"
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
           >
             <Plus size={20} /> Product
           </Link>
           <Link
-            href="/dashboard/inventory/purchase-orders/create"
+            href="/admin/inventory/purchase-orders/create"
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             <Plus size={20} /> PO
           </Link>
           <Link
-            href="/dashboard/inventory/grn/create"
+            href="/admin/inventory/grn/create"
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
           >
             <Plus size={20} /> GRN
@@ -156,25 +156,25 @@ export default function InventoryDashboard() {
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
           <div className="space-y-2">
             <Link
-              href="/dashboard/inventory/products"
+              href="/admin/inventory/products"
               className="block p-3 bg-gray-50 dark:bg-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition text-sm font-medium"
             >
               Manage Products
             </Link>
             <Link
-              href="/dashboard/inventory/purchase-orders"
+              href="/admin/inventory/purchase-orders"
               className="block p-3 bg-gray-50 dark:bg-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition text-sm font-medium"
             >
               Purchase Orders
             </Link>
             <Link
-              href="/dashboard/inventory/current-stock"
+              href="/admin/inventory/current-stock"
               className="block p-3 bg-gray-50 dark:bg-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition text-sm font-medium"
             >
               Current Stock
             </Link>
             <Link
-              href="/dashboard/inventory/reports"
+              href="/admin/inventory/reports"
               className="block p-3 bg-gray-50 dark:bg-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition text-sm font-medium"
             >
               Reports

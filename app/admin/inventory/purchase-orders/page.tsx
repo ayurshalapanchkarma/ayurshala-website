@@ -44,7 +44,7 @@ export default function PurchaseOrdersPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Purchase Orders</h1>
         <Link
-          href="/dashboard/inventory/purchase-orders/create"
+          href="/admin/inventory/purchase-orders/create"
           className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
         >
           <Plus size={20} /> Create PO
@@ -102,8 +102,8 @@ export default function PurchaseOrdersPage() {
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{new Date(po.created_at).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-center flex gap-3 justify-center">
-                      <Link href={`/dashboard/inventory/purchase-orders/${po.id}`} className="text-blue-600"><Eye size={18} /></Link>
-                      <Link href={`/dashboard/inventory/purchase-orders/${po.id}/edit`} className="text-amber-600"><Edit size={18} /></Link>
+                      <Link href={`/admin/inventory/purchase-orders/${po.id}`} className="text-blue-600"><Eye size={18} /></Link>
+                      <Link href={`/admin/inventory/purchase-orders/${po.id}/edit`} className="text-amber-600"><Edit size={18} /></Link>
                     </td>
                   </tr>
                 ))}

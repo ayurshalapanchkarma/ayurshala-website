@@ -7,7 +7,7 @@ export default function InventoryIndex() {
   const router = useRouter()
 
   useEffect(() => {
-    router.replace('/dashboard/inventory/dashboard')
+    router.replace('/admin/inventory/products')
   }, [router])
 
   return null
