@@ -13,7 +13,8 @@ function sanitize(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const RENDERER_VERSION = '68d69bc'
+  const RENDERER_VERSION = 'dd82a1b'
+  const BUILD_TIME = '2026-06-29T00:49:00Z'
   
   try {
     const data = await req.json()
@@ -22,9 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
     }
 
-    console.log(`[DISCHARGE-PDF] Renderer Version: ${RENDERER_VERSION}`)
-    console.log(`[DISCHARGE-PDF] Using FlowDocument from lib/flow-document.ts`)
-    console.log(`[DISCHARGE-PDF] Patient: ${data.patient_uhid}`)
+    console.log(`[PDF] Version: ${RENDERER_VERSION} | Built: ${BUILD_TIME}`)
 
     const pdfDoc = await PDFDocument.create()
     const doc = new FlowDocument(pdfDoc)
