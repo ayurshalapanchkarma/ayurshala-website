@@ -99,7 +99,8 @@ export default function SmartFilterBar({
           className={`px-3 py-2 rounded-lg text-xs border transition ${dark ? 'bg-gray-800/40 border-gray-700 text-gray-200' : 'bg-white/40 border-white/60 text-stone-700'}`}
         >
           <option value="">All Doctors</option>
-          <option value="dr1">Dr. Sharma</option>
+          <option value="Dr. Farha Naqvi">Dr. Farha Naqvi</option>
+          <option value="Dr. Sanjay Yadav">Dr. Sanjay Yadav</option>
         </select>
 
         <select

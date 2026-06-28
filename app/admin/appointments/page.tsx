@@ -180,7 +180,7 @@ export default function AdminAppointmentsPage() {
   const getDoctorName = (booking: Booking) => {
     if (booking.doctor_name) return booking.doctor_name
     if (booking.doctor) return booking.doctor
-    return 'Doctor Not Assigned'
+    return ''
   }
 
   const todayAppointments = bookings
