@@ -84,9 +84,6 @@ export default function Dashboard() {
       {/* Inventory Card */}
       {canAccessInventory(userRole) && <InventoryCard canAccess={true} />}
 
-      {/* Inventory Card */}
-      {canAccessInventory(userRole) && <InventoryCard canAccess={true} />}
-
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
