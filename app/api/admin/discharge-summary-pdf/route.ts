@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PDFDocument } from 'pdf-lib'
-import { PDFLayoutEngine } from '@/lib/pdf-layout-engine'
+import { FlowDocument, Heading, LabelValue, Paragraph, NumberedList, Table, SignatureBlock, Spacer } from '@/lib/flow-document'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const SPACING_AFTER_SECTION = 12
+function sanitize(text: string): string {
+  if (!text) return ''
+  return text.replace(/₂/g, '2').replace(/₃/g, '3').replace(/SpO₂/g, 'SpO2').replace(/CO₂/g, 'CO2').replace(/O₂/g, 'O2')
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,248 +21,145 @@ export async function POST(req: NextRequest) {
     }
 
     const pdfDoc = await PDFDocument.create()
-    const engine = new PDFLayoutEngine(pdfDoc)
+    const doc = new FlowDocument(pdfDoc)
 
-    // Load logo
     const logoPath = join(process.cwd(), 'public', 'ayurshala_text.png')
     const logoBuffer = readFileSync(logoPath)
     const logoImage = await pdfDoc.embedPng(logoBuffer)
 
-    await engine.init(logoImage)
+    await doc.init(logoImage)
 
-    // Helper to render a block
-    async function renderBlock(title: string, contentRenderer: () => Promise<number>) {
-      const titleHeight = engine.drawHeading(title)
-      await engine.ensureSpace(titleHeight + SPACING_AFTER_SECTION)
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
+    // Build document blocks
+    doc.addBlock(new Heading('PATIENT INFORMATION'))
+    doc.addBlock(new LabelValue('Patient UHID:', sanitize(data.patient_uhid || '')))
+    doc.addBlock(new LabelValue('Patient Name:', sanitize(data.patient_name || '')))
+    doc.addBlock(new LabelValue('Age / Sex:', `${data.age || ''} / ${data.sex || ''}`))
+    doc.addBlock(new LabelValue('Nationality:', sanitize(data.nationality || '')))
+    doc.addBlock(new Spacer(12))
 
-      const contentHeight = await contentRenderer()
-
-      await engine.ensureSpace(contentHeight + SPACING_AFTER_SECTION)
-      engine.setCurrentY(engine.getCurrentY() - contentHeight - SPACING_AFTER_SECTION)
-    }
-
-    // BLOCK: Patient Information Header
-    await renderBlock('PATIENT INFORMATION', async () => {
-      let blockHeight = 0
-
-      const uhidHeight = engine.drawLabel('Patient UHID:', data.patient_uhid || '')
-      blockHeight += uhidHeight
-      engine.setCurrentY(engine.getCurrentY() - uhidHeight)
-
-      const nameHeight = engine.drawLabel('Patient Name:', data.patient_name || '')
-      blockHeight += nameHeight
-      engine.setCurrentY(engine.getCurrentY() - nameHeight)
-
-      const ageHeight = engine.drawLabel('Age / Sex:', `${data.age || ''} / ${data.sex || ''}`)
-      blockHeight += ageHeight
-      engine.setCurrentY(engine.getCurrentY() - ageHeight)
-
-      const natHeight = engine.drawLabel('Nationality:', data.nationality || '')
-      blockHeight += natHeight
-      engine.setCurrentY(engine.getCurrentY() - natHeight)
-
-      return blockHeight
-    })
-
-    // BLOCK: Diagnosis
     if (data.diagnosis) {
-      const diagHeight = engine.measureWrappedHeight(data.diagnosis)
-      await engine.ensureSpace(14 + diagHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('DIAGNOSIS')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.diagnosis)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('DIAGNOSIS'))
+      doc.addBlock(new Paragraph(sanitize(data.diagnosis)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Complaints
     if (data.complaints && data.complaints.length > 0) {
-      const listHeight = engine.measureListHeight(data.complaints)
-      await engine.ensureSpace(14 + listHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('COMPLAINTS ON ADMISSION')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawNumberedList(data.complaints)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('COMPLAINTS ON ADMISSION'))
+      doc.addBlock(new NumberedList(data.complaints.map((c: string) => sanitize(c))))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: History
     if (data.history_present_complaints) {
-      const histHeight = engine.measureWrappedHeight(data.history_present_complaints)
-      await engine.ensureSpace(14 + histHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('HISTORY OF PRESENT COMPLAINTS')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.history_present_complaints)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('HISTORY OF PRESENT COMPLAINTS'))
+      doc.addBlock(new Paragraph(sanitize(data.history_present_complaints)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Past History
     if (data.past_history_medical || data.past_history_surgical) {
-      await engine.ensureSpace(14 + 14 + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('PAST HISTORY')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawLabel(
-        'Medical / Surgical:',
-        `${data.past_history_medical || ''} / ${data.past_history_surgical || ''}`
-      )
-      engine.setCurrentY(engine.getCurrentY() - contentHeight - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('PAST HISTORY'))
+      doc.addBlock(new LabelValue('Medical / Surgical:', `${sanitize(data.past_history_medical || '')} / ${sanitize(data.past_history_surgical || '')}`))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Medication Administered
     if (data.medication_administered) {
-      const medHeight = engine.measureWrappedHeight(data.medication_administered)
-      await engine.ensureSpace(14 + medHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('MEDICATION ADMINISTERED')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.medication_administered)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('MEDICATION ADMINISTERED'))
+      doc.addBlock(new Paragraph(sanitize(data.medication_administered)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Day of Therapy
     if (data.day_of_therapy) {
-      await engine.ensureSpace(14 + 14 + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('DAY OF THERAPY')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawLabel('Days:', data.day_of_therapy)
-      engine.setCurrentY(engine.getCurrentY() - contentHeight - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('DAY OF THERAPY'))
+      doc.addBlock(new LabelValue('Days:', sanitize(data.day_of_therapy)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Pradhan Vedna
     if (data.pradhan_vedna && data.pradhan_vedna.length > 0) {
-      const vednaHeight = engine.measureListHeight(data.pradhan_vedna)
-      await engine.ensureSpace(14 + vednaHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('PRADHAN VEDNA')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawNumberedList(data.pradhan_vedna)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('PRADHAN VEDNA'))
+      doc.addBlock(new NumberedList(data.pradhan_vedna.map((v: string) => sanitize(v))))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Vitals
     if (data.vitals_bp || data.vitals_hr) {
-      await engine.ensureSpace(14 + 14 + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('VITALS ON ADMISSION')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawLabel('BP / HR / Nadi:', `${data.vitals_bp || ''} / ${data.vitals_hr || ''} / ${data.vitals_nadi || ''}`)
-      engine.setCurrentY(engine.getCurrentY() - contentHeight - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('VITALS ON ADMISSION'))
+      doc.addBlock(new LabelValue('BP / HR / Nadi:', `${sanitize(data.vitals_bp || '')} / ${sanitize(data.vitals_hr || '')} / ${sanitize(data.vitals_nadi || '')}`))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: O/E
     if (data.oe_mala || data.oe_mutra) {
-      await engine.ensureSpace(14 + 14 * 2 + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('EXAMINATION (O/E)')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-
-      let oeHeight = 0
-      const oe1 = engine.drawLabel('Mala / Mutra / Jihwa:', `${data.oe_mala || ''} / ${data.oe_mutra || ''} / ${data.oe_jihwa || ''}`)
-      oeHeight += oe1
-      engine.setCurrentY(engine.getCurrentY() - oe1)
-
-      const oe2 = engine.drawLabel('Shuda / Nidra:', `${data.oe_shuda || ''} / ${data.oe_nidra || ''}`)
-      oeHeight += oe2
-      engine.setCurrentY(engine.getCurrentY() - oe2 - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('EXAMINATION (O/E)'))
+      doc.addBlock(new LabelValue('Mala / Mutra / Jihwa:', `${sanitize(data.oe_mala || '')} / ${sanitize(data.oe_mutra || '')} / ${sanitize(data.oe_jihwa || '')}`))
+      doc.addBlock(new LabelValue('Shuda / Nidra:', `${sanitize(data.oe_shuda || '')} / ${sanitize(data.oe_nidra || '')}`))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Therapies
     if (data.therapies && data.therapies.length > 0) {
-      const therapyHeight = engine.measureListHeight(data.therapies)
-      await engine.ensureSpace(14 + therapyHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('THERAPIES / PROCEDURES')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawNumberedList(data.therapies)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('THERAPIES / PROCEDURES'))
+      doc.addBlock(new NumberedList(data.therapies.map((t: string) => sanitize(t))))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Investigations
     if (data.investigations) {
-      const invHeight = engine.measureWrappedHeight(data.investigations)
-      await engine.ensureSpace(14 + invHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('INVESTIGATIONS')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.investigations)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('INVESTIGATIONS'))
+      doc.addBlock(new Paragraph(sanitize(data.investigations)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Findings
     if (data.findings_discharge) {
-      const findHeight = engine.measureWrappedHeight(data.findings_discharge)
-      await engine.ensureSpace(14 + findHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('FINDINGS ON DISCHARGE')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.findings_discharge)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('FINDINGS ON DISCHARGE'))
+      doc.addBlock(new Paragraph(sanitize(data.findings_discharge)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Condition at Discharge
     if (data.condition_discharge) {
-      const condHeight = engine.measureWrappedHeight(data.condition_discharge)
-      await engine.ensureSpace(14 + condHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('CONDITION AT DISCHARGE')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.condition_discharge)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('CONDITION AT DISCHARGE'))
+      doc.addBlock(new Paragraph(sanitize(data.condition_discharge)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Advice on Discharge
     if (data.advice_discharge) {
-      const advHeight = engine.measureWrappedHeight(data.advice_discharge)
-      await engine.ensureSpace(14 + advHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('ADVICE ON DISCHARGE')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.advice_discharge)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('ADVICE ON DISCHARGE'))
+      doc.addBlock(new Paragraph(sanitize(data.advice_discharge)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Medicine Table
     if (data.medicines && data.medicines.length > 0) {
+      doc.addBlock(new Heading('MEDICINES'))
       const headers = ['Medication', 'Dosage', 'Instructions', 'Schedule', 'Duration']
-      const rows = data.medicines.map((m: any) => [m.name || '', m.dosage || '', m.instructions || '', m.schedule || '', m.duration || ''])
-
-      const tableHeight = engine.measureTableHeight(rows)
-      await engine.ensureSpace(14 + tableHeight + SPACING_AFTER_SECTION)
-
-      const titleHeight = engine.drawHeading('MEDICINES')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-
-      const contentHeight = await engine.drawTable(headers, rows)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      const rows = data.medicines.map((m: any) => [
+        sanitize(m.name || ''),
+        sanitize(m.dosage || ''),
+        sanitize(m.instructions || ''),
+        sanitize(m.schedule || ''),
+        sanitize(m.duration || ''),
+      ])
+      doc.addBlock(new Table(headers, rows))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Cautions
     if (data.cautions) {
-      const cautHeight = engine.measureWrappedHeight(data.cautions)
-      await engine.ensureSpace(14 + cautHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('CAUTIONS')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.cautions)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('CAUTIONS'))
+      doc.addBlock(new Paragraph(sanitize(data.cautions)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Pathya
     if (data.pathya) {
-      const pathHeight = engine.measureWrappedHeight(data.pathya)
-      await engine.ensureSpace(14 + pathHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('PATHYA (RECOMMENDED)')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.pathya)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('PATHYA (RECOMMENDED)'))
+      doc.addBlock(new Paragraph(sanitize(data.pathya)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Apathya
     if (data.apathya) {
-      const apathHeight = engine.measureWrappedHeight(data.apathya)
-      await engine.ensureSpace(14 + apathHeight + SPACING_AFTER_SECTION)
-      const titleHeight = engine.drawHeading('APATHYA (CONTRAINDICATED)')
-      engine.setCurrentY(engine.getCurrentY() - titleHeight)
-      const contentHeight = engine.drawWrappedText(data.apathya)
-      engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+      doc.addBlock(new Heading('APATHYA (CONTRAINDICATED)'))
+      doc.addBlock(new Paragraph(sanitize(data.apathya)))
+      doc.addBlock(new Spacer(12))
     }
 
-    // BLOCK: Signature Block (atomic)
-    const sigHeight = engine.measureSignatureHeight()
-    await engine.ensureSpace(sigHeight + 20)
-    const sigContentHeight = engine.drawSignatureBlock(data.doctor_name)
-    engine.setCurrentY(engine.getCurrentY() - SPACING_AFTER_SECTION)
+    doc.addBlock(new Spacer(20))
+    doc.addBlock(new SignatureBlock(sanitize(data.doctor_name)))
 
-    const pdfBytes = await engine.save()
+    await doc.render()
+    const pdfBytes = await doc.save()
+
     return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {
