@@ -1,12 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, Download } from 'lucide-react'
 import Link from 'next/link'
 
 export default function DischargeSummaryPage() {
-  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null)
-  const [router, setRouter] = useState<any>(null)
+  const router = useRouter()
   const [bookingId, setBookingId] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -20,9 +19,7 @@ export default function DischargeSummaryPage() {
   useEffect(() => {
     setMounted(true)
     const sp = new URLSearchParams(window.location.search)
-    setSearchParams(sp)
     setBookingId(sp.get('booking_id'))
-    setRouter(useRouter())
     
     if (sp.get('booking_id')) {
       loadBookingData(sp.get('booking_id')!)
