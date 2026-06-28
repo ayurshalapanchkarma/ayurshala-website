@@ -168,7 +168,7 @@ Priority Order (To Execute):
     Command: npm install && npm run lint && npm run type-check && npm run build
 
 16. ⏳ DEV DEPLOYMENT
-    Deploy: dev.ayurshalapanchakarma.com
+    Deploy: ayurshalapanchakarma.com
     Verify: HTTPS, env vars, database, storage, auth, email, webhooks, payments, AI, analytics
 
 17. ⏳ UAT PREPARATION

@@ -93,7 +93,7 @@ This phase transforms the ERP from feature-complete to **production-ready** thro
 12. **Bug Fixing** — Zero errors approach
 13. **Responsive Testing** — All screen sizes
 14. **Build Validation** — npm install → npm run build
-15. **DEV Deployment** — Deploy to dev.ayurshalapanchakarma.com
+15. **Production Deployment** — Deploy to ayurshalapanchakarma.com
 16. **UAT Preparation** — Create testing checklists for each role
 17. **Final Report** — Document entire DEV deployment
 

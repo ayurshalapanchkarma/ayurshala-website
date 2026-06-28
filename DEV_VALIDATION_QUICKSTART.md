@@ -88,7 +88,7 @@ npm run dev
 14. Bug Fixing (zero errors)
 15. Responsive Testing (mobile, tablet, desktop)
 16. Build Validation (npm run build)
-17. DEV Deployment (deploy to dev.ayurshalapanchakarma.com)
+17. Production Deployment (deploy to ayurshalapanchakarma.com)
 18. UAT Preparation (role testing checklists)
 19. Final Report (go/no-go decision)
 

@@ -3,7 +3,7 @@ import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { BookingConfirmationOnline, BookingConfirmationCash, AdminNewOnlineBooking, AdminNewOfflineBooking } from '@/lib/email-template'
-import { getAppUrl } from '@/lib/auth-config'
+import { getBaseUrl } from '@/lib/url'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
         customer_email: patientData.email,
         customer_phone: (patientData.phone || '9999999999').replace(/\D/g, '').slice(-10),
       },
-      order_meta: { return_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/book/verify?order_id={order_id}` },
+      order_meta: { return_url: `${getBaseUrl()}/api/book/verify?order_id={order_id}` },
       order_note: `${booking_type} | ${treatments.join(', ')} | ${preferred_date} ${preferred_time}`,
     })
 
@@ -267,7 +267,7 @@ export async function POST(req: NextRequest) {
     const amountLabel = isCod ? `₹${amount} — Cash on Arrival` : `₹${amount} — Paid Online`
     const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'
-    const appUrl = getAppUrl()
+    const appUrl = getBaseUrl()
 
     if (isCod) {
       // Clinic gets email with Confirm + Cancel buttons
@@ -314,7 +314,7 @@ export async function POST(req: NextRequest) {
         customer_email: patient.email,
         customer_phone: (patient.phone || '9999999999').replace(/\D/g, '').slice(-10),
       },
-      order_meta: { return_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/book/verify?order_id={order_id}&original_booking_id=${booking_id}` },
+      order_meta: { return_url: `${getBaseUrl()}/api/book/verify?order_id={order_id}&original_booking_id=${booking_id}` },
       order_note: `Payment for ${booking_id}`,
     })
 
@@ -425,7 +425,7 @@ export async function POST(req: NextRequest) {
     const { data: rPatient } = await supabase.from('patients').select('full_name,patient_id,email,phone').eq('id', patient_uuid).single()
     const { data: treatmentRows } = await supabase.from('booking_treatments_v2').select('treatment_name').eq('booking_uuid', booking.id)
     const treatmentList = treatmentRows?.map((t: any) => t.treatment_name).join(', ') || '—'
-    const appUrl = getAppUrl()
+    const appUrl = getBaseUrl()
     const confirmUrl = `${appUrl}/api/admin/confirm-reschedule?booking_id=${booking_id}&secret=${process.env.ADMIN_CONFIRM_SECRET ?? 'ayurshala-confirm'}`
     const cancelUrl = `${appUrl}/api/admin/cancel-reschedule?booking_id=${booking_id}&secret=${process.env.ADMIN_CONFIRM_SECRET ?? 'ayurshala-confirm'}`
     const from = process.env.RESEND_FROM_EMAIL ?? 'Ayurshala Bookings <onboarding@resend.dev>'

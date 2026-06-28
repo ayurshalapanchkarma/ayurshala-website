@@ -1,16 +1,20 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Providers } from './providers'
+import { getBaseUrl } from '@/lib/url'
 import './globals.css'
+
+const baseUrl = getBaseUrl()
 
 export const metadata: Metadata = {
   title: 'Ayurshala Panchakarma Center | Secure Patient Portal',
   description: 'Official website of Ayurshala Panchakarma Center. Book appointments, access treatment records, download medical certificates, and securely manage your healthcare using Google Sign-In.',
   keywords: 'Panchakarma, Ayurveda, Patient Portal, Medical Certificates, Appointments, Healthcare',
+  metadataBase: new URL(baseUrl),
   openGraph: {
     title: 'Ayurshala Panchakarma Center | Secure Patient Portal',
     description: 'Book appointments, access treatment records, and manage your healthcare securely.',
-    url: 'https://app.ayurshalapanchakarma.com',
+    url: baseUrl,
     siteName: 'Ayurshala Panchakarma Center',
     locale: 'en_IN',
     type: 'website',

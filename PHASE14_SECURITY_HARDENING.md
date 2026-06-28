@@ -184,17 +184,14 @@
 
 ## PART 16-20: ENVIRONMENTS & RELEASE (Next)
 
-### Four Environments
-1. **LOCAL** - localhost
-2. **DEV** - dev.ayurshalapanchakarma.com
-3. **STAGING** - staging.ayurshalapanchakarma.com
-4. **PRODUCTION** - app.ayurshalapanchakarma.com
+### Environments
+1. **LOCAL** - localhost:3000
+2. **PRODUCTION** - ayurshalapanchakarma.com
 
-Each with separate:
-- Database
-- Storage
-- API Keys
-- Secrets
+Configuration:
+- Database via NEXT_PUBLIC_SITE_URL
+- API Keys and Secrets in Vercel environment
+- URL helpers in lib/url.ts
 
 ### Release Management
 - [ ] Semantic Versioning (v1.0.0)
