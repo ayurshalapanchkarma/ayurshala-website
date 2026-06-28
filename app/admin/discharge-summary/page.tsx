@@ -7,9 +7,14 @@ import { DischargeSummaryHeader } from '@/components/DischargeSummaryHeader'
 export default function DischargeSummaryPage() {
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [doctors, setDoctors] = useState<any[]>([])
   const [bookingId, setBookingId] = useState<string | null>(null)
   const [validationError, setValidationError] = useState('')
+  const DOCTOR_MOBILE = '+91-9821224767'
+  const CLINIC_EMAIL = 'ayurshalapanchkarma@gmail.com'
+  const doctors = [
+    { id: 1, name: 'Dr. Farha Naqvi', mobile: DOCTOR_MOBILE },
+    { id: 2, name: 'Dr. Sanjay Yadav', mobile: DOCTOR_MOBILE }
+  ]
   const [form, setForm] = useState({
     patient_uhid: '',
     patient_name: '',
@@ -55,7 +60,6 @@ export default function DischargeSummaryPage() {
 
   useEffect(() => {
     setMounted(true)
-    loadDoctors()
     const bookId = new URLSearchParams(window.location.search).get('booking_id')
     if (bookId) {
       setBookingId(bookId)
@@ -69,16 +73,6 @@ export default function DischargeSummaryPage() {
       }))
     }
   }, [])
-
-  async function loadDoctors() {
-    try {
-      const res = await fetch('/api/admin/doctors')
-      const data = await res.json()
-      setDoctors(data.doctors || [])
-    } catch (error) {
-      console.error('Error loading doctors:', error)
-    }
-  }
 
   async function loadBookingData(id: string) {
     try {
@@ -97,12 +91,9 @@ export default function DischargeSummaryPage() {
           dod_date: now.toISOString().split('T')[0],
           dod_time: now.toTimeString().slice(0, 5),
           doctor_name: booking.doctor_name || booking.doctor || '',
+          doctor_mobile: DOCTOR_MOBILE,
           diagnosis: booking.treatments || '',
         }))
-        const selectedDoctor = doctors.find(d => d.name === (booking.doctor_name || booking.doctor))
-        if (selectedDoctor) {
-          setForm(prev => ({ ...prev, doctor_mobile: selectedDoctor.mobile || '' }))
-        }
       }
     } catch (error) {
       console.error('Error loading booking:', error)
@@ -135,12 +126,7 @@ export default function DischargeSummaryPage() {
   function handleDoctorChange(e: any) {
     const doctorName = e.target.value
     updateForm('doctor_name', doctorName)
-    const doctor = doctors.find(d => d.name === doctorName)
-    if (doctor) {
-      updateForm('doctor_mobile', doctor.mobile || '')
-    } else {
-      updateForm('doctor_mobile', '')
-    }
+    updateForm('doctor_mobile', DOCTOR_MOBILE)
   }
 
   async function downloadPDF() {

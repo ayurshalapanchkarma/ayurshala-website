@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, rgb } from 'pdf-lib'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 function addText(page: any, text: string, x: number, y: number, size: number = 10, bold: boolean = false) {
   page.drawText(text, { x, y, size })
-}
-
-function addLine(page: any, x1: number, y1: number, x2: number, y2: number) {
-  page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: 0.5 })
 }
 
 export async function POST(req: NextRequest) {
@@ -21,10 +19,33 @@ export async function POST(req: NextRequest) {
     let y = 800
     const leftMargin = 40
     const lineHeight = 12
-    const maxWidth = 515
+
+    // Add header with logo
+    try {
+      const logoPath = join(process.cwd(), 'public', 'ayurshala_text.png')
+      const logoBuffer = readFileSync(logoPath)
+      const logoImage = await pdfDoc.embedPng(logoBuffer)
+      const logoDims = logoImage.scale(0.3)
+      page.drawImage(logoImage, { x: 245, y: y - 35, width: logoDims.width, height: logoDims.height })
+      y -= 50
+    } catch (e) {
+      console.error('Logo error:', e)
+    }
+
+    // Clinic header
+    addText(page, 'AYURSHALA PANCHAKARMA CENTER', 150, y, 12, true)
+    y -= 15
+    addText(page, 'SP-28, Wajidpur, Sector-130, Noida – 201301', 155, y, 10)
+    y -= 12
+    addText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', 155, y, 10)
+    y -= 15
+
+    // Divider
+    page.drawLine({ start: { x: 40, y }, end: { x: 555, y }, thickness: 1, color: rgb(0, 0, 0) })
+    y -= 15
 
     // Title
-    addText(page, 'Discharge Summary - Day Care', leftMargin, y, 14, true)
+    addText(page, 'DISCHARGE SUMMARY', 200, y, 14, true)
     y -= 25
 
     // Patient UHID
@@ -155,7 +176,7 @@ export async function POST(req: NextRequest) {
     // Doctor
     addText(page, `Dr. ${data.doctor_name || '_____________________________'}`, leftMargin, y, 10, true)
     y -= 12
-    addText(page, `Mobile: ${data.doctor_mobile || '_______________'}`, leftMargin, y, 10)
+    addText(page, `Mobile: +91-9821224767`, leftMargin, y, 10)
     y -= 12
     addText(page, `Email: ayurshalapanchkarma@gmail.com`, leftMargin, y, 10)
 
