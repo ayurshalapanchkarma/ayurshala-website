@@ -1,119 +1,206 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useTheme } from 'next-themes'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { ArrowLeft, Download } from 'lucide-react'
 import Link from 'next/link'
-import { AdminGuard } from '@/components/AdminGuard'
-import { AdminBackButton } from '@/components/AdminBackButton'
-import { LogOut, Moon, Sun, Plus, Search, Filter, Download, Clock, CheckCircle, FileText } from 'lucide-react'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-)
 
 export default function DischargeSummaryPage() {
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null)
+  const [router, setRouter] = useState<any>(null)
+  const [bookingId, setBookingId] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const [activeTab, setActiveTab] = useState<'drafts' | 'completed'>('drafts')
-  const { theme, setTheme } = useTheme()
-  const dark = mounted && theme === 'dark'
+  const [loading, setLoading] = useState(false)
+  const [booking, setBooking] = useState<any>(null)
+  const [patient, setPatient] = useState<any>(null)
+  const [diagnosis, setDiagnosis] = useState('')
+  const [notes, setNotes] = useState('')
+  const [treatment, setTreatment] = useState('')
+  const [recommendations, setRecommendations] = useState('')
 
-  useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    setMounted(true)
+    const sp = new URLSearchParams(window.location.search)
+    setSearchParams(sp)
+    setBookingId(sp.get('booking_id'))
+    setRouter(useRouter())
+    
+    if (sp.get('booking_id')) {
+      loadBookingData(sp.get('booking_id')!)
+    }
+  }, [])
+
+  async function loadBookingData(id: string) {
+    try {
+      const res = await fetch(`/api/admin/bookings?booking_id=${id}`)
+      const data = await res.json()
+      const bk = data.bookings?.[0]
+      if (bk) {
+        setBooking(bk)
+        setTreatment(bk.treatments || '')
+        setNotes(bk.notes || '')
+      }
+    } catch (error) {
+      console.error('Error loading booking:', error)
+    }
+  }
+
+  async function handleDownloadPDF() {
+    if (!patient) {
+      alert('Please fill in patient details')
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/discharge-summary/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_name: patient.full_name || patient.name,
+          patient_id: patient.patient_id || patient.id,
+          patient_phone: patient.phone || '',
+          patient_email: patient.email || '',
+          doctor_name: booking?.doctor_name || booking?.doctor || 'Not Selected',
+          appointment_date: booking?.preferred_date || '',
+          diagnosis,
+          treatment,
+          recommendations,
+          notes,
+          booking_id: booking?.booking_id || '',
+        }),
+      })
+      if (!res.ok) throw new Error('Download failed')
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `discharge-${patient.patient_id || 'summary'}.pdf`
+      a.click()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      alert('Failed to download PDF')
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!mounted) return null
 
   return (
-    <AdminGuard>
-      <div className={`min-h-screen ${dark ? 'bg-slate-950' : 'bg-gray-50'}`}>
-        {/* Header */}
-        <header className={`sticky top-0 z-40 border-b ${dark ? 'bg-slate-900/95 border-slate-800' : 'bg-white border-gray-200'} backdrop-blur`}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <Link href={bookingId ? `/admin/appointments` : `/admin`} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6">
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Link>
+
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-8">
+          <h1 className="text-3xl font-bold mb-8" style={{ color: '#F97316' }}>
+            Discharge Summary
+          </h1>
+
+          <div className="space-y-6">
+            {/* Patient Section */}
+            {!bookingId && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Patient Information</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Patient Name"
+                    value={patient?.full_name || patient?.name || ''}
+                    onChange={(e) => setPatient({ ...patient, full_name: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Patient ID"
+                    value={patient?.patient_id || patient?.id || ''}
+                    onChange={(e) => setPatient({ ...patient, patient_id: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={patient?.email || ''}
+                    onChange={(e) => setPatient({ ...patient, email: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone"
+                    value={patient?.phone || ''}
+                    onChange={(e) => setPatient({ ...patient, phone: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                </div>
+              </div>
+            )}
+
+            {bookingId && booking && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Pre-filled from Appointment</h2>
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">
+                  <p><strong>Patient:</strong> {booking.patient_name}</p>
+                  <p><strong>Patient ID:</strong> {booking.patient_id}</p>
+                  <p><strong>Booking ID:</strong> {booking.booking_id}</p>
+                  <p><strong>Doctor:</strong> {booking.doctor_name || booking.doctor || 'Not Selected'}</p>
+                  <p><strong>Appointment Date:</strong> {booking.preferred_date}</p>
+                  <p><strong>Treatment:</strong> {booking.treatments}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Clinical Section */}
             <div>
-              <h1 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-slate-900'}`}>Discharge Summary</h1>
-              <p className={`text-xs ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Patient discharge records and documentation</p>
+              <h2 className="text-xl font-semibold mb-4">Clinical Information</h2>
+              <div className="space-y-4">
+                <textarea
+                  placeholder="Diagnosis"
+                  value={diagnosis}
+                  onChange={(e) => setDiagnosis(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+                <textarea
+                  placeholder="Treatment Provided"
+                  value={treatment}
+                  onChange={(e) => setTreatment(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+                <textarea
+                  placeholder="Recommendations"
+                  value={recommendations}
+                  onChange={(e) => setRecommendations(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+                <textarea
+                  placeholder="Additional Notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setTheme(dark ? 'light' : 'dark')} className={`p-2 rounded-lg transition ${dark ? 'bg-slate-800 hover:bg-slate-700 text-slate-400' : 'bg-gray-100 hover:bg-gray-200 text-slate-600'}`}>
-                {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-              <Link href="/admin" className={`p-2 rounded-lg transition ${dark ? 'bg-slate-800 hover:bg-slate-700 text-slate-400' : 'bg-gray-100 hover:bg-gray-200 text-slate-600'}`}>
-                ←
-              </Link>
-            </div>
-          </div>
-        </header>
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Back Button */}
-          <AdminBackButton dark={dark} />
-
-          {/* Page Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className={`text-2xl font-semibold ${dark ? 'text-white' : 'text-slate-900'}`}>Discharge Summaries</h2>
-              <p className={`text-sm mt-1 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Create and manage patient discharge records</p>
-            </div>
-            <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Create Summary
-            </button>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-slate-800">
-            {['drafts', 'completed'].map(tab => (
+            {/* Download Button */}
+            <div className="flex gap-4 pt-6">
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab as typeof activeTab)}
-                className={`px-4 py-3 border-b-2 transition text-sm font-medium ${
-                  activeTab === tab
-                    ? `border-orange-600 text-orange-600 ${dark ? 'text-orange-400 border-orange-400' : ''}`
-                    : `border-transparent ${dark ? 'text-slate-400 hover:text-slate-300' : 'text-slate-600 hover:text-slate-900'}`
-                }`}
+                onClick={handleDownloadPDF}
+                disabled={loading || (!bookingId && !patient)}
+                className="flex items-center gap-2 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
               >
-                {tab === 'drafts' ? 'Drafts' : 'Completed'}
+                <Download className="w-4 h-4" />
+                {loading ? 'Generating...' : 'Download PDF'}
               </button>
-            ))}
-          </div>
-
-          {/* Search and Filters */}
-          <div className="flex gap-3 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by patient name or ID..."
-                className={`w-full pl-10 pr-4 py-2 rounded-lg border transition ${dark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400' : 'bg-white border-gray-200 text-slate-900 placeholder-slate-400'}`}
-              />
-            </div>
-            <button className={`p-2 rounded-lg transition ${dark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-gray-100 hover:bg-gray-200'}`}>
-              <Filter className="w-4 h-4" />
-            </button>
-            <button className={`p-2 rounded-lg transition ${dark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-gray-100 hover:bg-gray-200'}`}>
-              <Download className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Content - Empty State */}
-          <div className={`rounded-lg border p-12 text-center ${dark ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}>
-            <FileText className="w-12 h-12 mx-auto mb-4 opacity-40" />
-            <h3 className={`text-lg font-medium mb-2 ${dark ? 'text-white' : 'text-slate-900'}`}>No discharge summaries yet</h3>
-            <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Create your first discharge summary to get started</p>
-            <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition inline-flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Create Summary
-            </button>
-          </div>
-
-          {/* Recent Summaries Placeholder */}
-          <div className="mt-8">
-            <h3 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Recent Activity</h3>
-            <div className={`rounded-lg border p-6 text-center ${dark ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}>
-              <Clock className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className={`text-sm ${dark ? 'text-slate-400' : 'text-slate-600'}`}>No recent activity</p>
             </div>
           </div>
-        </main>
+        </div>
       </div>
-    </AdminGuard>
+    </div>
   )
 }
