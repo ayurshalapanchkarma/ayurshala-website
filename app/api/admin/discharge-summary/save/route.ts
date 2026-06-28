@@ -89,10 +89,10 @@ export async function POST(req: NextRequest) {
   const supabase = createClient(supabaseUrl!, serviceRoleKey!)
 
   try {
-    console.log('[INSERT] Calling supabase.from("discharge_summaries").insert()...')
+    console.log('[UPSERT] Calling supabase.from("discharge_summaries").upsert()...')
     const { data, error, status, statusText, count } = await supabase
       .from('discharge_summaries')
-      .insert([insertPayload])
+      .upsert([insertPayload], { onConflict: 'booking_id' })
       .select()
       .single()
 

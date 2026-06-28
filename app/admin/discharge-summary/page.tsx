@@ -63,6 +63,7 @@ export default function DischargeSummaryPage() {
     const bookId = new URLSearchParams(window.location.search).get('booking_id')
     if (bookId) {
       setBookingId(bookId)
+      loadDischargeSummary(bookId)
       loadBookingData(bookId)
     } else {
       const now = new Date()
@@ -73,6 +74,59 @@ export default function DischargeSummaryPage() {
       }))
     }
   }, [])
+
+  async function loadDischargeSummary(id: string) {
+    try {
+      const res = await fetch(`/api/admin/discharge-summary?bookingId=${id}`)
+      const { data } = await res.json()
+      if (data) {
+        setForm(prev => ({
+          ...prev,
+          patient_uhid: data.patient_uhid || prev.patient_uhid,
+          patient_name: data.patient_name || prev.patient_name,
+          age: data.age || prev.age,
+          sex: data.sex || prev.sex,
+          doa_date: data.doa_date || prev.doa_date,
+          doa_time: data.doa_time || prev.doa_time,
+          dod_date: data.dod_date || prev.dod_date,
+          dod_time: data.dod_time || prev.dod_time,
+          nationality: data.nationality || prev.nationality,
+          address: data.address || prev.address,
+          diagnosis: data.diagnosis || prev.diagnosis,
+          complaints: data.complaints || prev.complaints,
+          history_present_complaints: data.history_present_complaints || prev.history_present_complaints,
+          history_days: data.history_days || prev.history_days,
+          past_history_medical: data.past_history_medical || prev.past_history_medical,
+          past_history_surgical: data.past_history_surgical || prev.past_history_surgical,
+          past_history_details: data.past_history_details || prev.past_history_details,
+          medication_administered: data.medication_administered || prev.medication_administered,
+          day_of_therapy: data.day_of_therapy || prev.day_of_therapy,
+          pradhan_vedna: data.pradhan_vedna || prev.pradhan_vedna,
+          vitals_bp: data.vitals_bp || prev.vitals_bp,
+          vitals_hr: data.vitals_hr || prev.vitals_hr,
+          vitals_nadi: data.vitals_nadi || prev.vitals_nadi,
+          oe_mala: data.oe_mala || prev.oe_mala,
+          oe_mutra: data.oe_mutra || prev.oe_mutra,
+          oe_jihwa: data.oe_jihwa || prev.oe_jihwa,
+          oe_shuda: data.oe_shuda || prev.oe_shuda,
+          oe_nidra: data.oe_nidra || prev.oe_nidra,
+          therapies: data.therapies || prev.therapies,
+          investigations: data.investigations || prev.investigations,
+          findings_discharge: data.findings_discharge || prev.findings_discharge,
+          condition_discharge: data.condition_discharge || prev.condition_discharge,
+          advice_discharge: data.advice_discharge || prev.advice_discharge,
+          medicine_discharge: data.medicine_discharge || prev.medicine_discharge,
+          medicines: data.medicines || prev.medicines,
+          cautions: data.cautions || prev.cautions,
+          pathya: data.pathya || prev.pathya,
+          apathya: data.apathya || prev.apathya,
+          doctor_name: data.doctor_name || prev.doctor_name,
+        }))
+      }
+    } catch (error) {
+      console.error('Error loading discharge summary:', error)
+    }
+  }
 
   async function loadBookingData(id: string) {
     try {
