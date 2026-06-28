@@ -10,6 +10,7 @@ const MARGIN = 40
 const CONTENT_WIDTH = PAGE_WIDTH - 2 * MARGIN
 const LINE_HEIGHT = 14
 const BOTTOM_MARGIN = 40
+const CENTER_X = PAGE_WIDTH / 2
 
 export class PDFLayoutEngine {
   private pdfDoc: PDFDocument
@@ -17,6 +18,7 @@ export class PDFLayoutEngine {
   private currentY: number = 0
   private pages: PDFPage[] = []
   private logoImage: PDFImage | null = null
+  private isFirstPage: boolean = true
 
   constructor(pdfDoc: PDFDocument) {
     this.pdfDoc = pdfDoc
@@ -47,17 +49,44 @@ export class PDFLayoutEngine {
     return lines
   }
 
-  async init(logoImage: PDFImage) {
-    this.logoImage = logoImage
-    await this.addNewPage()
+  private getTextWidth(text: string, fontSize: number): number {
+    return text.length * fontSize * 0.5
   }
 
-  private async addNewPage() {
+  async init(logoImage: PDFImage) {
+    this.logoImage = logoImage
+    await this.addFirstPage()
+  }
+
+  private async addFirstPage() {
     const page = this.pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
     this.pages.push(page)
     this.currentPage = page
 
     // Draw border
+    this.drawPageBorder()
+
+    // Draw document header
+    this.drawDocumentHeader()
+
+    // Set cursor to content start
+    this.currentY = PAGE_HEIGHT - MARGIN - 240
+  }
+
+  private async addContinuationPage() {
+    const page = this.pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
+    this.pages.push(page)
+    this.currentPage = page
+
+    // Draw border only
+    this.drawPageBorder()
+
+    // Set cursor to content start
+    this.currentY = PAGE_HEIGHT - MARGIN - 20
+  }
+
+  private drawPageBorder() {
+    if (!this.currentPage) return
     this.currentPage.drawRectangle({
       x: MARGIN,
       y: BOTTOM_MARGIN,
@@ -66,71 +95,65 @@ export class PDFLayoutEngine {
       borderColor: ORANGE,
       borderWidth: 1.5,
     })
-
-    // Draw header
-    await this.drawHeader()
-
-    // Set cursor to content start (after header)
-    this.currentY = PAGE_HEIGHT - MARGIN - 200
   }
 
-  private async drawHeader() {
+  private drawDocumentHeader() {
     if (!this.currentPage || !this.logoImage) return
 
     let y = PAGE_HEIGHT - MARGIN
 
-    // Logo
+    // Logo - centered
     this.currentPage.drawImage(this.logoImage, {
-      x: PAGE_WIDTH / 2 - 35,
+      x: CENTER_X - 35,
       y: y - 70,
       width: 70,
       height: 70,
     })
     y -= 70 + 12
 
-    // Clinic name
+    // Clinic name - centered
     const clinicText = 'AYURSHALA PANCHAKARMA CENTER'
-    const nameWidth = clinicText.length * 3.5
+    const clinicWidth = this.getTextWidth(clinicText, 12)
     this.currentPage.drawText(clinicText, {
-      x: PAGE_WIDTH / 2 - nameWidth / 2,
+      x: CENTER_X - clinicWidth / 2,
       y,
       size: 12,
       color: BLACK,
     })
     y -= 14 + 6
 
-    // Address line 1
-    const addr1 = 'SP-28, Wajidpur, Sector-130, Noida – 201301'
-    const addr1Width = addr1.length * 2
-    this.currentPage.drawText(addr1, {
-      x: PAGE_WIDTH / 2 - addr1Width / 2,
+    // Address - centered
+    const addr = 'SP-28, Wajidpur, Sector-130, Noida – 201301'
+    const addrWidth = this.getTextWidth(addr, 9)
+    this.currentPage.drawText(addr, {
+      x: CENTER_X - addrWidth / 2,
       y,
       size: 9,
       color: GRAY,
     })
     y -= 12 + 6
 
-    // Contact
+    // Contact - centered
     const contact = '+91-9821224767 | ayurshalapanchkarma@gmail.com'
-    const contactWidth = contact.length * 2
+    const contactWidth = this.getTextWidth(contact, 9)
     this.currentPage.drawText(contact, {
-      x: PAGE_WIDTH / 2 - contactWidth / 2,
+      x: CENTER_X - contactWidth / 2,
       y,
       size: 9,
       color: GRAY,
     })
     y -= 12 + 12
 
-    // Title
+    // Title - centered
     const titleText = 'DISCHARGE SUMMARY'
-    const titleWidth = titleText.length * 4
+    const titleWidth = this.getTextWidth(titleText, 16)
     this.currentPage.drawText(titleText, {
-      x: PAGE_WIDTH / 2 - titleWidth / 2,
+      x: CENTER_X - titleWidth / 2,
       y,
       size: 16,
       color: ORANGE,
     })
-    y -= 16 + 10
+    y -= 16 + 15
 
     // Separator line
     this.currentPage.drawLine({
@@ -143,11 +166,10 @@ export class PDFLayoutEngine {
 
   async ensureSpace(height: number) {
     if (this.currentY - height < BOTTOM_MARGIN + 20) {
-      await this.addNewPage()
+      await this.addContinuationPage()
     }
   }
 
-  // Returns the height actually consumed
   drawHeading(text: string): number {
     const height = LINE_HEIGHT
     this.currentPage?.drawText(text, {
@@ -159,7 +181,6 @@ export class PDFLayoutEngine {
     return height
   }
 
-  // Returns the height actually consumed
   drawLabel(label: string, value: string): number {
     const text = `${label} ${this.sanitizeText(value)}`
     const height = LINE_HEIGHT
@@ -172,13 +193,11 @@ export class PDFLayoutEngine {
     return height
   }
 
-  // Measures wrapped lines and returns total height
   measureWrappedHeight(text: string, fontSize: number = 10): number {
     const lines = this.wrapText(this.sanitizeText(text), CONTENT_WIDTH - 40, fontSize)
     return lines.length * LINE_HEIGHT
   }
 
-  // Draws wrapped text and returns height consumed
   drawWrappedText(text: string, fontSize: number = 10): number {
     const sanitized = this.sanitizeText(text)
     const lines = this.wrapText(sanitized, CONTENT_WIDTH - 40, fontSize)
@@ -196,7 +215,6 @@ export class PDFLayoutEngine {
     return lines.length * LINE_HEIGHT
   }
 
-  // Measures list and returns height
   measureListHeight(items: string[], fontSize: number = 10): number {
     let height = 0
     items.forEach(item => {
@@ -206,7 +224,6 @@ export class PDFLayoutEngine {
     return height
   }
 
-  // Draws numbered list and returns height consumed
   drawNumberedList(items: string[], fontSize: number = 10): number {
     let height = 0
 
@@ -245,14 +262,12 @@ export class PDFLayoutEngine {
     return height
   }
 
-  // Measures table and returns height
   measureTableHeight(rows: string[][]): number {
     const headerHeight = LINE_HEIGHT + 4
     const rowHeight = LINE_HEIGHT + 4
     return headerHeight + rows.length * rowHeight
   }
 
-  // Draws table and returns height consumed
   async drawTable(headers: string[], rows: string[][], fontSize: number = 9) {
     const colWidths = [120, 80, 130, 80, 80]
     const rowHeight = LINE_HEIGHT + 4
@@ -305,12 +320,10 @@ export class PDFLayoutEngine {
     return height
   }
 
-  // Measures signature block and returns height
   measureSignatureHeight(): number {
     return LINE_HEIGHT * 3
   }
 
-  // Draws signature block and returns height consumed
   drawSignatureBlock(doctorName: string): number {
     const height = LINE_HEIGHT * 3
 
