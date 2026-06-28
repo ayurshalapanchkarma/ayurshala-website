@@ -1,4 +1,5 @@
 export function EmailLayout({ children }: { children: string }) {
+  const logoUrl = process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/ayurshala_text.png` : 'https://www.ayurshalapanchakarma.com/ayurshala_text.png'
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -15,7 +16,7 @@ export function EmailLayout({ children }: { children: string }) {
         <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:24px;overflow:hidden;background:#fff;border:1px solid rgba(232,98,26,0.18);box-shadow:0 8px 40px rgba(232,98,26,0.10)">
           <tr>
             <td style="background:linear-gradient(135deg,#fff8f0,#ffe8d0);padding:32px 40px;text-align:center;border-bottom:1px solid rgba(232,98,26,0.15)">
-              <img src="https://ayurshala-website.vercel.app/ayurshala_text.png" alt="Ayurshala" width="160" style="height:auto;display:block;margin:0 auto 12px;max-width:100%">
+              <img src="${logoUrl}" alt="Ayurshala" width="160" style="height:auto;display:block;margin:0 auto 12px;max-width:100%">
             </td>
           </tr>
           <tr>
