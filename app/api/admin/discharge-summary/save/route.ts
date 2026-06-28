@@ -1,16 +1,45 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+console.log('[INIT] Supabase Config:', {
+  url: supabaseUrl?.substring(0, 30) + '...',
+  hasServiceKey: !!serviceRoleKey,
+})
+
+const supabase = createClient(supabaseUrl!, serviceRoleKey!)
 
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
 
-    // Try to insert into discharge_summaries table
+    console.log('[SAVE] Request received:', {
+      patient_uhid: data.patient_uhid,
+      doctor_name: data.doctor_name,
+      booking_uuid: data.booking_uuid,
+    })
+
+    // Test connection
+    const { count, error: countError } = await supabase
+      .from('discharge_summaries')
+      .select('*', { count: 'exact', head: true })
+
+    console.log('[TEST] Table connectivity:', {
+      count,
+      error: countError ? { code: countError.code, message: countError.message } : null,
+    })
+
+    if (countError) {
+      console.error('[ERROR] Table test failed:', JSON.stringify(countError, null, 2))
+      return NextResponse.json({ 
+        error: `Table test failed: ${countError.message}`,
+        details: countError 
+      }, { status: 503 })
+    }
+
+    // Attempt insert
     const { data: saved, error } = await supabase
       .from('discharge_summaries')
       .insert([{
@@ -60,20 +89,25 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Database error:', error)
-      // If table doesn't exist, return more helpful message
-      if (error.message?.includes('Could not find the table')) {
-        return NextResponse.json({ 
-          error: 'Database table not yet provisioned. Please contact administrator. Migration: migrations/discharge_summaries_001.sql' 
-        }, { status: 503 })
-      }
-      throw new Error(`Database insert failed: ${error.message}`)
+      console.error('[ERROR] Insert failed:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      })
+      return NextResponse.json({ 
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      }, { status: 500 })
     }
 
+    console.log('[SUCCESS] Insert completed:', { id: saved.id })
     return NextResponse.json({ success: true, id: saved.id }, { status: 201 })
   } catch (error) {
+    console.error('[EXCEPTION]', error)
     const message = error instanceof Error ? error.message : String(error)
-    console.error('Save error:', message)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
