@@ -178,21 +178,25 @@ export default function DischargeSummaryPage() {
     }
     setSaving(true)
     try {
+      const payload = {
+        ...form,
+        booking_uuid: bookingId,
+      }
+      console.log('[FRONTEND] POST payload:', JSON.stringify(payload, null, 2))
+
       const res = await fetch('/api/admin/discharge-summary/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          booking_uuid: bookingId,
-        }),
+        body: JSON.stringify(payload),
       })
       const result = await res.json()
+      console.log('[FRONTEND] API response:', result)
       if (!res.ok) throw new Error(result.error || 'Save failed')
       setHasUnsavedChanges(false)
       alert('Discharge summary saved successfully')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.error('Save error:', message)
+      console.error('[FRONTEND] Save error:', message)
       alert(`Failed to save: ${message}`)
     } finally {
       setSaving(false)
