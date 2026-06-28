@@ -7,8 +7,18 @@ import { join } from 'path'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+function sanitizeText(text: string): string {
+  if (!text) return text
+  return text
+    .replace(/₂/g, '2')
+    .replace(/₃/g, '3')
+    .replace(/SpO₂/g, 'SpO2')
+    .replace(/CO₂/g, 'CO2')
+    .replace(/O₂/g, 'O2')
+}
+
 function addText(page: any, text: string, x: number, y: number, size: number = 10) {
-  page.drawText(text, { x, y, size })
+  page.drawText(sanitizeText(text || ''), { x, y, size })
 }
 
 export async function POST(req: NextRequest) {
@@ -36,7 +46,6 @@ export async function POST(req: NextRequest) {
     }
 
     const leftMargin = 40
-    const lineHeight = 12
 
     // Patient UHID
     addText(page, `Patient UHID- ${data.patient_uhid || '_______________'}`, leftMargin, y, 10)
