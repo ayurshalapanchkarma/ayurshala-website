@@ -13,26 +13,31 @@ interface DischargeSummaryHeaderProps {
 export function DischargeSummaryHeader({ onSave, onDownloadPDF, isLoading, isSaving }: DischargeSummaryHeaderProps) {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/30 dark:bg-black/30 border-b border-white/20 dark:border-white/10 shadow-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 flex-1">
-          <Link href="/admin/appointments" className="text-blue-600 hover:text-blue-700 text-sm">
+      <div className="h-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
+        {/* Left section */}
+        <div className="flex items-center gap-6 min-w-0">
+          <Link href="/admin/appointments" className="text-blue-600 hover:text-blue-700 text-sm flex-shrink-0">
             ← Back
           </Link>
-          <Link href="/admin" className="h-9 relative w-auto hover:opacity-80 transition-opacity">
-            <Image
-              src="/ayurshala_text.png"
-              alt="Ayurshala Logo"
-              height={36}
-              width={140}
-              className="object-contain"
-            />
-          </Link>
-          <h1 className="text-sm font-semibold text-gray-900 dark:text-white">
-            Discharge Summary – Day Care
-          </h1>
+          
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="h-10 w-auto flex-shrink-0">
+              <Image
+                src="/ayurshala_text.png"
+                alt="Ayurshala Logo"
+                height={40}
+                width={133}
+                className="h-10 w-auto object-contain"
+              />
+            </div>
+            <h1 className="text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+              Discharge Summary – Day Care
+            </h1>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Right section */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           {onSave && (
             <button
               onClick={onSave}
