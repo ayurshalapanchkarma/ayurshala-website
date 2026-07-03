@@ -116,9 +116,16 @@ export async function POST(req: NextRequest) {
       console.log('[EXPLICIT-UPSERT] Record exists with id:', existingRecord.id)
       console.log('[EXPLICIT-UPSERT] Performing UPDATE...')
       
+      // CRITICAL: Explicitly set updated_at to NOW() for UPDATE operations
+      // Supabase doesn't auto-update this, we must do it explicitly
+      const updatePayload = {
+        ...insertPayload,
+        updated_at: new Date().toISOString() // Ensure updated_at is set to current time
+      }
+      
       const { data, error } = await supabase
         .from('discharge_summaries')
-        .update(insertPayload)
+        .update(updatePayload)
         .eq('id', existingRecord.id)
         .select()
         .single()
