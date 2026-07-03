@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PDFDocument } from 'pdf-lib'
-import { FlowDocument, Heading, LabelValue, Paragraph, NumberedList, Table, SignatureBlock, Spacer } from '@/lib/flow-document'
+import { FlowDocument, Heading, LabelValue, Paragraph, NumberedList, MedicineTable, SignatureBlock, Spacer } from '@/lib/flow-document'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
@@ -129,15 +129,13 @@ export async function POST(req: NextRequest) {
 
     if (data.medicines && data.medicines.length > 0) {
       doc.addBlock(new Heading('MEDICINES'))
-      const headers = ['Medication', 'Dosage', 'Instructions', 'Schedule', 'Duration']
-      const rows = data.medicines.map((m: any) => [
-        sanitize(m.name || ''),
-        sanitize(m.dosage || ''),
-        sanitize(m.instructions || ''),
-        sanitize(m.schedule || ''),
-        sanitize(m.duration || ''),
-      ])
-      doc.addBlock(new Table(headers, rows))
+      doc.addBlock(new MedicineTable(data.medicines.map((m: any) => ({
+        name: sanitize(m.name || ''),
+        dosage: sanitize(m.dosage || ''),
+        instructions: sanitize(m.instructions || ''),
+        schedule: sanitize(m.schedule || ''),
+        duration: sanitize(m.duration || ''),
+      }))))
       doc.addBlock(new Spacer(12))
     }
 
