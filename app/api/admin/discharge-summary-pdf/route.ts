@@ -123,7 +123,14 @@ export async function POST(req: NextRequest) {
 
     if (data.advice_discharge) {
       doc.addBlock(new Heading('ADVICE ON DISCHARGE'))
-      doc.addBlock(new Paragraph(sanitize(data.advice_discharge)))
+      console.log(`[ADVICE] Type: ${typeof data.advice_discharge}, IsArray: ${Array.isArray(data.advice_discharge)}`)
+      if (Array.isArray(data.advice_discharge)) {
+        console.log(`[ADVICE] Items: ${data.advice_discharge.length}`)
+        doc.addBlock(new NumberedList(data.advice_discharge.map((a: any) => sanitize(typeof a === 'string' ? a : JSON.stringify(a)))))
+      } else {
+        console.log(`[ADVICE] Content length: ${data.advice_discharge.length}`)
+        doc.addBlock(new Paragraph(sanitize(data.advice_discharge)))
+      }
       doc.addBlock(new Spacer(12))
     }
 
@@ -141,19 +148,40 @@ export async function POST(req: NextRequest) {
 
     if (data.cautions) {
       doc.addBlock(new Heading('CAUTIONS'))
-      doc.addBlock(new Paragraph(sanitize(data.cautions)))
+      console.log(`[CAUTIONS] Type: ${typeof data.cautions}, IsArray: ${Array.isArray(data.cautions)}`)
+      if (Array.isArray(data.cautions)) {
+        console.log(`[CAUTIONS] Items: ${data.cautions.length}`)
+        doc.addBlock(new NumberedList(data.cautions.map((c: any) => sanitize(typeof c === 'string' ? c : JSON.stringify(c)))))
+      } else {
+        console.log(`[CAUTIONS] Content length: ${data.cautions.length}`)
+        doc.addBlock(new Paragraph(sanitize(data.cautions)))
+      }
       doc.addBlock(new Spacer(12))
     }
 
     if (data.pathya) {
       doc.addBlock(new Heading('PATHYA (RECOMMENDED)'))
-      doc.addBlock(new Paragraph(sanitize(data.pathya)))
+      console.log(`[PATHYA] Type: ${typeof data.pathya}, IsArray: ${Array.isArray(data.pathya)}`)
+      if (Array.isArray(data.pathya)) {
+        console.log(`[PATHYA] Items: ${data.pathya.length}`)
+        doc.addBlock(new NumberedList(data.pathya.map((p: any) => sanitize(typeof p === 'string' ? p : JSON.stringify(p)))))
+      } else {
+        console.log(`[PATHYA] Content length: ${data.pathya.length}`)
+        doc.addBlock(new Paragraph(sanitize(data.pathya)))
+      }
       doc.addBlock(new Spacer(12))
     }
 
     if (data.apathya) {
       doc.addBlock(new Heading('APATHYA (CONTRAINDICATED)'))
-      doc.addBlock(new Paragraph(sanitize(data.apathya)))
+      console.log(`[APATHYA] Type: ${typeof data.apathya}, IsArray: ${Array.isArray(data.apathya)}`)
+      if (Array.isArray(data.apathya)) {
+        console.log(`[APATHYA] Items: ${data.apathya.length}`)
+        doc.addBlock(new NumberedList(data.apathya.map((a: any) => sanitize(typeof a === 'string' ? a : JSON.stringify(a)))))
+      } else {
+        console.log(`[APATHYA] Content length: ${data.apathya.length}`)
+        doc.addBlock(new Paragraph(sanitize(data.apathya)))
+      }
       doc.addBlock(new Spacer(12))
     }
 

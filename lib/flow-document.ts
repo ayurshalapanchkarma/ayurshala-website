@@ -79,9 +79,10 @@ class Paragraph implements Block {
     const lines = this.wrapLines(wrappingWidth)
     let currentY = y
 
-    console.log(`[PARAGRAPH_DEBUG] contentWidth=${contentWidth}, wrappingWidth=${wrappingWidth}, actualLines=${lines.length}`)
+    console.log(`[PARAGRAPH_RENDER_START] y=${y}, contentWidth=${contentWidth}, wrappingWidth=${wrappingWidth}, lines=${lines.length}`)
 
     lines.forEach((line, idx) => {
+      console.log(`  Line ${idx + 1}/${lines.length}: y=${currentY}, text="${line.substring(0, 60)}"`)
       page.drawText(line, {
         x: x + 20,
         y: currentY,
@@ -92,7 +93,7 @@ class Paragraph implements Block {
     })
 
     const actualHeight = lines.length * LINE_HEIGHT
-    console.log(`[PARAGRAPH_RENDER] text="${this.text.substring(0, 50)}...", lines=${lines.length}, height=${actualHeight}, y=${y}, endY=${currentY}`)
+    console.log(`[PARAGRAPH_RENDER_END] height=${actualHeight}, startY=${y}, endY=${currentY}, expectedEnd=${y - actualHeight}`)
     return { height: actualHeight }
   }
 }
@@ -163,13 +164,15 @@ class NumberedList implements Block {
 
   measure(): number {
     let height = 0
+    let totalLines = 0
     this.items.forEach(item => {
       const lines = this.wrapLines(item, CONTENT_WIDTH - 80)
+      totalLines += lines.length
       height += lines.length * LINE_HEIGHT
     })
     const itemSpacing = (this.items.length - 1) * 2
     const total = height + itemSpacing
-    console.log(`[NUMBEREDLIST_MEASURE] items=${this.items.length}, itemsHeight=${height}, spacing=${itemSpacing}, total=${total}`)
+    console.log(`[NUMBEREDLIST_MEASURE] items=${this.items.length}, totalLines=${totalLines}, itemsHeight=${height}, spacing=${itemSpacing}, total=${total}`)
     return total
   }
 
@@ -177,6 +180,7 @@ class NumberedList implements Block {
     let currentY = y
     let totalHeight = 0
     let linesPerItem: number[] = []
+    let itemsDrawn = 0
 
     this.items.forEach((item, index) => {
       const lines = this.wrapLines(item, contentWidth - 80)
@@ -200,6 +204,7 @@ class NumberedList implements Block {
 
       currentY -= LINE_HEIGHT
       totalHeight += LINE_HEIGHT
+      itemsDrawn++
 
       // Draw continuation lines
       lines.slice(1).forEach(line => {
@@ -211,6 +216,7 @@ class NumberedList implements Block {
         })
         currentY -= LINE_HEIGHT
         totalHeight += LINE_HEIGHT
+        itemsDrawn++
       })
 
       // Spacing between items
@@ -220,7 +226,7 @@ class NumberedList implements Block {
       }
     })
 
-    console.log(`[NUMBEREDLIST_RENDER] items=${this.items.length}, lines=${linesPerItem.join(',')}, totalHeight=${totalHeight}, y=${y}, endY=${currentY}`)
+    console.log(`[NUMBEREDLIST_RENDER] items=${this.items.length}, linesPerItem=${linesPerItem.join(',')}, linesDrawn=${itemsDrawn}, totalHeight=${totalHeight}, y=${y}, endY=${currentY}`)
     return { height: totalHeight }
   }
 }
@@ -553,7 +559,9 @@ export class FlowDocument {
 
       // DEBUG LOG - focused format for paragraph/list debugging
       if (blockType === 'NumberedList' || blockType === 'Paragraph' || blockType === 'Heading') {
-        console.log(`[PAGE${pageNum}] ${blockType}: before=${cursorBefore}, height=${result.height}, after=${cursorAfter}`)
+        // Check if this is advice/cautions/pathya/apathya by looking at Heading before it
+        const headingMarker = i > 0 && this.blocks[i-1].constructor.name === 'Heading' ? '⚠️' : '  '
+        console.log(`${headingMarker}[PAGE${pageNum}] ${blockType}: before=${cursorBefore}, height=${result.height}, after=${cursorAfter}`)
       }
 
       // CRITICAL: Use returned height, not estimated
