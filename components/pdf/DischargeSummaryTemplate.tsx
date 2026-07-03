@@ -12,6 +12,7 @@
  */
 
 import { Header } from './Header'
+import { PatientIdentifiers } from './PatientIdentifiers'
 import { PatientInfo } from './PatientInfo'
 import { Section } from './Section'
 import { MedicineTable } from './MedicineTable'
@@ -96,6 +97,16 @@ export function DischargeSummaryTemplate({ data }: DischargeSummaryTemplateProps
     <div className="bg-white text-gray-900 font-serif" id="discharge-summary-document">
       {/* ── Header ── */}
       <Header />
+
+      {/* ── Patient Identifiers ── */}
+      <div className="px-4 sm:px-6">
+        <PatientIdentifiers
+          uhid={data.patient_uhid}
+          patientName={data.patient_name}
+          date={data.dod_date || data.doa_date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+          doctorName={data.doctor_name}
+        />
+      </div>
 
       {/* ── Main content ── */}
       <div className="px-4 sm:px-6 py-4">

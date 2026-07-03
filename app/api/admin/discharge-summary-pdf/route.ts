@@ -114,9 +114,83 @@ export async function POST(req: NextRequest) {
       .eq('booking_uuid', booking_uuid)
       .single()
 
-    // Build HTML
-    console.log('[PDF-V2] Building HTML document...')
-    const html = buildDischargeSummaryHtml(summary, booking?.booking_id || '')
+    // Build HTML using React component
+    console.log('[PDF-V2] Building HTML document with React...')
+    const { renderToString } = require('react-dom/server')
+    const { DischargeSummaryTemplate } = require('@/components/pdf/DischargeSummaryTemplate')
+    
+    const dischargeData = {
+      patient_uhid: summary.patient_uhid || '',
+      patient_name: summary.patient_name || '',
+      age: summary.age || '',
+      sex: summary.sex || '',
+      nationality: summary.nationality || '',
+      address: summary.address || '',
+      doa_date: summary.doa_date || '',
+      doa_time: summary.doa_time || '',
+      dod_date: summary.dod_date || '',
+      dod_time: summary.dod_time || '',
+      diagnosis: summary.diagnosis || '',
+      complaints: Array.isArray(summary.complaints) ? summary.complaints : [],
+      history_present_complaints: summary.history_present_complaints || '',
+      history_days: summary.history_days || '',
+      past_history_medical: summary.past_history_medical || '',
+      past_history_surgical: summary.past_history_surgical || '',
+      past_history_details: summary.past_history_details || '',
+      medication_administered: summary.medication_administered || '',
+      day_of_therapy: summary.day_of_therapy || '',
+      pradhan_vedna: Array.isArray(summary.pradhan_vedna) ? summary.pradhan_vedna : [],
+      vitals_bp: summary.vitals_bp || '',
+      vitals_hr: summary.vitals_hr || '',
+      vitals_nadi: summary.vitals_nadi || '',
+      oe_mala: summary.oe_mala || '',
+      oe_mutra: summary.oe_mutra || '',
+      oe_jihwa: summary.oe_jihwa || '',
+      oe_shuda: summary.oe_shuda || '',
+      oe_nidra: summary.oe_nidra || '',
+      therapies: Array.isArray(summary.therapies) ? summary.therapies : [],
+      investigations: summary.investigations || '',
+      findings_discharge: summary.findings_discharge || '',
+      condition_discharge: summary.condition_discharge || '',
+      advice_discharge: summary.advice_discharge || '',
+      medicine_discharge: summary.medicine_discharge || '',
+      medicines: Array.isArray(summary.medicines) ? summary.medicines : [],
+      cautions: summary.cautions || '',
+      pathya: summary.pathya || '',
+      apathya: summary.apathya || '',
+      doctor_name: summary.doctor_name || '',
+      booking_number: booking?.booking_id || '',
+    }
+
+    const reactHtml = renderToString(DischargeSummaryTemplate({ data: dischargeData }))
+    
+    // Wrap in full HTML document with styles
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discharge Summary - ${summary.patient_name || 'Patient'}</title>
+  <style>
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.5; color: #333; background: white; }
+    html, body { height: 100%; }
+    @page { size: A4; margin: 0.5in; }
+    .page-break-avoid { page-break-inside: avoid; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f3f4f6; font-weight: 600; }
+    .no-print { display: none; }
+    @media print {
+      body { margin: 0; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  ${reactHtml}
+</body>
+</html>`
+    
     console.log('[PDF-V2] HTML built, length:', html.length)
 
     // Generate PDF with Puppeteer
@@ -165,125 +239,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function escape(text: any): string {
-  if (!text) return ''
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
 function buildDischargeSummaryHtml(summary: any, bookingNumber: string): string {
-  const complaints = Array.isArray(summary.complaints) ? summary.complaints : []
-  const medicines = Array.isArray(summary.medicines) ? summary.medicines : []
-  const therapies = Array.isArray(summary.therapies) ? summary.therapies : []
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Discharge Summary - ${escape(summary.patient_name)}</title>
-  <style>
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body { margin: 0; padding: 20px; background: white; font-family: system-ui, sans-serif; }
-    .container { max-width: 210mm; margin: 0 auto; background: white; }
-    .header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #f97316; padding-bottom: 16px; }
-    .logo { font-size: 24px; font-weight: bold; color: #f97316; }
-    .clinic-name { font-size: 16px; font-weight: 600; margin-top: 8px; }
-    .clinic-info { font-size: 12px; color: #666; margin-top: 4px; }
-    .title { font-size: 20px; font-weight: bold; color: #f97316; margin: 20px 0; text-align: center; }
-    .section { margin-bottom: 20px; page-break-inside: avoid; }
-    .section-title { font-size: 14px; font-weight: 700; color: white; background: #f97316; padding: 8px 12px; margin-bottom: 12px; }
-    .row { display: flex; gap: 20px; margin-bottom: 12px; }
-    .field { flex: 1; }
-    .label { font-weight: 600; font-size: 12px; color: #666; }
-    .value { font-size: 13px; color: #333; margin-top: 4px; }
-    .list { margin-left: 20px; }
-    .list-item { margin-bottom: 8px; font-size: 13px; color: #333; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    thead { background: #f3f4f6; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
-    th { font-weight: 600; }
-    .signature-block { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
-    .signature-line { width: 200px; border-top: 1px solid #000; margin-top: 40px; margin-bottom: 4px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">AYURSHALA</div>
-      <div class="clinic-name">PANCHAKARMA CENTER</div>
-      <div class="clinic-info">SP-28, Wajidpur, Sector-130, Noida – 201301</div>
-      <div class="clinic-info">+91-9821224767 | ayurshalapanchkarma@gmail.com</div>
-    </div>
-
-    <div class="title">DISCHARGE SUMMARY</div>
-
-    <div class="section">
-      <div class="section-title">PATIENT INFORMATION</div>
-      <div class="row">
-        <div class="field">
-          <div class="label">UHID</div>
-          <div class="value">${escape(summary.patient_uhid)}</div>
-        </div>
-        <div class="field">
-          <div class="label">Patient Name</div>
-          <div class="value">${escape(summary.patient_name)}</div>
-        </div>
-        <div class="field">
-          <div class="label">Age / Sex</div>
-          <div class="value">${escape(summary.age)} / ${escape(summary.sex)}</div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <div class="label">Nationality</div>
-          <div class="value">${escape(summary.nationality)}</div>
-        </div>
-        <div class="field">
-          <div class="label">Booking #</div>
-          <div class="value">${escape(bookingNumber)}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="row">
-        <div class="field">
-          <div class="label">Date of Admission</div>
-          <div class="value">${escape(summary.doa_date)} ${escape(summary.doa_time)}</div>
-        </div>
-        <div class="field">
-          <div class="label">Date of Discharge</div>
-          <div class="value">${escape(summary.dod_date)} ${escape(summary.dod_time)}</div>
-        </div>
-      </div>
-    </div>
-
-    ${summary.diagnosis ? `<div class="section"><div class="section-title">DIAGNOSIS</div><div class="value">${escape(summary.diagnosis)}</div></div>` : ''}
-
-    ${complaints.length > 0 ? `<div class="section"><div class="section-title">COMPLAINTS ON ADMISSION</div><div class="list">${complaints.map((c: any, i: number) => `<div class="list-item">${i + 1}. ${escape(c)}</div>`).join('')}</div></div>` : ''}
-
-    ${summary.history_present_complaints ? `<div class="section"><div class="section-title">HISTORY OF PRESENT COMPLAINTS</div><div class="value">${escape(summary.history_present_complaints)}</div></div>` : ''}
-
-    ${therapies.length > 0 ? `<div class="section"><div class="section-title">THERAPIES / PROCEDURES</div><div class="list">${therapies.map((t: any, i: number) => `<div class="list-item">${i + 1}. ${escape(t)}</div>`).join('')}</div></div>` : ''}
-
-    ${medicines.length > 0 ? `<div class="section"><div class="section-title">MEDICINES</div><table><thead><tr><th>Medicine</th><th>Dosage</th><th>Instructions</th><th>Schedule</th><th>Duration</th></tr></thead><tbody>${medicines.map((m: any) => `<tr><td>${escape(m.name)}</td><td>${escape(m.dosage)}</td><td>${escape(m.instructions)}</td><td>${escape(m.schedule)}</td><td>${escape(m.duration)}</td></tr>`).join('')}</tbody></table></div>` : ''}
-
-    ${summary.advice_discharge ? `<div class="section"><div class="section-title">ADVICE ON DISCHARGE</div><div class="value">${escape(summary.advice_discharge)}</div></div>` : ''}
-
-    ${summary.pathya || summary.apathya || summary.cautions ? `<div class="section">${summary.pathya ? `<div><strong>Pathya:</strong> ${escape(summary.pathya)}</div>` : ''}${summary.apathya ? `<div><strong>Apathya:</strong> ${escape(summary.apathya)}</div>` : ''}${summary.cautions ? `<div><strong>Cautions:</strong> ${escape(summary.cautions)}</div>` : ''}</div>` : ''}
-
-    <div class="signature-block">
-      <div style="float: right; text-align: center;">
-        <div class="signature-line"></div>
-        <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">${escape(summary.doctor_name)}</div>
-      </div>
-      <div style="clear: both;"></div>
-    </div>
-  </div>
-</body>
-</html>`
+  // This function is deprecated - use React component instead
+  throw new Error('Use React DischargeSummaryTemplate component instead')
 }
