@@ -2,6 +2,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 /**
  * Security Headers Middleware - OWASP Top 10 & Industry Best Practices
+ * 
+ * This middleware applies security headers to all responses.
+ * For Next.js 16+, this file can remain as middleware.ts for backwards compatibility.
+ * The warning about "deprecated convention" is informational and doesn't break functionality.
  */
 export function middleware(request: NextRequest) {
   const response = NextResponse.next()
