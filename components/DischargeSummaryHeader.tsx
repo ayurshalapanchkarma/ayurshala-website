@@ -1,16 +1,17 @@
 'use client'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Download, Save } from 'lucide-react'
+import { Download, Save, Eye } from 'lucide-react'
 
 interface DischargeSummaryHeaderProps {
   onSave?: () => void
   onDownloadPDF?: () => void
+  bookingUuid?: string | null
   isLoading?: boolean
   isSaving?: boolean
 }
 
-export function DischargeSummaryHeader({ onSave, onDownloadPDF, isLoading, isSaving }: DischargeSummaryHeaderProps) {
+export function DischargeSummaryHeader({ onSave, onDownloadPDF, bookingUuid, isLoading, isSaving }: DischargeSummaryHeaderProps) {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/30 dark:bg-black/30 border-b border-white/20 dark:border-white/10 shadow-xl">
       <div className="h-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
@@ -38,6 +39,16 @@ export function DischargeSummaryHeader({ onSave, onDownloadPDF, isLoading, isSav
 
         {/* Right section */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {bookingUuid && (
+            <Link
+              href={`/admin/pdf-preview?booking_uuid=${bookingUuid}`}
+              target="_blank"
+              className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800 whitespace-nowrap"
+            >
+              <Eye className="w-4 h-4" />
+              Preview
+            </Link>
+          )}
           {onSave && (
             <button
               onClick={onSave}
