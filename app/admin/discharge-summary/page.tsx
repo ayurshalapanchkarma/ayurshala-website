@@ -67,14 +67,8 @@ export default function DischargeSummaryPage() {
       loadDischargeSummary(bookId)
       loadBookingData(bookId)
     } else {
-      console.warn('[FRONTEND] No booking_id in URL - page opened without appointment')
-      setValidationError('No appointment selected. Please open the discharge summary from an appointment.')
-      const now = new Date()
-      setForm(prev => ({
-        ...prev,
-        dod_date: now.toISOString().split('T')[0],
-        dod_time: now.toTimeString().slice(0, 5),
-      }))
+      console.warn('[FRONTEND] No booking_id in URL - page must be opened from an appointment')
+      // Don't set any form data - page will show error UI
     }
   }, [])
 
@@ -277,6 +271,35 @@ export default function DischargeSummaryPage() {
   }
 
   if (!mounted) return null
+
+  // CRITICAL: If no booking_id, show error UI and block entire page
+  if (!bookingId) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg p-8">
+          <div className="text-center">
+            <div className="mb-4">
+              <svg className="mx-auto h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0a9 9 0 11-9-9m0 0a9 9 0 019 9" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              No Appointment Selected
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Discharge summaries must be created for a specific appointment. Please select an appointment from the Appointments page to create a discharge summary.
+            </p>
+            <a
+              href="/admin/appointments"
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
+            >
+              Go to Appointments
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
