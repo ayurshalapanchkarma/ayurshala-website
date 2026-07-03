@@ -89,16 +89,12 @@ export default function DischargeSummariesPage() {
   async function handleDownloadPDF(row: SummaryRow) {
     setDownloading(row.id)
     try {
-      // Load the full persisted record first, then generate PDF from it
-      const res = await fetch(`/api/admin/discharge-summary?booking_uuid=${encodeURIComponent(row.booking_uuid)}`)
-      if (!res.ok) throw new Error('Failed to load discharge summary data')
-      const { data } = await res.json()
-      if (!data) throw new Error('No persisted discharge summary found for this booking')
-
-      const pdfRes = await fetch('/api/admin/discharge-summary-pdf', {
+      // Use the new Puppeteer-based renderer (v2)
+      // Pass booking_uuid to load from database
+      const pdfRes = await fetch('/api/admin/discharge-summary-pdf-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ booking_uuid: row.booking_uuid }),
       })
       if (!pdfRes.ok) {
         const err = await pdfRes.json()

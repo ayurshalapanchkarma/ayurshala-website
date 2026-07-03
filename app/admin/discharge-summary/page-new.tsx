@@ -276,17 +276,19 @@ export default function DischargeSummaryPage() {
         if (hasUnsavedChanges) return
       }
     }
-    if (!form.doctor_name) {
-      alert('Please select a doctor before downloading')
+    if (!appointmentContext) {
+      alert('No appointment selected')
       return
     }
 
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/discharge-summary-pdf', {
+      // Use the new Puppeteer-based renderer (v2)
+      // Pass booking_uuid instead of form data to ensure we render from saved database record
+      const res = await fetch('/api/admin/discharge-summary-pdf-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ booking_uuid: appointmentContext.bookingUuid }),
       })
       if (!res.ok) {
         const error = await res.json()
