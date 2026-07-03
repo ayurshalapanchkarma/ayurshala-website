@@ -91,7 +91,7 @@ export default function DischargeSummariesPage() {
     try {
       // Use the new Puppeteer-based renderer (v2)
       // Pass booking_uuid to load from database
-      const pdfRes = await fetch('/api/admin/discharge-summary-pdf-v2', {
+      const pdfRes = await fetch('/api/admin/discharge-summary-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ booking_uuid: row.booking_uuid }),
