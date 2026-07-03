@@ -131,13 +131,24 @@ const testData: DischargeSummaryData = {
 
 export default function PDFPreviewPage() {
   const [showPrintHint, setShowPrintHint] = useState(true)
+  const [showDebugPanel, setShowDebugPanel] = useState(false)
   const [data, setData] = useState<DischargeSummaryData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [bookingUuid, setBookingUuid] = useState<string | null>(null)
   const [mode, setMode] = useState<'dev' | 'production'>('dev')
+  const [metadata, setMetadata] = useState<Record<string, string>>({})
+  
+  // Enable debug panel in development
+  useEffect(() => {
+    // Check if running in development
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      setShowDebugPanel(true)
+    }
+  }, [])
 
   // Load real data if booking_uuid is provided
+  // Always load from DB, never preview unsaved React state
   useEffect(() => {
     // Read booking_uuid from URL
     const params = new URLSearchParams(window.location.search)
@@ -148,7 +159,7 @@ export default function PDFPreviewPage() {
       setMode('production')
       loadRealData(uuid)
     } else {
-      // Use mock test data
+      // Use mock test data (development only)
       setMode('dev')
       setData(testData)
     }
@@ -222,11 +233,29 @@ export default function PDFPreviewPage() {
       }
 
       setData(transformedData)
+      
+      // Capture metadata for debug panel
+      setMetadata({
+        'Booking UUID': uuid,
+        'Patient Name': summary.patient_name || '—',
+        'Patient ID': summary.patient_uhid || '—',
+        'Doctor': summary.doctor_name || '—',
+        'Updated At': summary.updated_at ? new Date(summary.updated_at).toLocaleString() : '—',
+        'Template Version': '1.0',
+        'Renderer': 'HTML Preview',
+      })
     } catch (err) {
       console.error('Error loading discharge summary:', err)
       setError('An error occurred while loading the discharge summary.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Reload from database (ensures we always preview persisted data, not React state)
+  async function reloadFromDb() {
+    if (bookingUuid) {
+      await loadRealData(bookingUuid)
     }
   }
 
@@ -307,15 +336,25 @@ export default function PDFPreviewPage() {
                   : 'Development Mode: Test Data'}
               </p>
             </div>
-            <button
-              onClick={() => window.print()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-              Print to PDF (Ctrl+P)
-            </button>
+            <div className="flex gap-2">
+              {mode === 'production' && (
+                <button
+                  onClick={reloadFromDb}
+                  disabled={loading}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm disabled:opacity-50">
+                  ⟳ Reload from DB
+                </button>
+              )}
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                Print to PDF (Ctrl+P)
+              </button>
+            </div>
           </div>
 
           {/* Mode badge */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             {mode === 'production' && (
               <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">
                 PRODUCTION DATA
@@ -326,8 +365,37 @@ export default function PDFPreviewPage() {
                 DEV: MOCK DATA
               </span>
             )}
+            
+            {/* Debug toggle (dev only) */}
+            {showDebugPanel && (
+              <button
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                className="ml-auto text-xs text-gray-500 hover:text-gray-700 underline">
+                {showDebugPanel ? 'Hide' : 'Show'} Debug Info
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Debug Panel (development only) */}
+        {showDebugPanel && metadata && Object.keys(metadata).length > 0 && (
+          <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h3 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Preview Source</h3>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              {Object.entries(metadata).map(([key, value]) => (
+                <div key={key}>
+                  <p className="text-gray-500 font-medium">{key}</p>
+                  <p className="text-gray-800 font-mono break-all">{value}</p>
+                </div>
+              ))}
+            </div>
+            {mode === 'production' && (
+              <p className="text-xs text-gray-500 mt-3 pt-2 border-t">
+                ℹ️ Preview Source shows data loaded from database. Click "Reload from DB" to refresh before printing.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Print hint */}
         {showPrintHint && (
