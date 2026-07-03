@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DischargeSummaryTemplate, type DischargeSummaryData } from '@/components/pdf/DischargeSummaryTemplate'
 import '@/styles/pdf.css'
 
@@ -10,15 +10,26 @@ import '@/styles/pdf.css'
  * Use it to verify layout, spacing, tables, and page breaks BEFORE
  * integrating Puppeteer.
  * 
+ * Usage:
+ * 
+ * Development Mode (mock data):
+ *   /admin/pdf-preview
+ *   Shows comprehensive test data for layout testing
+ * 
+ * Production Mode (real data):
+ *   /admin/pdf-preview?booking_uuid=<uuid>
+ *   Loads actual saved discharge summary from database
+ *   Ideal for verifying exact production documents
+ * 
  * To test:
- * 1. Open /admin/pdf-preview
+ * 1. Open the URL (with or without booking_uuid)
  * 2. Review the layout — should look like a professional hospital document
  * 3. Test print: Ctrl+P / Cmd+P → Print to PDF
  * 4. Verify page breaks, tables, signatures look correct
  * 5. Once satisfied, Puppeteer will generate the same PDF automatically
  */
 
-// Sample test data — change this to test different scenarios
+// Sample test data — used when no booking_uuid is provided
 const testData: DischargeSummaryData = {
   patient_uhid: 'AYP-2026-000042',
   patient_name: 'Rajesh Kumar Singh',
@@ -120,23 +131,202 @@ const testData: DischargeSummaryData = {
 
 export default function PDFPreviewPage() {
   const [showPrintHint, setShowPrintHint] = useState(true)
+  const [data, setData] = useState<DischargeSummaryData | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [bookingUuid, setBookingUuid] = useState<string | null>(null)
+  const [mode, setMode] = useState<'dev' | 'production'>('dev')
+
+  // Load real data if booking_uuid is provided
+  useEffect(() => {
+    // Read booking_uuid from URL
+    const params = new URLSearchParams(window.location.search)
+    const uuid = params.get('booking_uuid')
+
+    if (uuid) {
+      setBookingUuid(uuid)
+      setMode('production')
+      loadRealData(uuid)
+    } else {
+      // Use mock test data
+      setMode('dev')
+      setData(testData)
+    }
+  }, [])
+
+  async function loadRealData(uuid: string) {
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Fetch the discharge summary
+      const res = await fetch(`/api/admin/discharge-summary?booking_uuid=${encodeURIComponent(uuid)}`)
+
+      if (!res.ok) {
+        const errorBody = await res.json()
+        setError(errorBody.error || 'Failed to load discharge summary')
+        setLoading(false)
+        return
+      }
+
+      const { data: summary } = await res.json()
+
+      if (!summary) {
+        setError('No saved discharge summary found for this booking.')
+        setLoading(false)
+        return
+      }
+
+      // Transform database record to DischargeSummaryData format
+      const transformedData: DischargeSummaryData = {
+        patient_uhid: summary.patient_uhid || '',
+        patient_name: summary.patient_name || '',
+        age: summary.age || '',
+        sex: summary.sex || '',
+        nationality: summary.nationality || 'Indian',
+        address: summary.address || '',
+        doa_date: summary.doa_date || '',
+        doa_time: summary.doa_time || '',
+        dod_date: summary.dod_date || '',
+        dod_time: summary.dod_time || '',
+        diagnosis: summary.diagnosis || '',
+        complaints: summary.complaints || [],
+        history_present_complaints: summary.history_present_complaints || '',
+        history_days: summary.history_days || '',
+        past_history_medical: summary.past_history_medical || '',
+        past_history_surgical: summary.past_history_surgical || '',
+        past_history_details: summary.past_history_details || '',
+        medication_administered: summary.medication_administered || '',
+        day_of_therapy: summary.day_of_therapy || '',
+        pradhan_vedna: summary.pradhan_vedna || [],
+        vitals_bp: summary.vitals_bp || '',
+        vitals_hr: summary.vitals_hr || '',
+        vitals_nadi: summary.vitals_nadi || '',
+        oe_mala: summary.oe_mala || '',
+        oe_mutra: summary.oe_mutra || '',
+        oe_jihwa: summary.oe_jihwa || '',
+        oe_shuda: summary.oe_shuda || '',
+        oe_nidra: summary.oe_nidra || '',
+        therapies: summary.therapies || [],
+        investigations: summary.investigations || '',
+        findings_discharge: summary.findings_discharge || '',
+        condition_discharge: summary.condition_discharge || '',
+        advice_discharge: summary.advice_discharge || '',
+        medicine_discharge: summary.medicine_discharge || '',
+        medicines: summary.medicines || [],
+        cautions: summary.cautions || '',
+        pathya: summary.pathya || '',
+        apathya: summary.apathya || '',
+        doctor_name: summary.doctor_name || '',
+        booking_number: summary.booking_number || '',
+      }
+
+      setData(transformedData)
+    } catch (err) {
+      console.error('Error loading discharge summary:', err)
+      setError('An error occurred while loading the discharge summary.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-gray-100 min-h-screen py-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-gray-600">Loading discharge summary...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gray-100 min-h-screen py-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow p-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">PDF Preview</h1>
+            {bookingUuid ? (
+              <>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-red-900"><strong>Error:</strong> {error}</p>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  Booking UUID: <code className="bg-gray-100 px-2 py-1 rounded text-sm">{bookingUuid}</code>
+                </p>
+                <button
+                  onClick={() => window.history.back()}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium">
+                  Go Back
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-blue-900">
+                    <strong>Select a booking to preview a discharge summary.</strong>
+                  </p>
+                  <p className="text-sm text-blue-800 mt-2">
+                    Open this page from the Discharge Summaries list, or use the URL pattern:
+                  </p>
+                  <code className="block bg-blue-100 px-3 py-2 rounded text-xs mt-2">/admin/pdf-preview?booking_uuid=&lt;uuid&gt;</code>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!data) {
+    return (
+      <div className="bg-gray-100 min-h-screen py-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-gray-600">No data to display.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-gray-100 min-h-screen py-6">
       <div className="max-w-4xl mx-auto">
         {/* Controls */}
-        <div className="mb-4 bg-white rounded-lg shadow p-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">PDF Preview</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              This is how the discharge summary will appear in the PDF
-            </p>
+        <div className="mb-4 bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">PDF Preview</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                {mode === 'production' 
+                  ? `Production Data: ${data.patient_name} (${data.patient_uhid})` 
+                  : 'Development Mode: Test Data'}
+              </p>
+            </div>
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+              Print to PDF (Ctrl+P)
+            </button>
           </div>
-          <button
-            onClick={() => window.print()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-            Print to PDF (Ctrl+P)
-          </button>
+
+          {/* Mode badge */}
+          <div className="flex gap-2">
+            {mode === 'production' && (
+              <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">
+                PRODUCTION DATA
+              </span>
+            )}
+            {mode === 'dev' && (
+              <span className="inline-block px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded">
+                DEV: MOCK DATA
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Print hint */}
@@ -156,13 +346,18 @@ export default function PDFPreviewPage() {
         {/* Template rendering */}
         <div className="bg-white shadow">
           <div className="p-6 sm:p-8">
-            <DischargeSummaryTemplate data={testData} />
+            <DischargeSummaryTemplate data={data} />
           </div>
         </div>
 
         {/* Footer note */}
         <div className="mt-4 text-center text-xs text-gray-500">
           <p>Once this preview looks correct, Puppeteer will generate PDFs using the same component.</p>
+          {mode === 'dev' && (
+            <p className="mt-2 text-gray-400">
+              To preview real data: <code className="bg-gray-100 px-2 py-1 rounded text-xs">/admin/pdf-preview?booking_uuid=&lt;uuid&gt;</code>
+            </p>
+          )}
         </div>
       </div>
     </div>
