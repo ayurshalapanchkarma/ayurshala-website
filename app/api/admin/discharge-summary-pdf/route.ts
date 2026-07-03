@@ -23,11 +23,24 @@ async function launchBrowser() {
   if (isVercel) {
     // Vercel serverless environment
     console.log('[PDF-V2] Using puppeteer-core + chromium for Vercel')
-    return await puppeteerCore.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
-      headless: true,
-    } as any)
+    
+    try {
+      const executable = await chromium.executablePath()
+      console.log('[PDF-V2] Chromium executable path:', executable)
+      
+      if (!executable) {
+        throw new Error('Chromium executable path is undefined - package not bundled correctly')
+      }
+      
+      return await puppeteerCore.launch({
+        args: chromium.args,
+        executablePath: executable,
+        headless: true,
+      } as any)
+    } catch (error) {
+      console.error('[PDF-V2] Failed to launch Chromium on Vercel:', error instanceof Error ? error.message : String(error))
+      throw error
+    }
   } else {
     // Local development
     console.log('[PDF-V2] Using full Puppeteer for local development')
