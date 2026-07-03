@@ -33,39 +33,55 @@ export async function POST(req: NextRequest) {
       patient_uhid: data.patient_uhid || 'unknown',
     })
 
-    // ── Log all incoming fields to identify undefined values ──
-    console.log('[PDF] Input fields:', {
-      patient_uhid: { value: data.patient_uhid, type: typeof data.patient_uhid },
-      patient_name: { value: data.patient_name, type: typeof data.patient_name },
-      age: { value: data.age, type: typeof data.age },
-      sex: { value: data.sex, type: typeof data.sex },
-      diagnosis: { value: data.diagnosis, type: typeof data.diagnosis },
-      complaints: { value: Array.isArray(data.complaints) ? `[${data.complaints.length} items]` : data.complaints, type: typeof data.complaints },
-      history_present_complaints: { value: data.history_present_complaints, type: typeof data.history_present_complaints },
-      past_history_medical: { value: data.past_history_medical, type: typeof data.past_history_medical },
-      past_history_surgical: { value: data.past_history_surgical, type: typeof data.past_history_surgical },
-      medication_administered: { value: data.medication_administered, type: typeof data.medication_administered },
-      day_of_therapy: { value: data.day_of_therapy, type: typeof data.day_of_therapy },
-      pradhan_vedna: { value: Array.isArray(data.pradhan_vedna) ? `[${data.pradhan_vedna.length} items]` : data.pradhan_vedna, type: typeof data.pradhan_vedna },
-      vitals_bp: { value: data.vitals_bp, type: typeof data.vitals_bp },
-      vitals_hr: { value: data.vitals_hr, type: typeof data.vitals_hr },
-      vitals_nadi: { value: data.vitals_nadi, type: typeof data.vitals_nadi },
-      oe_mala: { value: data.oe_mala, type: typeof data.oe_mala },
-      oe_mutra: { value: data.oe_mutra, type: typeof data.oe_mutra },
-      oe_jihwa: { value: data.oe_jihwa, type: typeof data.oe_jihwa },
-      oe_shuda: { value: data.oe_shuda, type: typeof data.oe_shuda },
-      oe_nidra: { value: data.oe_nidra, type: typeof data.oe_nidra },
-      therapies: { value: Array.isArray(data.therapies) ? `[${data.therapies.length} items]` : data.therapies, type: typeof data.therapies },
-      investigations: { value: data.investigations, type: typeof data.investigations },
-      findings_discharge: { value: data.findings_discharge, type: typeof data.findings_discharge },
-      condition_discharge: { value: data.condition_discharge, type: typeof data.condition_discharge },
-      advice_discharge: { value: data.advice_discharge, type: typeof data.advice_discharge },
-      medicines: { value: Array.isArray(data.medicines) ? `[${data.medicines.length} items]` : data.medicines, type: typeof data.medicines },
-      cautions: { value: data.cautions, type: typeof data.cautions },
-      pathya: { value: data.pathya, type: typeof data.pathya },
-      apathya: { value: data.apathya, type: typeof data.apathya },
-      doctor_name: { value: data.doctor_name, type: typeof data.doctor_name },
-    })
+    // ── COMPREHENSIVE PAYLOAD LOG ──
+    console.log('=== PDF PAYLOAD (FULL) ===')
+    console.dir(data, { depth: null, maxArrayLength: 50 })
+    console.log('=== END PDF PAYLOAD ===')
+
+    // ── Log all incoming fields with type checking ──
+    console.log('[PDF] Field presence and types:')
+    const fieldStatus = {
+      patient_uhid: { value: data.patient_uhid, type: typeof data.patient_uhid, defined: data.patient_uhid !== undefined },
+      patient_name: { value: data.patient_name, type: typeof data.patient_name, defined: data.patient_name !== undefined },
+      age: { value: data.age, type: typeof data.age, defined: data.age !== undefined },
+      sex: { value: data.sex, type: typeof data.sex, defined: data.sex !== undefined },
+      diagnosis: { value: data.diagnosis, type: typeof data.diagnosis, defined: data.diagnosis !== undefined },
+      complaints: { value: Array.isArray(data.complaints) ? `[${data.complaints.length}]` : data.complaints, type: typeof data.complaints, defined: data.complaints !== undefined },
+      history_present_complaints: { value: data.history_present_complaints, type: typeof data.history_present_complaints, defined: data.history_present_complaints !== undefined },
+      past_history_medical: { value: data.past_history_medical, type: typeof data.past_history_medical, defined: data.past_history_medical !== undefined },
+      past_history_surgical: { value: data.past_history_surgical, type: typeof data.past_history_surgical, defined: data.past_history_surgical !== undefined },
+      medication_administered: { value: data.medication_administered, type: typeof data.medication_administered, defined: data.medication_administered !== undefined },
+      day_of_therapy: { value: data.day_of_therapy, type: typeof data.day_of_therapy, defined: data.day_of_therapy !== undefined },
+      pradhan_vedna: { value: Array.isArray(data.pradhan_vedna) ? `[${data.pradhan_vedna.length}]` : data.pradhan_vedna, type: typeof data.pradhan_vedna, defined: data.pradhan_vedna !== undefined },
+      vitals_bp: { value: data.vitals_bp, type: typeof data.vitals_bp, defined: data.vitals_bp !== undefined },
+      vitals_hr: { value: data.vitals_hr, type: typeof data.vitals_hr, defined: data.vitals_hr !== undefined },
+      vitals_nadi: { value: data.vitals_nadi, type: typeof data.vitals_nadi, defined: data.vitals_nadi !== undefined },
+      oe_mala: { value: data.oe_mala, type: typeof data.oe_mala, defined: data.oe_mala !== undefined },
+      oe_mutra: { value: data.oe_mutra, type: typeof data.oe_mutra, defined: data.oe_mutra !== undefined },
+      oe_jihwa: { value: data.oe_jihwa, type: typeof data.oe_jihwa, defined: data.oe_jihwa !== undefined },
+      oe_shuda: { value: data.oe_shuda, type: typeof data.oe_shuda, defined: data.oe_shuda !== undefined },
+      oe_nidra: { value: data.oe_nidra, type: typeof data.oe_nidra, defined: data.oe_nidra !== undefined },
+      therapies: { value: Array.isArray(data.therapies) ? `[${data.therapies.length}]` : data.therapies, type: typeof data.therapies, defined: data.therapies !== undefined },
+      investigations: { value: data.investigations, type: typeof data.investigations, defined: data.investigations !== undefined },
+      findings_discharge: { value: data.findings_discharge, type: typeof data.findings_discharge, defined: data.findings_discharge !== undefined },
+      condition_discharge: { value: data.condition_discharge, type: typeof data.condition_discharge, defined: data.condition_discharge !== undefined },
+      advice_discharge: { value: data.advice_discharge, type: typeof data.advice_discharge, defined: data.advice_discharge !== undefined },
+      medicines: { value: Array.isArray(data.medicines) ? `[${data.medicines.length}]` : data.medicines, type: typeof data.medicines, defined: data.medicines !== undefined },
+      cautions: { value: data.cautions, type: typeof data.cautions, defined: data.cautions !== undefined },
+      pathya: { value: data.pathya, type: typeof data.pathya, defined: data.pathya !== undefined },
+      apathya: { value: data.apathya, type: typeof data.apathya, defined: data.apathya !== undefined },
+      doctor_name: { value: data.doctor_name, type: typeof data.doctor_name, defined: data.doctor_name !== undefined },
+    }
+    console.log(JSON.stringify(fieldStatus, null, 2))
+
+    // Report any undefined fields
+    const undefinedFields = Object.entries(fieldStatus)
+      .filter(([_, info]) => !info.defined)
+      .map(([field]) => field)
+    
+    if (undefinedFields.length > 0) {
+      console.error('[PDF] ⚠️ UNDEFINED FIELDS:', undefinedFields)
+    }
 
     if (!data.doctor_name) {
       return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
@@ -93,55 +109,82 @@ export async function POST(req: NextRequest) {
 
     await doc.init(logoImage)
 
-    // Build document blocks
-    doc.addBlock(new Heading('PATIENT INFORMATION'))
-    doc.addBlock(new LabelValue('Patient UHID:', sanitize(data.patient_uhid || '')))
-    doc.addBlock(new LabelValue('Patient Name:', sanitize(data.patient_name || '')))
-    doc.addBlock(new LabelValue('Age / Sex:', `${data.age || ''} / ${data.sex || ''}`))
-    doc.addBlock(new LabelValue('Nationality:', sanitize(data.nationality || '')))
-    doc.addBlock(new Spacer(12))
+    console.log('[PDF] Starting document block generation...')
 
-    if (data.diagnosis) {
-      doc.addBlock(new Heading('DIAGNOSIS'))
-      doc.addBlock(new Paragraph(sanitize(data.diagnosis)))
+    try {
+      // Build document blocks
+      doc.addBlock(new Heading('PATIENT INFORMATION'))
+      console.log('[PDF-BLOCK] Added: PATIENT INFORMATION')
+      
+      doc.addBlock(new LabelValue('Patient UHID:', sanitize(data.patient_uhid || '')))
+      console.log('[PDF-BLOCK] Added: Patient UHID')
+      
+      doc.addBlock(new LabelValue('Patient Name:', sanitize(data.patient_name || '')))
+      console.log('[PDF-BLOCK] Added: Patient Name')
+      
+      doc.addBlock(new LabelValue('Age / Sex:', `${data.age || ''} / ${data.sex || ''}`))
+      console.log('[PDF-BLOCK] Added: Age / Sex')
+      
+      doc.addBlock(new LabelValue('Nationality:', sanitize(data.nationality || '')))
+      console.log('[PDF-BLOCK] Added: Nationality')
+      
       doc.addBlock(new Spacer(12))
-    }
 
-    if (data.complaints && data.complaints.length > 0) {
-      doc.addBlock(new Heading('COMPLAINTS ON ADMISSION'))
-      doc.addBlock(new NumberedList(data.complaints.map((c: string) => sanitize(c))))
-      doc.addBlock(new Spacer(12))
-    }
+      if (data.diagnosis) {
+        doc.addBlock(new Heading('DIAGNOSIS'))
+        console.log('[PDF-BLOCK] Added: DIAGNOSIS heading')
+        doc.addBlock(new Paragraph(sanitize(data.diagnosis)))
+        console.log('[PDF-BLOCK] Added: DIAGNOSIS content')
+        doc.addBlock(new Spacer(12))
+      }
 
-    if (data.history_present_complaints) {
-      doc.addBlock(new Heading('HISTORY OF PRESENT COMPLAINTS'))
-      doc.addBlock(new Paragraph(sanitize(data.history_present_complaints)))
-      doc.addBlock(new Spacer(12))
-    }
+      if (data.complaints && data.complaints.length > 0) {
+        doc.addBlock(new Heading('COMPLAINTS ON ADMISSION'))
+        console.log('[PDF-BLOCK] Added: COMPLAINTS heading')
+        doc.addBlock(new NumberedList(data.complaints.map((c: string) => sanitize(c))))
+        console.log('[PDF-BLOCK] Added: COMPLAINTS list')
+        doc.addBlock(new Spacer(12))
+      }
 
-    if (data.past_history_medical || data.past_history_surgical) {
-      doc.addBlock(new Heading('PAST HISTORY'))
-      doc.addBlock(new LabelValue('Medical / Surgical:', `${sanitize(data.past_history_medical || '')} / ${sanitize(data.past_history_surgical || '')}`))
-      doc.addBlock(new Spacer(12))
-    }
+      if (data.history_present_complaints) {
+        doc.addBlock(new Heading('HISTORY OF PRESENT COMPLAINTS'))
+        console.log('[PDF-BLOCK] Added: HISTORY heading')
+        doc.addBlock(new Paragraph(sanitize(data.history_present_complaints)))
+        console.log('[PDF-BLOCK] Added: HISTORY content')
+        doc.addBlock(new Spacer(12))
+      }
 
-    if (data.medication_administered) {
-      doc.addBlock(new Heading('MEDICATION ADMINISTERED'))
-      doc.addBlock(new Paragraph(sanitize(data.medication_administered)))
-      doc.addBlock(new Spacer(12))
-    }
+      if (data.past_history_medical || data.past_history_surgical) {
+        doc.addBlock(new Heading('PAST HISTORY'))
+        console.log('[PDF-BLOCK] Added: PAST HISTORY heading')
+        doc.addBlock(new LabelValue('Medical / Surgical:', `${sanitize(data.past_history_medical || '')} / ${sanitize(data.past_history_surgical || '')}`))
+        console.log('[PDF-BLOCK] Added: PAST HISTORY content')
+        doc.addBlock(new Spacer(12))
+      }
 
-    if (data.day_of_therapy) {
-      doc.addBlock(new Heading('DAY OF THERAPY'))
-      doc.addBlock(new LabelValue('Days:', sanitize(data.day_of_therapy)))
-      doc.addBlock(new Spacer(12))
-    }
+      if (data.medication_administered) {
+        doc.addBlock(new Heading('MEDICATION ADMINISTERED'))
+        console.log('[PDF-BLOCK] Added: MEDICATION heading')
+        doc.addBlock(new Paragraph(sanitize(data.medication_administered)))
+        console.log('[PDF-BLOCK] Added: MEDICATION content')
+        doc.addBlock(new Spacer(12))
+      }
 
-    if (data.pradhan_vedna && data.pradhan_vedna.length > 0) {
-      doc.addBlock(new Heading('PRADHAN VEDNA'))
-      doc.addBlock(new NumberedList(data.pradhan_vedna.map((v: string) => sanitize(v))))
-      doc.addBlock(new Spacer(12))
-    }
+      if (data.day_of_therapy) {
+        doc.addBlock(new Heading('DAY OF THERAPY'))
+        console.log('[PDF-BLOCK] Added: DAY OF THERAPY heading')
+        doc.addBlock(new LabelValue('Days:', sanitize(data.day_of_therapy)))
+        console.log('[PDF-BLOCK] Added: DAY OF THERAPY content')
+        doc.addBlock(new Spacer(12))
+      }
+
+      if (data.pradhan_vedna && data.pradhan_vedna.length > 0) {
+        doc.addBlock(new Heading('PRADHAN VEDNA'))
+        console.log('[PDF-BLOCK] Added: PRADHAN VEDNA heading')
+        doc.addBlock(new NumberedList(data.pradhan_vedna.map((v: string) => sanitize(v))))
+        console.log('[PDF-BLOCK] Added: PRADHAN VEDNA list')
+        doc.addBlock(new Spacer(12))
+      }
 
     if (data.vitals_bp || data.vitals_hr) {
       doc.addBlock(new Heading('VITALS ON ADMISSION'))
@@ -247,19 +290,41 @@ export async function POST(req: NextRequest) {
     doc.addBlock(new Spacer(20))
     doc.addBlock(new SignatureBlock(sanitize(data.doctor_name)))
 
-    await doc.render()
-    const pdfBytes = await doc.save()
+    console.log('[PDF] All blocks added successfully. Starting render...')
 
-    return new NextResponse(Buffer.from(pdfBytes), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Discharge_Summary_${data.patient_uhid || 'PATIENT'}.pdf"`,
-      },
-    })
+    try {
+      await doc.render()
+      console.log('[PDF] Render completed successfully')
+    } catch (renderError) {
+      console.error('[PDF-RENDER-ERROR] Failed to render document:', renderError instanceof Error ? renderError.message : String(renderError))
+      throw renderError
+    }
+
+    try {
+      const pdfBytes = await doc.save()
+      console.log('[PDF] PDF saved successfully, size:', pdfBytes.length, 'bytes')
+
+      return new NextResponse(Buffer.from(pdfBytes), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="Discharge_Summary_${data.patient_uhid || 'PATIENT'}.pdf"`,
+        },
+      })
+    } catch (saveError) {
+      console.error('[PDF-SAVE-ERROR] Failed to save PDF:', saveError instanceof Error ? saveError.message : String(saveError))
+      throw saveError
+    }
+
+    } catch (blockError) {
+      console.error('[PDF-BLOCK-ERROR]', blockError instanceof Error ? blockError.message : String(blockError))
+      throw blockError
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    console.error('PDF error:', message, error)
-    return NextResponse.json({ error: message }, { status: 500 })
+    const stack = error instanceof Error ? error.stack : ''
+    console.error('[PDF-OUTER-ERROR] Exception:', message)
+    console.error('[PDF-OUTER-ERROR] Stack:', stack)
+    return NextResponse.json({ error: message, stack: stack }, { status: 500 })
   }
 }
