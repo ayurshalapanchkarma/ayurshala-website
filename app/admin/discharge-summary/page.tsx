@@ -63,9 +63,12 @@ export default function DischargeSummaryPage() {
     const bookId = new URLSearchParams(window.location.search).get('booking_id')
     if (bookId) {
       setBookingId(bookId)
+      console.log('[FRONTEND] Booking ID from URL:', bookId)
       loadDischargeSummary(bookId)
       loadBookingData(bookId)
     } else {
+      console.warn('[FRONTEND] No booking_id in URL - page opened without appointment')
+      setValidationError('No appointment selected. Please open the discharge summary from an appointment.')
       const now = new Date()
       setForm(prev => ({
         ...prev,
@@ -226,10 +229,17 @@ export default function DischargeSummaryPage() {
   }
 
   async function saveDischargeSummary() {
+    // CRITICAL: Validate booking_id exists before attempting save
+    if (!bookingId || bookingId === 'null' || bookingId === 'undefined') {
+      alert('Error: No appointment selected. Please open the discharge summary from an appointment.')
+      return
+    }
+
     if (!form.doctor_name) {
       alert('Please select a doctor')
       return
     }
+    
     setSaving(true)
     try {
       const payload = {
@@ -237,6 +247,7 @@ export default function DischargeSummaryPage() {
         booking_uuid: bookingId,
       }
       console.log('[FRONTEND] POST payload:', JSON.stringify(payload, null, 2))
+      console.log('[FRONTEND] booking_id:', bookingId)
 
       const res = await fetch('/api/admin/discharge-summary/save', {
         method: 'POST',

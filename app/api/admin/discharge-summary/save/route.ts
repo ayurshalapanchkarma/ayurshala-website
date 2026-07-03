@@ -16,9 +16,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
+  // CRITICAL: Validate booking_id before any Supabase queries
+  console.log('[VALIDATION] Checking booking_id...')
+  const bookingId = requestBody.booking_uuid
+  
+  if (
+    !bookingId ||
+    bookingId === 'null' ||
+    bookingId === 'undefined' ||
+    bookingId === '' ||
+    (typeof bookingId === 'string' && bookingId.trim() === '')
+  ) {
+    console.log('[VALIDATION] FAILED - booking_id missing or invalid:', bookingId)
+    return NextResponse.json(
+      { 
+        error: 'Missing appointment. Please open the discharge summary from an appointment.',
+        code: 'MISSING_BOOKING_ID'
+      }, 
+      { status: 400 }
+    )
+  }
+
   // Validation
   console.log('[VALIDATION] Checking required fields...')
   const validations = {
+    booking_id: !!bookingId,
     patient_uhid: !!requestBody.patient_uhid,
     doctor_name: !!requestBody.doctor_name,
     patient_name: !!requestBody.patient_name,
@@ -30,11 +52,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
   }
 
-  // Build payload
+  // Build payload - use validated bookingId
   console.log('[PAYLOAD] Building insert object...')
   const insertPayload = {
     patient_id: requestBody.patient_uhid,
-    booking_id: requestBody.booking_uuid,
+    booking_id: bookingId,
     doctor_name: requestBody.doctor_name,
     patient_uhid: requestBody.patient_uhid,
     patient_name: requestBody.patient_name,
