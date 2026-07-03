@@ -13,8 +13,8 @@ function sanitize(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const RENDERER_VERSION = 'dd82a1b'
-  const BUILD_TIME = '2026-06-29T00:49:00Z'
+  const RENDERER_VERSION = '35dcfc6'  // Latest: Pagination optimization
+  const BUILD_TIME = new Date().toISOString()
   
   try {
     const data = await req.json()

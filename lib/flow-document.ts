@@ -343,8 +343,12 @@ class SignatureBlock implements Block {
 
     currentY -= LINE_HEIGHT + 4
 
-    // Doctor name
-    page.drawText(`Dr. ${this.doctorName}`, {
+    // Doctor name (don't duplicate "Dr." prefix)
+    const displayName = this.doctorName.startsWith('Dr.') 
+      ? this.doctorName 
+      : `Dr. ${this.doctorName}`
+    
+    page.drawText(displayName, {
       x: x + 20,
       y: currentY,
       size: 10,
