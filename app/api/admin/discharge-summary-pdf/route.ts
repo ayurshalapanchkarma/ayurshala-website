@@ -197,13 +197,13 @@ function buildDischargeSummaryHtml(summary: any): string {
 
     /* Section Titles */
     .section-title {
-      background-color: #f97316;
-      color: white;
       font-size: 12px;
       font-weight: bold;
-      padding: 8px 12px;
-      margin: 24px 0 12px 0;
+      padding: 12px 0 8px 0;
+      margin: 16px 0 12px 0;
       text-transform: uppercase;
+      border-bottom: 2px solid #f97316;
+      color: #111827;
     }
 
     /* Data rows */
@@ -251,8 +251,8 @@ function buildDischargeSummaryHtml(summary: any): string {
     }
 
     thead {
-      background-color: #f97316;
-      color: white;
+      background-color: #f3f4f6;
+      color: #111827;
     }
 
     th {
