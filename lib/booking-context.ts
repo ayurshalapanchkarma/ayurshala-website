@@ -68,16 +68,17 @@ export async function resolveBookingContext(
   const supabase = createClient(supabaseUrl, serviceRoleKey)
 
   // ── 1. Look up booking ──────────────────────────────────────────────────────
-  console.log(`[${requestLabel}][RESOLVE] Querying bookings_new WHERE id=${bookingUuid}`)
+  console.log(`[${requestLabel}][RESOLVE] Querying bookings_new WHERE booking_uuid=${bookingUuid}`)
 
   const { data: booking, error: bookingError } = await supabase
     .from('bookings_new')
-    .select('id, booking_id, patient_uuid')
-    .eq('id', bookingUuid)
+    .select('id, booking_id, booking_uuid, patient_uuid')
+    .eq('booking_uuid', bookingUuid)
     .single()
 
   if (bookingError || !booking) {
     console.error(`[${requestLabel}][RESOLVE] Booking not found:`, bookingError?.message)
+    console.error(`[${requestLabel}][RESOLVE] Full error:`, bookingError)
     return {
       ok: false,
       error: 'Unable to locate the appointment. Please reopen the discharge summary from the Appointments page.',
@@ -108,12 +109,12 @@ export async function resolveBookingContext(
   console.log(`[${requestLabel}][RESOLVE] Patient found: patient_id=${patient.patient_id}`)
 
   // ── 3. Check for existing discharge summary ─────────────────────────────────
-  console.log(`[${requestLabel}][RESOLVE] Querying discharge_summaries WHERE booking_id=${booking.id}`)
+  console.log(`[${requestLabel}][RESOLVE] Querying discharge_summaries WHERE booking_id=${booking.booking_uuid}`)
 
   const { data: summary } = await supabase
     .from('discharge_summaries')
     .select('id')
-    .eq('booking_id', booking.id)
+    .eq('booking_id', booking.booking_uuid)
     .maybeSingle()
 
   const discharge_summary_id = summary?.id ?? null
@@ -122,7 +123,7 @@ export async function resolveBookingContext(
   // ── 4. Log full resolved context ────────────────────────────────────────────
   const context: BookingContext = {
     booking_number: booking.booking_id,
-    booking_uuid: booking.id,
+    booking_uuid: booking.booking_uuid,
     patient_id: patient.patient_id,
     patient_uuid: patient.id,
     discharge_summary_id,
