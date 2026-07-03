@@ -31,9 +31,15 @@ export async function POST(req: NextRequest) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
   try {
-    const { booking_uuid } = await req.json()
+    const rawBody = await req.json()
+    console.log('[PDF-V2] Raw request body:', JSON.stringify(rawBody, null, 2))
+    
+    const { booking_uuid } = rawBody
+
+    console.log('[PDF-V2] Extracted booking_uuid:', booking_uuid, 'type:', typeof booking_uuid)
 
     if (!booking_uuid) {
+      console.error('[PDF-V2] ERROR: booking_uuid is missing or empty')
       return NextResponse.json(
         { error: 'booking_uuid is required' },
         { status: 400 }

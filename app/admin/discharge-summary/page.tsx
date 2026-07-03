@@ -195,7 +195,6 @@ export default function DischargeSummaryPage() {
 
   async function downloadPDF() {
     // Gate: PDF must only be generated from a persisted database record.
-    // If the discharge summary has never been saved (or the last save failed), block generation.
     if (!isSaved) {
       alert('Save the discharge summary successfully before generating the PDF.')
       return
@@ -204,7 +203,6 @@ export default function DischargeSummaryPage() {
       const choice = confirm('You have unsaved changes.\n\nSave before downloading?\n\nOK = Save & Download\nCancel = Download Current Form')
       if (choice) {
         await saveDischargeSummary()
-        // If save failed, hasUnsavedChanges will still be true — abort
         if (hasUnsavedChanges) return
       }
     }
@@ -215,13 +213,34 @@ export default function DischargeSummaryPage() {
 
     setLoading(true)
     try {
-      // Use the new Puppeteer-based renderer (v2)
-      // Pass booking_uuid instead of form data to ensure we render from saved database record
+      // Verify booking_uuid before sending
+      console.log('[DOWNLOAD] bookingId (React state):', bookingId, 'type:', typeof bookingId)
+      
+      // Also check URL in case state is stale
+      const params = new URLSearchParams(window.location.search)
+      const urlBookingUuid = params.get('booking_uuid')
+      console.log('[DOWNLOAD] booking_uuid (from URL):', urlBookingUuid)
+      
+      // Use URL param if state is empty (safety fallback)
+      const effectiveUuid = bookingId || urlBookingUuid
+      console.log('[DOWNLOAD] effective UUID to use:', effectiveUuid)
+      
+      if (!effectiveUuid) {
+        throw new Error('No booking UUID available (checked both state and URL)')
+      }
+
+      const payload = { booking_uuid: effectiveUuid }
+      console.log('[DOWNLOAD] payload:', JSON.stringify(payload))
+
       const res = await fetch('/api/admin/discharge-summary-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_uuid: bookingId }),
+        body: JSON.stringify(payload),
       })
+      
+      console.log('[DOWNLOAD] response status:', res.status)
+      console.log('[DOWNLOAD] response headers X-PDF-Renderer:', res.headers.get('X-PDF-Renderer'))
+      
       if (!res.ok) {
         const error = await res.json()
         throw new Error(error.error || 'PDF generation failed')
@@ -237,7 +256,7 @@ export default function DischargeSummaryPage() {
       window.URL.revokeObjectURL(url)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.error('PDF error:', message)
+      console.error('[DOWNLOAD] Error:', message)
       alert(`Failed to generate PDF: ${message}`)
     } finally {
       setLoading(false)

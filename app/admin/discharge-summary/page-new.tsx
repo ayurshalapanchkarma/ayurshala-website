@@ -283,13 +283,22 @@ export default function DischargeSummaryPage() {
 
     setLoading(true)
     try {
-      // Use the new Puppeteer-based renderer (v2)
-      // Pass booking_uuid instead of form data to ensure we render from saved database record
+      // Verify booking_uuid before sending
+      console.log('[DOWNLOAD] appointmentContext:', appointmentContext)
+      console.log('[DOWNLOAD] bookingUuid:', appointmentContext.bookingUuid)
+      
+      const payload = { booking_uuid: appointmentContext.bookingUuid }
+      console.log('[DOWNLOAD] payload:', JSON.stringify(payload))
+
       const res = await fetch('/api/admin/discharge-summary-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_uuid: appointmentContext.bookingUuid }),
+        body: JSON.stringify(payload),
       })
+      
+      console.log('[DOWNLOAD] response status:', res.status)
+      console.log('[DOWNLOAD] response headers X-PDF-Renderer:', res.headers.get('X-PDF-Renderer'))
+      
       if (!res.ok) {
         const error = await res.json()
         throw new Error(error.error || 'PDF generation failed')
@@ -305,7 +314,7 @@ export default function DischargeSummaryPage() {
       window.URL.revokeObjectURL(url)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.error('PDF error:', message)
+      console.error('[DOWNLOAD] Error:', message)
       alert(`Failed to generate PDF: ${message}`)
     } finally {
       setLoading(false)
