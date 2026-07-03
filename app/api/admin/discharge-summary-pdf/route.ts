@@ -217,11 +217,11 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     }
 
     .logo {
-      width: 130px;
-      max-width: 130px;
-      height: auto;
-      display: block;
-      margin: 0 auto 8px;
+      width: 26mm !important;
+      max-width: 26mm !important;
+      height: auto !important;
+      display: block !important;
+      margin: 0 auto 8px !important;
     }
 
     .clinic-name {
@@ -402,7 +402,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
   <div class="page">
     <!-- Header -->
     <div class="header">
-      ${logoDataUrl ? `<img src="${logoDataUrl}" alt="Ayurshala" class="logo" />` : ''}
+      ${logoDataUrl ? `<img src="${logoDataUrl}" alt="Ayurshala" class="logo" style="width: 26mm; max-width: 26mm; height: auto; display: block; margin: 0 auto 8px;" />` : ''}
       <div class="clinic-name">AYURSHALA PANCHAKARMA CENTER</div>
       <div class="clinic-address">
         SP-28, Wajidpur,<br />
