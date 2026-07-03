@@ -195,14 +195,17 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       word-break: break-word;
     }
 
-    /* Page container - bordered box with safe margins */
+    /* Page container - fixed A4 frame with complete border */
     .page {
       box-sizing: border-box;
       width: 100%;
-      min-height: calc(297mm - 24mm);
-      border: 1.5px solid #f97316;
+      height: calc(297mm - 20mm);
+      border: 2px solid #f97316;
       padding: 16mm;
       background: #fff;
+      position: relative;
+      display: flex;
+      flex-direction: column;
       page-break-after: always;
     }
 
@@ -214,6 +217,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     .header {
       text-align: center;
       margin-bottom: 0;
+      flex-shrink: 0;
     }
 
     .logo {
@@ -370,13 +374,20 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       word-break: break-word;
     }
 
-    /* Footer */
+    /* Content grows to fill available space */
+    .content {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Footer stays at bottom */
     .footer {
       margin-top: 30px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 40px;
       font-size: 9px;
+      flex-shrink: 0;
     }
 
     .signature-block {
@@ -413,111 +424,114 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       <div class="document-title">DISCHARGE SUMMARY</div>
     </div>
 
-    <!-- Patient Information -->
-    <div class="section-title">PATIENT INFORMATION</div>
-    <div class="data-row">
-      <div class="data-field">
-        <div class="data-label">UHID</div>
-        <div class="data-value">${escapeHtml(summary.patient_uhid || '—')}</div>
+    <!-- Content (grows to fill space) -->
+    <div class="content">
+      <!-- Patient Information -->
+      <div class="section-title">PATIENT INFORMATION</div>
+      <div class="data-row">
+        <div class="data-field">
+          <div class="data-label">UHID</div>
+          <div class="data-value">${escapeHtml(summary.patient_uhid || '—')}</div>
+        </div>
+        <div class="data-field">
+          <div class="data-label">Patient Name</div>
+          <div class="data-value">${escapeHtml(summary.patient_name || '—')}</div>
+        </div>
+        <div class="data-field">
+          <div class="data-label">Age / Sex</div>
+          <div class="data-value">${escapeHtml(summary.age || '')} / ${escapeHtml(summary.sex || '—')}</div>
+        </div>
       </div>
-      <div class="data-field">
-        <div class="data-label">Patient Name</div>
-        <div class="data-value">${escapeHtml(summary.patient_name || '—')}</div>
+      <div class="data-row">
+        <div class="data-field">
+          <div class="data-label">Nationality</div>
+          <div class="data-value">${escapeHtml(summary.nationality || '—')}</div>
+        </div>
+        <div class="data-field">
+          <div class="data-label">Date of Discharge</div>
+          <div class="data-value">${escapeHtml(summary.dod_date || '—')}</div>
+        </div>
+        <div class="data-field">
+          <div class="data-label">Doctor</div>
+          <div class="data-value">${escapeHtml(summary.doctor_name || '—')}</div>
+        </div>
       </div>
-      <div class="data-field">
-        <div class="data-label">Age / Sex</div>
-        <div class="data-value">${escapeHtml(summary.age || '')} / ${escapeHtml(summary.sex || '—')}</div>
+
+      <!-- Admission & Discharge -->
+      ${summary.doa_date || summary.dod_date ? `
+      <div class="section-title">ADMISSION & DISCHARGE</div>
+      <div class="data-row">
+        <div class="data-field">
+          <div class="data-label">Date of Admission</div>
+          <div class="data-value">${escapeHtml(summary.doa_date || '')} ${escapeHtml(summary.doa_time || '')}</div>
+        </div>
+        <div class="data-field">
+          <div class="data-label">Date of Discharge</div>
+          <div class="data-value">${escapeHtml(summary.dod_date || '')} ${escapeHtml(summary.dod_time || '')}</div>
+        </div>
       </div>
+      ` : ''}
+
+      <!-- Diagnosis -->
+      ${summary.diagnosis ? `
+      <div class="section-title">DIAGNOSIS</div>
+      <div class="content-block">${escapeHtml(summary.diagnosis)}</div>
+      ` : ''}
+
+      <!-- Complaints -->
+      ${complaints.length > 0 ? `
+      <div class="section-title">COMPLAINTS ON ADMISSION</div>
+      <div class="list">
+        ${complaints.map((c: any) => `<div class="list-item">• ${escapeHtml(c)}</div>`).join('')}
+      </div>
+      ` : ''}
+
+      <!-- Therapies -->
+      ${therapies.length > 0 ? `
+      <div class="section-title">THERAPIES / PROCEDURES</div>
+      <div class="list">
+        ${therapies.map((t: any) => `<div class="list-item">• ${escapeHtml(t)}</div>`).join('')}
+      </div>
+      ` : ''}
+
+      <!-- Medicines -->
+      ${medicines.length > 0 ? `
+      <div class="section-title">MEDICATIONS</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th>Dosage</th>
+            <th>Instructions</th>
+            <th>Schedule</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${medicines.map((m: any) => `
+          <tr>
+            <td>${escapeHtml(m.name || '')}</td>
+            <td>${escapeHtml(m.dosage || '')}</td>
+            <td>${escapeHtml(m.instructions || '')}</td>
+            <td>${escapeHtml(m.schedule || '')}</td>
+            <td>${escapeHtml(m.duration || '')}</td>
+          </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ` : ''}
+
+      <!-- Advice -->
+      ${summary.advice_discharge ? `
+      <div class="section-title">ADVICE ON DISCHARGE</div>
+      <div class="content-block">${escapeHtml(summary.advice_discharge)}</div>
+      ` : ''}
+
+      <!-- Lifestyle -->
+      ${lifestyleHtml}
     </div>
-    <div class="data-row">
-      <div class="data-field">
-        <div class="data-label">Nationality</div>
-        <div class="data-value">${escapeHtml(summary.nationality || '—')}</div>
-      </div>
-      <div class="data-field">
-        <div class="data-label">Date of Discharge</div>
-        <div class="data-value">${escapeHtml(summary.dod_date || '—')}</div>
-      </div>
-      <div class="data-field">
-        <div class="data-label">Doctor</div>
-        <div class="data-value">${escapeHtml(summary.doctor_name || '—')}</div>
-      </div>
-    </div>
 
-    <!-- Admission & Discharge -->
-    ${summary.doa_date || summary.dod_date ? `
-    <div class="section-title">ADMISSION & DISCHARGE</div>
-    <div class="data-row">
-      <div class="data-field">
-        <div class="data-label">Date of Admission</div>
-        <div class="data-value">${escapeHtml(summary.doa_date || '')} ${escapeHtml(summary.doa_time || '')}</div>
-      </div>
-      <div class="data-field">
-        <div class="data-label">Date of Discharge</div>
-        <div class="data-value">${escapeHtml(summary.dod_date || '')} ${escapeHtml(summary.dod_time || '')}</div>
-      </div>
-    </div>
-    ` : ''}
-
-    <!-- Diagnosis -->
-    ${summary.diagnosis ? `
-    <div class="section-title">DIAGNOSIS</div>
-    <div class="content-block">${escapeHtml(summary.diagnosis)}</div>
-    ` : ''}
-
-    <!-- Complaints -->
-    ${complaints.length > 0 ? `
-    <div class="section-title">COMPLAINTS ON ADMISSION</div>
-    <div class="list">
-      ${complaints.map((c: any) => `<div class="list-item">• ${escapeHtml(c)}</div>`).join('')}
-    </div>
-    ` : ''}
-
-    <!-- Therapies -->
-    ${therapies.length > 0 ? `
-    <div class="section-title">THERAPIES / PROCEDURES</div>
-    <div class="list">
-      ${therapies.map((t: any) => `<div class="list-item">• ${escapeHtml(t)}</div>`).join('')}
-    </div>
-    ` : ''}
-
-    <!-- Medicines -->
-    ${medicines.length > 0 ? `
-    <div class="section-title">MEDICATIONS</div>
-    <table>
-      <thead>
-        <tr>
-          <th>Medicine</th>
-          <th>Dosage</th>
-          <th>Instructions</th>
-          <th>Schedule</th>
-          <th>Duration</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${medicines.map((m: any) => `
-        <tr>
-          <td>${escapeHtml(m.name || '')}</td>
-          <td>${escapeHtml(m.dosage || '')}</td>
-          <td>${escapeHtml(m.instructions || '')}</td>
-          <td>${escapeHtml(m.schedule || '')}</td>
-          <td>${escapeHtml(m.duration || '')}</td>
-        </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    ` : ''}
-
-    <!-- Advice -->
-    ${summary.advice_discharge ? `
-    <div class="section-title">ADVICE ON DISCHARGE</div>
-    <div class="content-block">${escapeHtml(summary.advice_discharge)}</div>
-    ` : ''}
-
-    <!-- Lifestyle -->
-    ${lifestyleHtml}
-
-    <!-- Footer -->
+    <!-- Footer (stays at bottom) -->
     <div class="footer">
       <div class="signature-block">
         <div class="signature-line"></div>
