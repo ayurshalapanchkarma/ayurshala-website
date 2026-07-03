@@ -403,6 +403,14 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       font-weight: 500;
     }
 
+    .doctor-stamp {
+      width: 30mm;
+      height: auto;
+      display: block;
+      margin: 6mm auto 0;
+      object-fit: contain;
+    }
+
     page-break-inside: avoid;
   </style>
 </head>
@@ -536,7 +544,8 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       </div>
       <div class="signature-block">
         <div class="signature-line"></div>
-        <div class="signature-label">Dr. ${escapeHtml(summary.doctor_name || '')}</div>
+        <div class="signature-label">Dr. Sanjay Yadav</div>
+        <img src="/Stamp.png" alt="Doctor Stamp" class="doctor-stamp" />
       </div>
     </div>
   </div>
