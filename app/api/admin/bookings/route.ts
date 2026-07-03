@@ -9,6 +9,50 @@ const supabase = createClient(
 export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get('status')
   const payment = req.nextUrl.searchParams.get('payment')
+  const bookingUuid = req.nextUrl.searchParams.get('booking_uuid')
+
+  // Single booking lookup by UUID (used by discharge summary page)
+  if (bookingUuid) {
+    const { data: booking, error } = await supabase
+      .from('bookings_new')
+      .select('*')
+      .eq('id', bookingUuid)
+      .eq('is_deleted', false)
+      .single()
+
+    if (error || !booking) {
+      return NextResponse.json({ bookings: [] })
+    }
+
+    const { data: patient } = await supabase
+      .from('patients')
+      .select('id,full_name,patient_id,phone,email')
+      .eq('id', booking.patient_uuid)
+      .single()
+
+    const { data: treatments } = await supabase
+      .from('booking_treatments_v2')
+      .select('booking_uuid,treatment_name')
+      .eq('booking_uuid', booking.id)
+
+    const { data: paymentRow } = await supabase
+      .from('payments')
+      .select('booking_uuid,amount')
+      .eq('booking_uuid', booking.id)
+      .maybeSingle()
+
+    const result = {
+      ...booking,
+      patient_name: patient?.full_name || '—',
+      patient_id: patient?.patient_id || '—',
+      patient_phone: patient?.phone || '',
+      patient_email: patient?.email || '',
+      treatments: treatments?.map(t => t.treatment_name).join(', ') || '—',
+      amount: paymentRow?.amount || 0,
+    }
+
+    return NextResponse.json({ bookings: [result] })
+  }
 
   let query = supabase.from('bookings_new').select('*').eq('is_deleted', false).order('created_at', { ascending: false })
   if (status && status !== 'ALL') query = query.eq('status', status)

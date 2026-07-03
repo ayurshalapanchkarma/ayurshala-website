@@ -334,7 +334,9 @@ export default function AdminAppointmentsPage() {
               }
             }}
             onDischarge={() => {
-              if (selectedRow) router.push(`/admin/discharge-summary?booking_id=${selectedRow.booking_id}`)
+              // Pass the booking UUID (selectedRow.id), NOT the human-readable booking_id (AYB-...).
+              // discharge_summaries.booking_id is type UUID — passing AYB-... causes a Postgres type error.
+              if (selectedRow) router.push(`/admin/discharge-summary?booking_uuid=${selectedRow.id}`)
             }}
             getStatusBadge={getStatusBadge}
             getPaymentBadge={getPaymentBadge}

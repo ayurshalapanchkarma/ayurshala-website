@@ -1,62 +1,99 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveBookingContext } from '@/lib/booking-context'
 
 export async function POST(req: NextRequest) {
-  console.log('[REQUEST] New save request')
+  const ENVIRONMENT = process.env.VERCEL_ENV || 'local'
+  const COMMIT_HASH = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'local'
+  const BUILD_TIME = process.env.VERCEL_BUILD_TIME || new Date().toISOString()
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  // ── Startup log — confirms which code is actually running ─────────────────
+  console.log('[SAVE] Request received', {
+    environment: ENVIRONMENT,
+    commit: COMMIT_HASH,
+    build: BUILD_TIME,
+    timestamp: new Date().toISOString(),
+  })
 
-  let requestBody: any = {}
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+  let requestBody: Record<string, unknown> = {}
   try {
     requestBody = await req.json()
-    console.log('[REQUEST] Body received:', JSON.stringify(requestBody, null, 2))
-  } catch (parseError) {
-    console.error('[REQUEST] Parse error:', parseError)
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  // CRITICAL: Validate booking_id before any Supabase queries
-  console.log('[VALIDATION] Checking booking_id...')
-  const bookingId = requestBody.booking_uuid
-  
-  if (
-    !bookingId ||
-    bookingId === 'null' ||
-    bookingId === 'undefined' ||
-    bookingId === '' ||
-    (typeof bookingId === 'string' && bookingId.trim() === '')
-  ) {
-    console.log('[VALIDATION] FAILED - booking_id missing or invalid:', bookingId)
+  // ── Validate booking_uuid ─────────────────────────────────────────────────
+  const rawBookingUuid = requestBody.booking_uuid as string | undefined
+
+  console.log('[SAVE] Received identifier:', {
+    booking_uuid: rawBookingUuid,
+    type: typeof rawBookingUuid,
+  })
+
+  if (!rawBookingUuid || rawBookingUuid.trim() === '') {
     return NextResponse.json(
-      { 
-        error: 'Missing appointment. Please open the discharge summary from an appointment.',
-        code: 'MISSING_BOOKING_ID'
-      }, 
+      {
+        success: false,
+        code: 'MISSING_BOOKING_UUID',
+        message: 'Unable to locate the appointment. Please reopen the discharge summary from the Appointments page.',
+      },
       { status: 400 }
     )
   }
 
-  // Validation
-  console.log('[VALIDATION] Checking required fields...')
-  const validations = {
-    booking_id: !!bookingId,
-    patient_uhid: !!requestBody.patient_uhid,
-    doctor_name: !!requestBody.doctor_name,
-    patient_name: !!requestBody.patient_name,
+  // Hard reject if a booking_number slipped through
+  if (rawBookingUuid.startsWith('AYB-') || rawBookingUuid.startsWith('AYP-')) {
+    console.error('[SAVE] Received booking_number where UUID is required:', rawBookingUuid)
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'INVALID_BOOKING_UUID',
+        message: 'Unable to locate the appointment. Please reopen the discharge summary from the Appointments page.',
+      },
+      { status: 400 }
+    )
   }
-  console.log('[VALIDATION] Results:', validations)
 
+  // ── Resolve booking context (single source of truth) ─────────────────────
+  const resolved = await resolveBookingContext(rawBookingUuid, supabaseUrl, serviceRoleKey, 'SAVE')
+
+  if (!resolved.ok) {
+    return NextResponse.json(
+      {
+        success: false,
+        code: resolved.code,
+        message: resolved.error,
+      },
+      { status: resolved.code === 'INVALID_INPUT' ? 400 : 404 }
+    )
+  }
+
+  const { context } = resolved
+
+  // Log the fully resolved context — every subsequent DB query uses context.booking_uuid
+  console.log('[SAVE] Context resolved:', {
+    booking_number: context.booking_number,
+    booking_uuid: context.booking_uuid,
+    patient_id: context.patient_id,
+    patient_uuid: context.patient_uuid,
+    discharge_summary_id: context.discharge_summary_id,
+    environment: ENVIRONMENT,
+    commit: COMMIT_HASH,
+  })
+
+  // ── Validate required fields ──────────────────────────────────────────────
   if (!requestBody.doctor_name) {
-    console.log('[VALIDATION] FAILED - doctor_name missing')
-    return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
+    return NextResponse.json({ success: false, error: 'Doctor name is required' }, { status: 400 })
   }
 
-  // Build payload - use validated bookingId
-  console.log('[PAYLOAD] Building insert object...')
-  const insertPayload = {
-    patient_id: requestBody.patient_uhid,
-    booking_id: bookingId,
+  // ── Build payload ─────────────────────────────────────────────────────────
+  const payload = {
+    // Always use the UUID from the resolved context — never the raw input
+    patient_id: context.patient_uuid,
+    booking_id: context.booking_uuid,
     doctor_name: requestBody.doctor_name,
     patient_uhid: requestBody.patient_uhid,
     patient_name: requestBody.patient_name,
@@ -98,115 +135,89 @@ export async function POST(req: NextRequest) {
     apathya: requestBody.apathya,
   }
 
-  console.log('[PAYLOAD] Object keys:', Object.keys(insertPayload).length)
-  console.log('[PAYLOAD] Sample fields:', {
-    patient_uhid: insertPayload.patient_uhid,
-    doctor_name: insertPayload.doctor_name,
-    complaints_type: typeof insertPayload.complaints,
-    complaints_length: insertPayload.complaints?.length,
-  })
-
-  // Create Supabase client
-  console.log('[CLIENT] Creating Supabase client...')
-  const supabase = createClient(supabaseUrl!, serviceRoleKey!)
+  const supabase = createClient(supabaseUrl, serviceRoleKey)
 
   try {
-    // EXPLICIT UPSERT LOGIC: Check if record exists first
-    console.log('[EXPLICIT-UPSERT] Checking if booking_id exists:', insertPayload.booking_id)
-    
-    const { data: existingRecord, error: checkError } = await supabase
-      .from('discharge_summaries')
-      .select('id')
-      .eq('booking_id', insertPayload.booking_id)
-      .single()
+    let result: Record<string, unknown>
+    let operation: 'INSERT' | 'UPDATE'
 
-    if (checkError && checkError.code !== 'PGRST116') {
-      // PGRST116 = no rows returned, which is fine
-      console.error('[EXPLICIT-UPSERT] Error checking for existing record:', checkError)
-      return NextResponse.json(
-        { error: `Failed to check existing record: ${checkError.message}` },
-        { status: 500 }
-      )
-    }
-
-    let result
-    let operation = 'INSERT'
-
-    if (existingRecord?.id) {
-      // Record exists → UPDATE
+    if (context.discharge_summary_id) {
+      // ── UPDATE existing record ──────────────────────────────────────────
       operation = 'UPDATE'
-      console.log('[EXPLICIT-UPSERT] Record exists with id:', existingRecord.id)
-      console.log('[EXPLICIT-UPSERT] Performing UPDATE...')
-      
-      // CRITICAL: Explicitly set updated_at to NOW() for UPDATE operations
-      // Supabase doesn't auto-update this, we must do it explicitly
-      const updatePayload = {
-        ...insertPayload,
-        updated_at: new Date().toISOString() // Ensure updated_at is set to current time
-      }
-      
+      console.log('[SAVE] Performing UPDATE on discharge_summaries.id =', context.discharge_summary_id)
+
       const { data, error } = await supabase
         .from('discharge_summaries')
-        .update(updatePayload)
-        .eq('id', existingRecord.id)
+        .update({ ...payload, updated_at: new Date().toISOString() })
+        .eq('id', context.discharge_summary_id)
         .select()
         .single()
 
       if (error) {
-        console.error('[EXPLICIT-UPSERT] UPDATE error:', error)
+        console.error('[SAVE] UPDATE failed:', error)
         return NextResponse.json(
-          { error: `UPDATE failed: ${error.message}` },
+          {
+            success: false,
+            code: 'UPDATE_FAILED',
+            message: 'Failed to update the discharge summary. Please try again.',
+          },
           { status: 500 }
         )
       }
-      result = data
+      result = data as Record<string, unknown>
     } else {
-      // Record does not exist → INSERT
-      console.log('[EXPLICIT-UPSERT] Record does not exist')
-      console.log('[EXPLICIT-UPSERT] Performing INSERT...')
-      
+      // ── INSERT new record ───────────────────────────────────────────────
+      operation = 'INSERT'
+      console.log('[SAVE] Performing INSERT into discharge_summaries for booking_uuid =', context.booking_uuid)
+
       const { data, error } = await supabase
         .from('discharge_summaries')
-        .insert([insertPayload])
+        .insert([payload])
         .select()
         .single()
 
       if (error) {
-        console.error('[EXPLICIT-UPSERT] INSERT error:', error)
+        console.error('[SAVE] INSERT failed:', error)
         return NextResponse.json(
-          { error: `INSERT failed: ${error.message}` },
+          {
+            success: false,
+            code: 'INSERT_FAILED',
+            message: 'Failed to save the discharge summary. Please try again.',
+          },
           { status: 500 }
         )
       }
-      result = data
+      result = data as Record<string, unknown>
     }
 
-    console.log(`[EXPLICIT-UPSERT] ${operation} SUCCESS`, {
-      id: result?.id,
-      booking_id: result?.booking_id,
-      patient_uhid: result?.patient_uhid,
+    console.log('[SAVE] SUCCESS', {
       operation,
-    })
-
-    console.log('[HTTP-RESPONSE] Returning 200 with complete record')
-    return NextResponse.json({
-      success: true,
-      id: result?.id,
-      data: result,
-      operation, // Indicates whether INSERT or UPDATE was performed
-    }, { status: 200 })
-  } catch (error) {
-    console.error('[EXCEPTION]', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+      id: result.id,
+      booking_id: result.booking_id,
+      booking_number: context.booking_number,
     })
 
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      {
+        success: true,
+        operation,
+        id: result.id,
+        data: result,
+        // Return both identifiers so the caller can verify the flow
+        booking_uuid: context.booking_uuid,
+        booking_number: context.booking_number,
+      },
+      { status: 200 }
+    )
+  } catch (e) {
+    console.error('[SAVE] Exception:', e)
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'INTERNAL_ERROR',
+        message: 'An unexpected error occurred. Please try again.',
+      },
       { status: 500 }
     )
   }
 }
-
-

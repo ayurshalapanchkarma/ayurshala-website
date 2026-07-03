@@ -28,7 +28,7 @@ const modules = [
   { label: 'Billing', icon: CreditCard, href: '/admin/billing', color: 'amber', description: 'Payment and invoicing' },
   { label: 'Certificates', icon: FileText, href: '/admin/certificates', color: 'indigo', description: 'Medical certificates' },
   { label: 'Inventory', icon: Package, href: '/admin/inventory', color: 'emerald', description: 'Stock and products' },
-  { label: 'Discharge Summary', icon: ClipboardList, href: '/admin/discharge-summary', color: 'cyan', description: 'Patient discharge records' },
+  { label: 'Discharge Summaries', icon: ClipboardList, href: '/admin/discharge-summaries', color: 'cyan', description: 'Patient discharge records archive' },
   { label: 'Reports', icon: BarChart3, href: '/admin/reports', color: 'pink', description: 'Analytics and reports' },
   { label: 'Settings', icon: Settings, href: '/admin/settings', color: 'slate', description: 'System configuration' },
 ]

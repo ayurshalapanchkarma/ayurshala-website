@@ -15,11 +15,28 @@ function sanitize(text: string): string {
 
 export async function POST(req: NextRequest) {
   const RENDERER_VERSION = '55ad57c'
-  const COMMIT_HASH = '55ad57c'
-  const BUILD_TIME = new Date().toISOString()
+  const COMMIT_HASH = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || '55ad57c'
+  const BUILD_TIME = process.env.VERCEL_BUILD_TIME || new Date().toISOString()
   const ENVIRONMENT = process.env.VERCEL_ENV || 'local'
   
   try {
+    const data = await req.json()
+
+    // ── Startup log — appears at the top of every production PDF request ──
+    console.log('[PDF] Request received', {
+      version: RENDERER_VERSION,
+      commit: COMMIT_HASH,
+      build: BUILD_TIME,
+      environment: ENVIRONMENT,
+      node: process.version,
+      booking_id: data.booking_uuid || data.booking_id || 'unknown',
+      patient_uhid: data.patient_uhid || 'unknown',
+    })
+
+    if (!data.doctor_name) {
+      return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
+    }
+
     // Set up environment info for tracing
     const envInfo: EnvironmentInfo = {
       renderVersion: RENDERER_VERSION,
@@ -31,16 +48,7 @@ export async function POST(req: NextRequest) {
       fontLoaded: true,
       fontName: 'Helvetica'
     }
-    
     globalTracer.setEnvironment(envInfo)
-    
-    const data = await req.json()
-
-    if (!data.doctor_name) {
-      return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
-    }
-
-    console.log(`[PDF] Rendering: Version=${RENDERER_VERSION}, Env=${ENVIRONMENT}, Built=${BUILD_TIME}`)
 
     const pdfDoc = await PDFDocument.create()
     const doc = new FlowDocument(pdfDoc)
