@@ -84,8 +84,16 @@ export async function POST(req: NextRequest) {
       logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`
     }
 
+    // Load stamp as data URL
+    const stampPath = path.join(process.cwd(), 'public', 'Stamp.png')
+    let stampDataUrl = ''
+    if (fs.existsSync(stampPath)) {
+      const stampBuffer = fs.readFileSync(stampPath)
+      stampDataUrl = `data:image/png;base64,${stampBuffer.toString('base64')}`
+    }
+
     // Build HTML with certificate-exact styling
-    const html = buildDischargeSummaryHtml(summary, logoDataUrl)
+    const html = buildDischargeSummaryHtml(summary, logoDataUrl, stampDataUrl)
 
     // Generate PDF with Puppeteer
     console.log('[PDF] Launching browser...')
@@ -122,7 +130,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
+function buildDischargeSummaryHtml(summary: any, logoDataUrl: string, stampDataUrl: string): string {
   const complaints = Array.isArray(summary.complaints) ? summary.complaints : []
   const medicines = Array.isArray(summary.medicines) ? summary.medicines : []
   const therapies = Array.isArray(summary.therapies) ? summary.therapies : []
@@ -545,7 +553,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       <div class="signature-block">
         <div class="signature-line"></div>
         <div class="signature-label">Dr. Sanjay Yadav</div>
-        <img src="/Stamp.png" alt="Doctor Stamp" class="doctor-stamp" />
+        ${stampDataUrl ? `<img src="${stampDataUrl}" alt="Doctor Stamp" class="doctor-stamp" />` : ''}
       </div>
     </div>
   </div>
