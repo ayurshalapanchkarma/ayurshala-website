@@ -51,7 +51,13 @@
 
   .table-row {
     break-inside: avoid;
-    page-page-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Prevent orphaned list items */
+  li {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   /* Force page break before */

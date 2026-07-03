@@ -107,6 +107,7 @@ export function DischargeSummaryTemplate({ data }: DischargeSummaryTemplateProps
           age={data.age}
           sex={data.sex}
           nationality={data.nationality}
+          address={data.address}
           doa_date={data.doa_date}
           doa_time={data.doa_time}
           dod_date={data.dod_date}

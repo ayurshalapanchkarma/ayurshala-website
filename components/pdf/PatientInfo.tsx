@@ -9,6 +9,7 @@ interface PatientInfoProps {
   age: string
   sex: string
   nationality: string
+  address: string
   doa_date: string
   doa_time: string
   dod_date: string
@@ -45,7 +46,7 @@ export function PatientInfo(props: PatientInfoProps) {
         </div>
         <div className="col-span-2">
           <p className="font-semibold text-gray-700">Address</p>
-          <p className="text-gray-900 text-xs leading-relaxed">Check address field in template</p>
+          <p className="text-gray-900 text-xs leading-relaxed">{props.address || '—'}</p>
         </div>
       </div>
 
