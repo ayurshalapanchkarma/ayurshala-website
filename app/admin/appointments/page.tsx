@@ -335,10 +335,24 @@ export default function AdminAppointmentsPage() {
               }
             }}
             onDischarge={() => {
+              // Diagnostic: Print the entire selectedRow object
+              console.log('[APPOINTMENTS] Full selectedRow object:', JSON.stringify(selectedRow, null, 2))
+              
+              // Diagnostic: Print each identifier field
+              console.log('[APPOINTMENTS] Identifier fields:', {
+                id: selectedRow?.id,
+                booking_id: selectedRow?.booking_id,
+                booking_uuid: selectedRow?.booking_uuid,
+              })
+              
               // Pass the actual UUID from bookings_new.booking_uuid
               // discharge_summaries.booking_id expects PostgreSQL UUID type
               if (selectedRow && selectedRow.booking_uuid) {
-                router.push(`/admin/discharge-summary?booking_uuid=${encodeURIComponent(selectedRow.booking_uuid)}`)
+                const url = `/admin/discharge-summary?booking_uuid=${encodeURIComponent(selectedRow.booking_uuid)}`
+                console.log('[APPOINTMENTS] Navigating to:', url)
+                router.push(url)
+              } else {
+                console.error('[APPOINTMENTS] ERROR: Missing selectedRow or booking_uuid', { selectedRow, bookingUuid: selectedRow?.booking_uuid })
               }
             }}
             getStatusBadge={getStatusBadge}
