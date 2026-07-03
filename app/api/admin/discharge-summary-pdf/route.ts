@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import puppeteer from 'puppeteer'
+import puppeteerCore from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -8,13 +10,33 @@ export const dynamic = 'force-dynamic'
 /**
  * Generate PDF using Puppeteer from database record
  * 
- * Flow:
- * 1. Receive booking_uuid
- * 2. Load discharge summary from database
- * 3. Build HTML directly
- * 4. Use Puppeteer to render HTML to PDF
- * 5. Return PDF
+ * Supports both:
+ * - Local development: Uses full Puppeteer with installed Chrome
+ * - Vercel deployment: Uses puppeteer-core with @sparticuz/chromium
  */
+
+async function launchBrowser() {
+  const isVercel = !!process.env.VERCEL
+  
+  console.log('[PDF-V2] Environment:', { isVercel, env: process.env.VERCEL_ENV })
+
+  if (isVercel) {
+    // Vercel serverless environment
+    console.log('[PDF-V2] Using puppeteer-core + chromium for Vercel')
+    return await puppeteerCore.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    } as any)
+  } else {
+    // Local development
+    console.log('[PDF-V2] Using full Puppeteer for local development')
+    return await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    } as any)
+  }
+}
 
 export async function POST(req: NextRequest) {
   const COMMIT_HASH = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'local'
@@ -80,11 +102,9 @@ export async function POST(req: NextRequest) {
     console.log('[PDF-V2] HTML built, length:', html.length)
 
     // Generate PDF with Puppeteer
-    console.log('[PDF-V2] Launching Puppeteer...')
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    } as any)
+    console.log('[PDF-V2] Launching browser...')
+    const browser = await launchBrowser()
+    console.log('[PDF-V2] Browser launched successfully')
 
     const page = await browser.newPage()
     console.log('[PDF-V2] Page created')
