@@ -176,69 +176,72 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     /* Header - exactly like certificate */
     .header {
       text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 12px;
     }
 
     .logo {
-      max-width: 220px;
+      max-width: 150px;
+      width: 140px;
       height: auto;
-      margin: 0 auto 24px;
+      margin: 0 auto 8px;
       display: block;
     }
 
     .clinic-name {
-      font-size: 14px;
-      font-weight: bold;
+      font-size: 20px;
+      font-weight: 700;
       color: #111827;
-      margin-bottom: 14px;
-      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
     }
 
     .clinic-address {
-      font-size: 10px;
+      font-size: 11px;
+      font-weight: 400;
       color: #111827;
       line-height: 1.4;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .clinic-contact {
-      font-size: 9px;
-      color: #6b7280;
-      margin-bottom: 28px;
+      font-size: 10.5px;
+      font-weight: 400;
+      color: #666;
+      margin-bottom: 12px;
     }
 
     .divider {
       text-align: center;
-      font-size: 14px;
+      font-size: 12px;
       color: #f97316;
-      margin-bottom: 14px;
-      letter-spacing: 4px;
+      margin-bottom: 10px;
+      letter-spacing: 3px;
     }
 
     .document-title {
-      font-size: 16px;
-      font-weight: bold;
+      font-size: 18px;
+      font-weight: 700;
       color: #f97316;
       letter-spacing: 1px;
     }
 
     /* Section Titles */
     .section-title {
-      font-size: 11px;
-      font-weight: bold;
-      padding: 8px 0;
-      margin: 16px 0 8px 0;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 0 4px 0;
+      margin: 12px 0 8px 0;
       text-transform: uppercase;
       border-bottom: 1px solid #f97316;
-      color: #111827;
+      color: #f97316;
     }
 
     /* Data layout */
     .data-row {
       display: flex;
       gap: 20px;
-      margin-bottom: 12px;
-      font-size: 10px;
+      margin-bottom: 8px;
+      font-size: 10.5px;
     }
 
     .data-field {
@@ -246,31 +249,35 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     }
 
     .data-label {
-      font-weight: bold;
+      font-weight: 600;
       color: #111827;
+      font-size: 10.5px;
     }
 
     .data-value {
       color: #111827;
+      font-weight: 400;
+      font-size: 10.5px;
       margin-top: 2px;
     }
 
     /* Lists */
     .list {
-      margin-left: 20px;
-      font-size: 10px;
+      margin-left: 16px;
+      font-size: 10.5px;
     }
 
     .list-item {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       color: #111827;
+      line-height: 1.45;
     }
 
     /* Tables */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 12px 0;
+      margin: 10px 0;
       font-size: 10px;
     }
 
@@ -280,16 +287,18 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     }
 
     th {
-      padding: 8px;
+      padding: 6px;
       text-align: left;
-      font-weight: bold;
+      font-weight: 700;
       border: 0.5px solid #ddd;
+      font-size: 10px;
     }
 
     td {
-      padding: 8px;
+      padding: 6px;
       border: 0.5px solid #ddd;
       color: #111827;
+      font-size: 9.5px;
     }
 
     tbody tr:nth-child(even) {
@@ -298,27 +307,29 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
 
     /* Content blocks */
     .content-block {
-      margin: 8px 0;
-      font-size: 10px;
+      margin: 6px 0;
+      font-size: 11px;
       color: #111827;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     .subsection-label {
-      font-weight: bold;
+      font-weight: 600;
       color: #111827;
       margin-bottom: 2px;
+      font-size: 10.5px;
     }
 
     .subsection-value {
       margin-left: 0;
       color: #111827;
-      font-size: 10px;
+      font-size: 10.5px;
+      line-height: 1.55;
     }
 
     /* Footer */
     .footer {
-      margin-top: 40px;
+      margin-top: 30px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 40px;
@@ -331,14 +342,14 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
 
     .signature-line {
       border-top: 1px solid #111827;
-      margin-bottom: 8px;
-      height: 40px;
+      margin-bottom: 6px;
+      height: 32px;
     }
 
     .signature-label {
       font-size: 9px;
       color: #111827;
-      font-weight: normal;
+      font-weight: 500;
     }
 
     page-break-inside: avoid;
