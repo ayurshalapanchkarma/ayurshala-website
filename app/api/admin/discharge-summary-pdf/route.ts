@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import puppeteerCore from 'puppeteer-core'
 import chromium from '@sparticuz/chromium'
+import fs from 'fs'
+import path from 'path'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -74,8 +76,16 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Build HTML with certificate-style CSS
-    const html = buildDischargeSummaryHtml(summary)
+    // Load logo as data URL
+    const logoPath = path.join(process.cwd(), 'public', 'ayurshala_text.png')
+    let logoDataUrl = ''
+    if (fs.existsSync(logoPath)) {
+      const logoBuffer = fs.readFileSync(logoPath)
+      logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`
+    }
+
+    // Build HTML with certificate-exact styling
+    const html = buildDischargeSummaryHtml(summary, logoDataUrl)
 
     // Generate PDF with Puppeteer
     console.log('[PDF] Launching browser...')
@@ -112,10 +122,21 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function buildDischargeSummaryHtml(summary: any): string {
+function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
   const complaints = Array.isArray(summary.complaints) ? summary.complaints : []
   const medicines = Array.isArray(summary.medicines) ? summary.medicines : []
   const therapies = Array.isArray(summary.therapies) ? summary.therapies : []
+
+  // Build lifestyle section separately to avoid nested template literal issues
+  let lifestyleHtml = ''
+  if (summary.pathya || summary.apathya || summary.cautions) {
+    lifestyleHtml = `
+    <div class="section-title">LIFESTYLE & RESTRICTIONS</div>
+    ${summary.pathya ? `<div class="content-block"><div class="subsection-label">Pathya (Recommended):</div><div class="subsection-value">${escapeHtml(summary.pathya)}</div></div>` : ''}
+    ${summary.apathya ? `<div class="content-block"><div class="subsection-label">Apathya (Avoid):</div><div class="subsection-value">${escapeHtml(summary.apathya)}</div></div>` : ''}
+    ${summary.cautions ? `<div class="content-block"><div class="subsection-label">Cautions:</div><div class="subsection-value">${escapeHtml(summary.cautions)}</div></div>` : ''}
+    `
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -123,9 +144,6 @@ function buildDischargeSummaryHtml(summary: any): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Discharge Summary - ${escapeHtml(summary.patient_name)}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       -webkit-print-color-adjust: exact !important;
@@ -135,137 +153,125 @@ function buildDischargeSummaryHtml(summary: any): string {
       box-sizing: border-box;
     }
 
-    body {
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: white;
-      color: #1a1008;
-      line-height: 1.6;
-      font-size: 10px;
-    }
-
     @page {
       size: A4;
-      margin: 0;
+      margin: 18mm;
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      background: white;
+      color: #111827;
+      line-height: 1.5;
+      font-size: 11px;
     }
 
     .container {
       max-width: 210mm;
-      height: 297mm;
       background: white;
-      border: 2px solid #f97316;
-      border-radius: 10px;
+      border: 1.5px solid #f97316;
       padding: 20px;
-      margin: 0 auto;
     }
 
-    /* Header */
+    /* Header - exactly like certificate */
     .header {
       text-align: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 28px;
     }
 
     .logo {
-      max-width: 200px;
+      max-width: 220px;
       height: auto;
-      margin: 0 auto 12px;
+      margin: 0 auto 24px;
       display: block;
     }
 
     .clinic-name {
-      font-family: 'Marcellus', serif;
-      font-size: 18px;
-      font-weight: 600;
-      color: #1a1008;
-      margin-bottom: 6px;
-      letter-spacing: 0.3px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #111827;
+      margin-bottom: 14px;
+      letter-spacing: 0.5px;
     }
 
     .clinic-address {
-      font-size: 9px;
-      color: #6b7280;
+      font-size: 10px;
+      color: #111827;
       line-height: 1.4;
-      margin-bottom: 3px;
+      margin-bottom: 6px;
     }
 
     .clinic-contact {
-      font-size: 8px;
-      color: #9ca3af;
-      margin-bottom: 8px;
+      font-size: 9px;
+      color: #6b7280;
+      margin-bottom: 28px;
     }
 
     .divider {
-      height: 1px;
-      background: linear-gradient(to right, transparent, #f97316, transparent);
-      margin: 8px 0;
+      text-align: center;
+      font-size: 14px;
+      color: #f97316;
+      margin-bottom: 14px;
+      letter-spacing: 4px;
     }
 
     .document-title {
-      font-family: 'Marcellus', serif;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: bold;
       color: #f97316;
-      margin-top: 8px;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
 
     /* Section Titles */
     .section-title {
       font-size: 11px;
-      font-weight: 600;
-      padding: 10px 0 6px 0;
-      margin: 14px 0 10px 0;
+      font-weight: bold;
+      padding: 8px 0;
+      margin: 16px 0 8px 0;
       text-transform: uppercase;
-      border-bottom: 2px solid #f97316;
-      color: #f97316;
-      letter-spacing: 0.3px;
+      border-bottom: 1px solid #f97316;
+      color: #111827;
     }
 
-    /* Two-column data layout */
-    .data-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-bottom: 10px;
-      font-size: 9px;
-    }
-
+    /* Data layout */
     .data-row {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 8px;
-      margin-bottom: 6px;
+      display: flex;
+      gap: 20px;
+      margin-bottom: 12px;
+      font-size: 10px;
+    }
+
+    .data-field {
+      flex: 1;
     }
 
     .data-label {
-      font-weight: 600;
-      color: #1a1008;
-      white-space: nowrap;
+      font-weight: bold;
+      color: #111827;
     }
 
     .data-value {
-      color: #374151;
+      color: #111827;
+      margin-top: 2px;
     }
 
     /* Lists */
     .list {
-      margin-left: 12px;
-      font-size: 9px;
+      margin-left: 20px;
+      font-size: 10px;
     }
 
     .list-item {
-      margin-bottom: 6px;
-      color: #374151;
-      line-height: 1.4;
+      margin-bottom: 8px;
+      color: #111827;
     }
 
     /* Tables */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 10px 0;
-      font-size: 8px;
+      margin: 12px 0;
+      font-size: 10px;
     }
 
     thead {
@@ -274,16 +280,16 @@ function buildDischargeSummaryHtml(summary: any): string {
     }
 
     th {
-      padding: 6px;
+      padding: 8px;
       text-align: left;
-      font-weight: 600;
-      border: 0.5px solid #d1d5db;
+      font-weight: bold;
+      border: 0.5px solid #ddd;
     }
 
     td {
-      padding: 6px;
-      border: 0.5px solid #d1d5db;
-      color: #374151;
+      padding: 8px;
+      border: 0.5px solid #ddd;
+      color: #111827;
     }
 
     tbody tr:nth-child(even) {
@@ -293,31 +299,30 @@ function buildDischargeSummaryHtml(summary: any): string {
     /* Content blocks */
     .content-block {
       margin: 8px 0;
-      font-size: 9px;
-      color: #374151;
+      font-size: 10px;
+      color: #111827;
       line-height: 1.5;
     }
 
     .subsection-label {
-      font-weight: 600;
-      color: #f97316;
-      margin-bottom: 3px;
-      font-size: 9px;
+      font-weight: bold;
+      color: #111827;
+      margin-bottom: 2px;
     }
 
     .subsection-value {
-      margin-left: 8px;
-      color: #374151;
-      font-size: 9px;
+      margin-left: 0;
+      color: #111827;
+      font-size: 10px;
     }
 
     /* Footer */
     .footer {
-      margin-top: 32px;
+      margin-top: 40px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      font-size: 8px;
+      gap: 40px;
+      font-size: 9px;
     }
 
     .signature-block {
@@ -325,15 +330,15 @@ function buildDischargeSummaryHtml(summary: any): string {
     }
 
     .signature-line {
-      border-top: 1px solid #1a1008;
-      margin-bottom: 6px;
-      height: 32px;
+      border-top: 1px solid #111827;
+      margin-bottom: 8px;
+      height: 40px;
     }
 
     .signature-label {
-      font-size: 8px;
-      color: #1a1008;
-      font-weight: 500;
+      font-size: 9px;
+      color: #111827;
+      font-weight: normal;
     }
 
     page-break-inside: avoid;
@@ -341,62 +346,61 @@ function buildDischargeSummaryHtml(summary: any): string {
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
+    <!-- Header - exact certificate layout -->
     <div class="header">
-      <img src="/ayurshala_text.png" alt="Ayurshala" class="logo" onerror="this.style.display='none'" />
+      ${logoDataUrl ? `<img src="${logoDataUrl}" alt="Ayurshala" class="logo" />` : ''}
       <div class="clinic-name">AYURSHALA PANCHAKARMA CENTER</div>
       <div class="clinic-address">
-        SP-28, Wajidpur, Sector-130, Noida – 201301
+        SP-28, Wajidpur,<br />
+        Sector-130, Noida – 201301
       </div>
       <div class="clinic-contact">+91-9821224767 | ayurshalapanchkarma@gmail.com</div>
-      <div class="divider"></div>
+      <div class="divider">─────────────────────</div>
       <div class="document-title">DISCHARGE SUMMARY</div>
     </div>
 
     <!-- Patient Information -->
     <div class="section-title">PATIENT INFORMATION</div>
-    <div class="data-grid">
-      <div>
-        <div class="data-row">
-          <span class="data-label">UHID:</span>
-          <span class="data-value">${escapeHtml(summary.patient_uhid || '—')}</span>
-        </div>
-        <div class="data-row">
-          <span class="data-label">Patient:</span>
-          <span class="data-value">${escapeHtml(summary.patient_name || '—')}</span>
-        </div>
-        <div class="data-row">
-          <span class="data-label">Age:</span>
-          <span class="data-value">${escapeHtml(summary.age || '—')}</span>
-        </div>
+    <div class="data-row">
+      <div class="data-field">
+        <div class="data-label">UHID</div>
+        <div class="data-value">${escapeHtml(summary.patient_uhid || '—')}</div>
       </div>
-      <div>
-        <div class="data-row">
-          <span class="data-label">Date:</span>
-          <span class="data-value">${escapeHtml(summary.dod_date || '—')}</span>
-        </div>
-        <div class="data-row">
-          <span class="data-label">Doctor:</span>
-          <span class="data-value">${escapeHtml(summary.doctor_name || '—')}</span>
-        </div>
-        <div class="data-row">
-          <span class="data-label">Nationality:</span>
-          <span class="data-value">${escapeHtml(summary.nationality || '—')}</span>
-        </div>
+      <div class="data-field">
+        <div class="data-label">Patient Name</div>
+        <div class="data-value">${escapeHtml(summary.patient_name || '—')}</div>
+      </div>
+      <div class="data-field">
+        <div class="data-label">Age / Sex</div>
+        <div class="data-value">${escapeHtml(summary.age || '')} / ${escapeHtml(summary.sex || '—')}</div>
+      </div>
+    </div>
+    <div class="data-row">
+      <div class="data-field">
+        <div class="data-label">Nationality</div>
+        <div class="data-value">${escapeHtml(summary.nationality || '—')}</div>
+      </div>
+      <div class="data-field">
+        <div class="data-label">Date of Discharge</div>
+        <div class="data-value">${escapeHtml(summary.dod_date || '—')}</div>
+      </div>
+      <div class="data-field">
+        <div class="data-label">Doctor</div>
+        <div class="data-value">${escapeHtml(summary.doctor_name || '—')}</div>
       </div>
     </div>
 
     <!-- Admission & Discharge -->
     ${summary.doa_date || summary.dod_date ? `
     <div class="section-title">ADMISSION & DISCHARGE</div>
-    <div class="data-grid">
-      <div class="data-row">
-        <span class="data-label">Admission:</span>
-        <span class="data-value">${escapeHtml(summary.doa_date || '')} ${escapeHtml(summary.doa_time || '')}</span>
+    <div class="data-row">
+      <div class="data-field">
+        <div class="data-label">Date of Admission</div>
+        <div class="data-value">${escapeHtml(summary.doa_date || '')} ${escapeHtml(summary.doa_time || '')}</div>
       </div>
-      <div class="data-row">
-        <span class="data-label">Discharge:</span>
-        <span class="data-value">${escapeHtml(summary.dod_date || '')} ${escapeHtml(summary.dod_time || '')}</span>
+      <div class="data-field">
+        <div class="data-label">Date of Discharge</div>
+        <div class="data-value">${escapeHtml(summary.dod_date || '')} ${escapeHtml(summary.dod_time || '')}</div>
       </div>
     </div>
     ` : ''}
@@ -457,29 +461,9 @@ function buildDischargeSummaryHtml(summary: any): string {
     ` : ''}
 
     <!-- Lifestyle -->
-    ${summary.pathya || summary.apathya || summary.cautions ? `
-    <div class="section-title">LIFESTYLE & RESTRICTIONS</div>
-    ${summary.pathya ? `
-    <div class="content-block">
-      <div class="subsection-label">Pathya (Recommended)</div>
-      <div class="subsection-value">${escapeHtml(summary.pathya)}</div>
-    </div>
-    ` : ''}
-    ${summary.apathya ? `
-    <div class="content-block">
-      <div class="subsection-label">Apathya (Avoid)</div>
-      <div class="subsection-value">${escapeHtml(summary.apathya)}</div>
-    </div>
-    ` : ''}
-    ${summary.cautions ? `
-    <div class="content-block">
-      <div class="subsection-label">Cautions</div>
-      <div class="subsection-value">${escapeHtml(summary.cautions)}</div>
-    </div>
-    ` : ''}
-    ` : ''}
+    ${lifestyleHtml}
 
-    <!-- Footer -->
+    <!-- Footer - exact certificate layout -->
     <div class="footer">
       <div class="signature-block">
         <div class="signature-line"></div>
