@@ -153,7 +153,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
 
     @page {
       size: A4;
-      margin: 0;
+      margin: 12mm;
     }
 
     html, body {
@@ -195,14 +195,13 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       word-break: break-word;
     }
 
-    /* Page container - bordered box */
+    /* Page container - bordered box with safe margins */
     .page {
       box-sizing: border-box;
       width: 100%;
-      min-height: 100vh;
+      min-height: calc(297mm - 24mm);
       border: 1.5px solid #f97316;
-      padding: 18mm;
-      position: relative;
+      padding: 16mm;
       background: #fff;
       page-break-after: always;
     }
