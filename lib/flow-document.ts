@@ -1,5 +1,5 @@
 import { PDFPage, PDFDocument, rgb, PDFImage } from 'pdf-lib'
-import { globalTracer, BlockTrace, ItemTrace } from './trace-logger'
+import { globalTracer, BlockTrace, ItemTrace, EnvironmentInfo } from './trace-logger'
 
 const ORANGE = rgb(249 / 255, 115 / 255, 22 / 255)
 const BLACK = rgb(17 / 255, 24 / 255, 39 / 255)
@@ -560,14 +560,16 @@ export class FlowDocument {
 
       // Log trace for evidence collection
       const blockTrace: BlockTrace = {
-        block: blockType,
-        type: 'N/A',
-        isArray: false,
+        blockIndex: i,
+        section: blockType,
         renderer: blockType,
-        measure: estimatedHeight,
-        actual: result.height,
+        dataType: 'N/A',
+        isArray: false,
+        estimateHeight: estimatedHeight,
+        actualHeight: result.height,
         cursorBefore,
-        cursorAfter
+        cursorAfter,
+        pageNumber: pageNum
       }
       
       globalTracer.logBlock(blockTrace)
@@ -584,7 +586,8 @@ export class FlowDocument {
     }
     
     // Output summary at end
-    console.log('\n' + globalTracer.getSummary())
+    console.log(globalTracer.getDetailedReport())
+    console.log(globalTracer.getComparisonFormat())
 
     // Add page numbers
     this.pages.forEach((p, index) => {

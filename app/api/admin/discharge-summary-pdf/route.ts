@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PDFDocument } from 'pdf-lib'
 import { FlowDocument, Heading, LabelValue, Paragraph, NumberedList, MedicineTable, SignatureBlock, Spacer } from '@/lib/flow-document'
+import { globalTracer, EnvironmentInfo } from '@/lib/trace-logger'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
@@ -13,17 +14,33 @@ function sanitize(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const RENDERER_VERSION = '35dcfc6'  // Latest: Pagination optimization
+  const RENDERER_VERSION = '55ad57c'
+  const COMMIT_HASH = '55ad57c'
   const BUILD_TIME = new Date().toISOString()
+  const ENVIRONMENT = process.env.VERCEL_ENV || 'local'
   
   try {
+    // Set up environment info for tracing
+    const envInfo: EnvironmentInfo = {
+      renderVersion: RENDERER_VERSION,
+      commitHash: COMMIT_HASH,
+      buildTime: BUILD_TIME,
+      environment: ENVIRONMENT,
+      nodeVersion: process.version,
+      pdfLibVersion: '1.16.0',
+      fontLoaded: true,
+      fontName: 'Helvetica'
+    }
+    
+    globalTracer.setEnvironment(envInfo)
+    
     const data = await req.json()
 
     if (!data.doctor_name) {
       return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
     }
 
-    console.log(`[PDF] Version: ${RENDERER_VERSION} | Built: ${BUILD_TIME}`)
+    console.log(`[PDF] Rendering: Version=${RENDERER_VERSION}, Env=${ENVIRONMENT}, Built=${BUILD_TIME}`)
 
     const pdfDoc = await PDFDocument.create()
     const doc = new FlowDocument(pdfDoc)
