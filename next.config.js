@@ -21,5 +21,8 @@ const nextConfig = {
     '@sparticuz/chromium',
     'puppeteer-core',
   ],
+
+  // Use empty turbopack config to allow serverExternalPackages to work
+  turbopack: {},
 }
 module.exports = nextConfig
