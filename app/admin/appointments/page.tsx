@@ -19,7 +19,8 @@ const supabase = createClient(
 
 type Booking = {
   id: number
-  booking_id: string
+  booking_id: string                    // Human-readable (AYB-2026-...)
+  booking_uuid?: string                 // Actual UUID for discharge_summaries.booking_id (optional for backward compat)
   preferred_date: string
   preferred_time: string
   booking_type: string
@@ -334,10 +335,11 @@ export default function AdminAppointmentsPage() {
               }
             }}
             onDischarge={() => {
-              // Pass the booking UUID (selectedRow.booking_id), NOT the numeric row id.
-              // discharge_summaries.booking_id is type UUID in Postgres.
-              // selectedRow.booking_id contains the actual UUID (e.g., 550e8400-e29b-41d4-a716-446655440000)
-              if (selectedRow) router.push(`/admin/discharge-summary?booking_uuid=${encodeURIComponent(selectedRow.booking_id)}`)
+              // Pass the actual UUID from bookings_new.booking_uuid
+              // discharge_summaries.booking_id expects PostgreSQL UUID type
+              if (selectedRow && selectedRow.booking_uuid) {
+                router.push(`/admin/discharge-summary?booking_uuid=${encodeURIComponent(selectedRow.booking_uuid)}`)
+              }
             }}
             getStatusBadge={getStatusBadge}
             getPaymentBadge={getPaymentBadge}

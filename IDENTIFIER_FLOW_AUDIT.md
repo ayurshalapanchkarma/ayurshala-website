@@ -91,15 +91,27 @@ if (uuid) {
 
 **`/app/admin/appointments/page.tsx` line 339**
 
+**Database schema has THREE identifier columns in bookings_new:**
+
+| Column | Value | Type | Use For |
+|--------|-------|------|---------|
+| `id` | `6` | numeric | Database row ID (internal only) |
+| `booking_id` | `AYB-2026-000005` | string | Human-readable reference |
+| `booking_uuid` | `a76f621d-4639-4c1c-a705-ec1b4cc51f44` | string (UUID) | Foreign key to discharge_summaries.booking_id |
+
+**The code was passing wrong value:**
 ```typescript
-// WRONG ❌
+// WRONG ❌ (passes numeric ID)
 router.push(`/admin/discharge-summary?booking_uuid=${selectedRow.id}`)
 
-// CORRECT ✅
+// STILL WRONG ❌ (passes human-readable, not UUID)
 router.push(`/admin/discharge-summary?booking_uuid=${selectedRow.booking_id}`)
+
+// CORRECT ✅ (passes actual UUID)
+router.push(`/admin/discharge-summary?booking_uuid=${selectedRow.booking_uuid}`)
 ```
 
-The comment on line 337-338 even says to pass the UUID, but then passes `.id` instead.
+The issue: `discharge_summaries.booking_id` column is PostgreSQL UUID type and expects the actual UUID value from `bookings_new.booking_uuid`, not the numeric `.id` or human-readable `.booking_id`.
 
 ---
 
@@ -107,7 +119,8 @@ The comment on line 337-338 even says to pass the UUID, but then passes `.id` in
 
 | File | Line | Current | Correct | Status |
 |------|------|---------|---------|--------|
-| appointments/page.tsx | 339 | `selectedRow.id` | `selectedRow.booking_id` | ❌ WRONG |
+| appointments/page.tsx | 339 | `selectedRow.id` | `selectedRow.booking_uuid` | ❌ WRONG |
+| appointments/page.tsx | Type Booking | Missing | Add `booking_uuid: string` | ❌ MISSING |
 
 ---
 
