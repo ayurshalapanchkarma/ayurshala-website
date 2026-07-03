@@ -1,4 +1,5 @@
 import { PDFPage, PDFDocument, rgb, PDFImage } from 'pdf-lib'
+import { globalTracer, BlockTrace, ItemTrace } from './trace-logger'
 
 const ORANGE = rgb(249 / 255, 115 / 255, 22 / 255)
 const BLACK = rgb(17 / 255, 24 / 255, 39 / 255)
@@ -557,6 +558,20 @@ export class FlowDocument {
       const result = block.render(page, MARGIN, this.currentY, CONTENT_WIDTH)
       const cursorAfter = this.currentY - result.height - SECTION_SPACING
 
+      // Log trace for evidence collection
+      const blockTrace: BlockTrace = {
+        block: blockType,
+        type: 'N/A',
+        isArray: false,
+        renderer: blockType,
+        measure: estimatedHeight,
+        actual: result.height,
+        cursorBefore,
+        cursorAfter
+      }
+      
+      globalTracer.logBlock(blockTrace)
+
       // DEBUG LOG - focused format for paragraph/list debugging
       if (blockType === 'NumberedList' || blockType === 'Paragraph' || blockType === 'Heading') {
         // Check if this is advice/cautions/pathya/apathya by looking at Heading before it
@@ -567,6 +582,9 @@ export class FlowDocument {
       // CRITICAL: Use returned height, not estimated
       this.currentY = cursorAfter
     }
+    
+    // Output summary at end
+    console.log('\n' + globalTracer.getSummary())
 
     // Add page numbers
     this.pages.forEach((p, index) => {
