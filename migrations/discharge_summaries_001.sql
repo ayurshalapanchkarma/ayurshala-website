@@ -57,6 +57,9 @@ CREATE POLICY "Admins can view discharge summaries" ON discharge_summaries
 CREATE POLICY "Admins can insert discharge summaries" ON discharge_summaries
   FOR INSERT WITH CHECK (true);
 
+-- Create unique constraint on booking_id for upsert
+ALTER TABLE discharge_summaries ADD CONSTRAINT unique_booking_id UNIQUE (booking_id);
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_discharge_patient_id ON discharge_summaries(patient_id);
 CREATE INDEX IF NOT EXISTS idx_discharge_booking_id ON discharge_summaries(booking_id);

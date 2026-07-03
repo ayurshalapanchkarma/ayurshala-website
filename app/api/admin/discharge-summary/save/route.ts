@@ -85,53 +85,87 @@ export async function POST(req: NextRequest) {
   })
 
   // Create Supabase client
-  console.log('[INSERT] Creating Supabase client...')
+  console.log('[CLIENT] Creating Supabase client...')
   const supabase = createClient(supabaseUrl!, serviceRoleKey!)
 
   try {
-    console.log('[UPSERT] Calling supabase.from("discharge_summaries").upsert()...')
-    const { data, error, status, statusText, count } = await supabase
+    // EXPLICIT UPSERT LOGIC: Check if record exists first
+    console.log('[EXPLICIT-UPSERT] Checking if booking_id exists:', insertPayload.booking_id)
+    
+    const { data: existingRecord, error: checkError } = await supabase
       .from('discharge_summaries')
-      .upsert([insertPayload], { onConflict: 'booking_id' })
-      .select()
+      .select('id')
+      .eq('booking_id', insertPayload.booking_id)
       .single()
 
-    console.log('[SUPABASE RESPONSE]', {
-      status,
-      statusText,
-      count,
-      data_exists: !!data,
-      error_exists: !!error,
-    })
-
-    if (error) {
-      console.error('[SUPABASE ERROR]', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-      })
-
+    if (checkError && checkError.code !== 'PGRST116') {
+      // PGRST116 = no rows returned, which is fine
+      console.error('[EXPLICIT-UPSERT] Error checking for existing record:', checkError)
       return NextResponse.json(
-        {
-          error: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-        },
+        { error: `Failed to check existing record: ${checkError.message}` },
         { status: 500 }
       )
     }
 
-    if (data) {
-      console.log('[INSERT SUCCESS]', { id: data.id, patient_uhid: data.patient_uhid })
+    let result
+    let operation = 'INSERT'
 
-      console.log('[HTTP RESPONSE] Returning 201 with success')
-      return NextResponse.json({ success: true, id: data.id }, { status: 201 })
+    if (existingRecord?.id) {
+      // Record exists → UPDATE
+      operation = 'UPDATE'
+      console.log('[EXPLICIT-UPSERT] Record exists with id:', existingRecord.id)
+      console.log('[EXPLICIT-UPSERT] Performing UPDATE...')
+      
+      const { data, error } = await supabase
+        .from('discharge_summaries')
+        .update(insertPayload)
+        .eq('id', existingRecord.id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('[EXPLICIT-UPSERT] UPDATE error:', error)
+        return NextResponse.json(
+          { error: `UPDATE failed: ${error.message}` },
+          { status: 500 }
+        )
+      }
+      result = data
+    } else {
+      // Record does not exist → INSERT
+      console.log('[EXPLICIT-UPSERT] Record does not exist')
+      console.log('[EXPLICIT-UPSERT] Performing INSERT...')
+      
+      const { data, error } = await supabase
+        .from('discharge_summaries')
+        .insert([insertPayload])
+        .select()
+        .single()
+
+      if (error) {
+        console.error('[EXPLICIT-UPSERT] INSERT error:', error)
+        return NextResponse.json(
+          { error: `INSERT failed: ${error.message}` },
+          { status: 500 }
+        )
+      }
+      result = data
     }
 
-    console.log('[INSERT] No error but no data returned')
-    return NextResponse.json({ error: 'No data returned' }, { status: 500 })
+    console.log(`[EXPLICIT-UPSERT] ${operation} SUCCESS`, {
+      id: result?.id,
+      booking_id: result?.booking_id,
+      patient_uhid: result?.patient_uhid,
+      operation,
+    })
+
+    console.log('[HTTP-RESPONSE] Returning 200 with complete record')
+    return NextResponse.json({
+      success: true,
+      id: result?.id,
+      data: result,
+      operation, // Indicates whether INSERT or UPDATE was performed
+    }, { status: 200 })
   } catch (error) {
     console.error('[EXCEPTION]', {
       name: error instanceof Error ? error.name : 'Unknown',

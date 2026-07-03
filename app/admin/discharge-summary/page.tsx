@@ -246,6 +246,14 @@ export default function DischargeSummaryPage() {
       const result = await res.json()
       console.log('[FRONTEND] API response:', result)
       if (!res.ok) throw new Error(result.error || 'Save failed')
+      
+      // CRITICAL: After successful save, reload the full record from database
+      // This ensures React state matches what was actually persisted to Supabase
+      if (result.data && bookingId) {
+        console.log('[FRONTEND] Reloading saved data from database...')
+        await loadDischargeSummary(bookingId)
+      }
+      
       setHasUnsavedChanges(false)
       alert('Discharge summary saved successfully')
     } catch (error) {
