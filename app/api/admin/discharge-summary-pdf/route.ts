@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import puppeteer from 'puppeteer'
 import puppeteerCore from 'puppeteer-core'
 import chromium from '@sparticuz/chromium'
 
@@ -42,9 +41,9 @@ async function launchBrowser() {
       throw error
     }
   } else {
-    // Local development
-    console.log('[PDF-V2] Using full Puppeteer for local development')
-    return await puppeteer.launch({
+    // Local development - use puppeteer-core without chromium
+    console.log('[PDF-V2] Using puppeteer-core for local development (with local Chrome)')
+    return await puppeteerCore.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     } as any)
