@@ -84,6 +84,7 @@ class Paragraph implements Block {
     })
 
     const actualHeight = lines.length * LINE_HEIGHT
+    console.log(`[PARAGRAPH_RENDER] lines=${lines.length}, height=${actualHeight}, y=${y}`)
     return { height: actualHeight }
   }
 }
@@ -102,7 +103,9 @@ class Heading implements Block {
       size: 12,
       color: ORANGE,
     })
-    return { height: LINE_HEIGHT + 6 }
+    const actualHeight = LINE_HEIGHT + 6
+    console.log(`[HEADING_RENDER] text="${this.text}", height=${actualHeight}, y=${y}`)
+    return { height: actualHeight }
   }
 }
 
@@ -121,7 +124,9 @@ class LabelValue implements Block {
       size: 10,
       color: BLACK,
     })
-    return { height: LINE_HEIGHT }
+    const actualHeight = LINE_HEIGHT
+    console.log(`[LABELVALUE_RENDER] label="${this.label}", height=${actualHeight}, y=${y}`)
+    return { height: actualHeight }
   }
 }
 
@@ -202,6 +207,7 @@ class NumberedList implements Block {
       }
     })
 
+    console.log(`[NUMBEREDLIST_RENDER] items=${this.items.length}, height=${totalHeight}, y=${y}`)
     return { height: totalHeight }
   }
 }
@@ -309,6 +315,7 @@ class MedicineTable implements Block {
       totalHeight += rowHeight
     })
 
+    console.log(`[MEDICINETABLE_RENDER] medicines=${this.medicines.length}, height=${totalHeight}, y=${y}`)
     return { height: totalHeight }
   }
 }
@@ -361,7 +368,9 @@ class SignatureBlock implements Block {
       color: BLACK,
     })
 
-    return { height: LINE_HEIGHT * 4 }
+    const actualHeight = LINE_HEIGHT * 4
+    console.log(`[SIGNATUREBLOCK_RENDER] doctor="${this.doctorName}", height=${actualHeight}, y=${y}`)
+    return { height: actualHeight }
   }
 }
 
@@ -373,6 +382,7 @@ class Spacer implements Block {
   }
 
   render(page: PDFPage, x: number, y: number, contentWidth: number): RenderResult {
+    console.log(`[SPACER_RENDER] height=${this.height}, y=${y}`)
     return { height: this.height }
   }
 }
@@ -491,17 +501,30 @@ export class FlowDocument {
     for (const block of this.blocks) {
       const estimatedHeight = block.measure()
       const requiredSpace = estimatedHeight + SECTION_SPACING
+      const cursorBefore = this.currentY
 
       // CRITICAL: Check if block fits
       if (this.currentY - requiredSpace < BOTTOM_MARGIN + 20) {
         page = this.createPage()
+        console.log(`[PAGE_BREAK] Created new page. EstimatedHeight=${estimatedHeight}, Required=${requiredSpace}, cursorBefore=${cursorBefore}, newCursor=${this.currentY}`)
       }
 
       // Render block and GET ACTUAL HEIGHT
       const result = block.render(page, MARGIN, this.currentY, CONTENT_WIDTH)
+      const cursorAfter = this.currentY - result.height - SECTION_SPACING
+
+      // DEBUG LOG
+      const blockName = block.constructor.name
+      console.log(`[DEBUG] ${blockName}`)
+      console.log(`  estimate: ${estimatedHeight}`)
+      console.log(`  actual: ${result.height}`)
+      console.log(`  before: ${cursorBefore}`)
+      console.log(`  after: ${cursorAfter}`)
+      console.log(`  spacing: ${SECTION_SPACING}`)
+      console.log(`  page: ${this.pages.length}`)
 
       // CRITICAL: Use returned height, not estimated
-      this.currentY -= result.height + SECTION_SPACING
+      this.currentY = cursorAfter
     }
 
     // Add page numbers
