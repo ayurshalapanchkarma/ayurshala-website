@@ -15,14 +15,26 @@ const nextConfig = {
   },
 
   // Externalize Chromium and Puppeteer packages for serverless deployment
-  // Prevents Next.js from bundling these into the server function
-  // They must remain as external dependencies for @sparticuz/chromium to work correctly
   serverExternalPackages: [
     '@sparticuz/chromium',
     'puppeteer-core',
   ],
 
-  // Use empty turbopack config to allow serverExternalPackages to work
+  // Webpack configuration to explicitly externalize packages
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Add regex patterns for externals
+      const externals = config.externals || []
+      config.externals = [
+        ...externals,
+        /^@sparticuz\/chromium/,
+        /^puppeteer-core/,
+      ]
+    }
+    return config
+  },
+
+  // Empty turbopack config to allow build to proceed
   turbopack: {},
 }
 module.exports = nextConfig

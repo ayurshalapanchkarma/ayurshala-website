@@ -23,16 +23,17 @@ async function launchBrowser() {
     // Vercel serverless environment
     console.log('[PDF-V2] Using puppeteer-core + chromium for Vercel')
     
-    // Diagnostic: Check chromium package
-    console.log('[PDF-V2] chromium package:', chromium)
-    console.log('[PDF-V2] chromium.args:', chromium.args)
-    
     try {
-      const executable = await chromium.executablePath()
-      console.log('[PDF-V2] Executable:', executable)
+      // For Vercel, @sparticuz/chromium needs to download the binary from a URL
+      // since bundling doesn't work properly. Use the public CDN URL.
+      const chromiumUrl = 'https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.tar'
+      
+      console.log('[PDF-V2] Downloading Chromium from:', chromiumUrl)
+      const executable = await chromium.executablePath(chromiumUrl)
+      console.log('[PDF-V2] Chromium executable path:', executable)
       
       if (!executable) {
-        throw new Error('Chromium executable path is undefined - package not bundled correctly')
+        throw new Error('Chromium executable path is undefined')
       }
       
       return await puppeteerCore.launch({
@@ -40,9 +41,9 @@ async function launchBrowser() {
         executablePath: executable,
         headless: true,
       } as any)
-    } catch (err) {
-      console.error('[PDF-V2] Error calling chromium.executablePath():', err)
-      throw err
+    } catch (error) {
+      console.error('[PDF-V2] Failed to launch Chromium on Vercel:', error instanceof Error ? error.message : String(error))
+      throw error
     }
   } else {
     // Local development - use puppeteer-core without chromium
