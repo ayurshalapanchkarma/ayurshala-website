@@ -155,14 +155,14 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
 
     @page {
       size: A4;
-      margin: 18mm;
+      margin: 0;
     }
 
     body {
       font-family: Helvetica, Arial, sans-serif;
       background: white;
-      color: #111827;
-      line-height: 1.5;
+      color: #333;
+      line-height: 1.55;
       font-size: 11px;
     }
 
@@ -170,18 +170,19 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       max-width: 210mm;
       background: white;
       border: 1.5px solid #f97316;
-      padding: 20px;
+      border-radius: 8px;
+      padding: 18mm;
     }
 
     /* Header - exactly like certificate */
     .header {
       text-align: center;
-      margin-bottom: 12px;
+      margin-bottom: 0;
     }
 
     .logo {
-      max-width: 150px;
       width: 140px;
+      max-width: 150px;
       height: auto;
       margin: 0 auto 8px;
       display: block;
@@ -191,6 +192,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       font-size: 20px;
       font-weight: 700;
       color: #111827;
+      margin-top: 4px;
       margin-bottom: 8px;
       letter-spacing: 0.3px;
     }
@@ -198,7 +200,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     .clinic-address {
       font-size: 11px;
       font-weight: 400;
-      color: #111827;
+      color: #555;
       line-height: 1.4;
       margin-bottom: 4px;
     }
@@ -211,11 +213,10 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     }
 
     .divider {
-      text-align: center;
-      font-size: 12px;
-      color: #f97316;
-      margin-bottom: 10px;
-      letter-spacing: 3px;
+      height: 1px;
+      background: #f97316;
+      opacity: 0.7;
+      margin: 12px 0 14px;
     }
 
     .document-title {
@@ -223,16 +224,18 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       font-weight: 700;
       color: #f97316;
       letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 20px;
     }
 
     /* Section Titles */
     .section-title {
       font-size: 13px;
       font-weight: 700;
-      padding: 6px 0 4px 0;
-      margin: 12px 0 8px 0;
+      padding-bottom: 6px;
+      margin: 18px 0 10px 0;
       text-transform: uppercase;
-      border-bottom: 1px solid #f97316;
+      border-bottom: 2px solid #f97316;
       color: #f97316;
     }
 
@@ -250,15 +253,15 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
 
     .data-label {
       font-weight: 600;
-      color: #111827;
+      color: #222;
       font-size: 10.5px;
+      margin-bottom: 2px;
     }
 
     .data-value {
-      color: #111827;
+      color: #444;
       font-weight: 400;
       font-size: 10.5px;
-      margin-top: 2px;
     }
 
     /* Lists */
@@ -269,7 +272,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
 
     .list-item {
       margin-bottom: 6px;
-      color: #111827;
+      color: #333;
       line-height: 1.45;
     }
 
@@ -297,8 +300,9 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     td {
       padding: 6px;
       border: 0.5px solid #ddd;
-      color: #111827;
+      color: #333;
       font-size: 9.5px;
+      line-height: 1.4;
     }
 
     tbody tr:nth-child(even) {
@@ -309,20 +313,20 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     .content-block {
       margin: 6px 0;
       font-size: 11px;
-      color: #111827;
+      color: #333;
       line-height: 1.55;
     }
 
     .subsection-label {
       font-weight: 600;
-      color: #111827;
+      color: #222;
       margin-bottom: 2px;
       font-size: 10.5px;
     }
 
     .subsection-value {
       margin-left: 0;
-      color: #111827;
+      color: #444;
       font-size: 10.5px;
       line-height: 1.55;
     }
