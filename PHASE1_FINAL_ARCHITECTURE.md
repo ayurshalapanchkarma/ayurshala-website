@@ -55,9 +55,9 @@ Save Discharge Summary
   ↓
 Click "Preview" button
   ↓
-See HTML in browser ← Visual approval starts here
+Server fetches latest DB record automatically
   ↓
-Reload from DB (ensures fresh data)
+See HTML in browser ← Visual approval starts here
   ↓
 Press Ctrl+P → Print Preview
   ↓
@@ -223,7 +223,7 @@ No need to build separate PDF engines.
 
 ### Issues Found?
 ❌ Fix HTML/CSS before Phase 2  
-❌ Reload from DB to retest  
+❌ Open preview again (fetches latest automatically)  
 ❌ Repeat until approved
 
 ---

@@ -252,13 +252,6 @@ export default function PDFPreviewPage() {
     }
   }
 
-  // Reload from database (ensures we always preview persisted data, not React state)
-  async function reloadFromDb() {
-    if (bookingUuid) {
-      await loadRealData(bookingUuid)
-    }
-  }
-
   if (loading) {
     return (
       <div className="bg-gray-100 min-h-screen py-6">
@@ -336,28 +329,18 @@ export default function PDFPreviewPage() {
                   : 'Development Mode: Test Data'}
               </p>
             </div>
-            <div className="flex gap-2">
-              {mode === 'production' && (
-                <button
-                  onClick={reloadFromDb}
-                  disabled={loading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm disabled:opacity-50">
-                  ⟳ Reload from DB
-                </button>
-              )}
-              <button
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                Print to PDF (Ctrl+P)
-              </button>
-            </div>
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+              Print to PDF (Ctrl+P)
+            </button>
           </div>
 
           {/* Mode badge */}
           <div className="flex gap-2 items-center">
             {mode === 'production' && (
               <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">
-                PRODUCTION DATA
+                PRODUCTION DATA (from database)
               </span>
             )}
             {mode === 'dev' && (
@@ -391,7 +374,7 @@ export default function PDFPreviewPage() {
             </div>
             {mode === 'production' && (
               <p className="text-xs text-gray-500 mt-3 pt-2 border-t">
-                ℹ️ Preview Source shows data loaded from database. Click "Reload from DB" to refresh before printing.
+                ℹ️ Preview Source shows data loaded from database on page load. Each time you open this preview, the latest saved record is fetched.
               </p>
             )}
           </div>
