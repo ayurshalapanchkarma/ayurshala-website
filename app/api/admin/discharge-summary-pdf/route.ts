@@ -199,25 +199,24 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     .page {
       box-sizing: border-box;
       width: 100%;
-      height: calc(297mm - 20mm);
+      min-height: calc(297mm - 20mm);
       border: 2px solid #f97316;
       padding: 16mm;
       background: #fff;
       position: relative;
-      display: flex;
-      flex-direction: column;
       page-break-after: always;
+      page-break-inside: avoid;
     }
 
     .page:last-child {
       page-break-after: auto;
+      min-height: auto;
     }
 
     /* Header */
     .header {
       text-align: center;
       margin-bottom: 0;
-      flex-shrink: 0;
     }
 
     .logo {
@@ -374,20 +373,18 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       word-break: break-word;
     }
 
-    /* Content grows to fill available space */
+    /* Content area - normal block flow for page breaks */
     .content {
-      flex: 1;
-      overflow: hidden;
+      display: block;
     }
 
-    /* Footer stays at bottom */
+    /* Footer */
     .footer {
       margin-top: 30px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 40px;
       font-size: 9px;
-      flex-shrink: 0;
     }
 
     .signature-block {
