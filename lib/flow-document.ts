@@ -46,10 +46,16 @@ interface Block {
 }
 
 class Paragraph implements Block {
-  constructor(private text: string, private fontSize: number = 10) {}
+  constructor(private text: string, private fontSize: number = 10) {
+    if (text === null || text === undefined) {
+      console.error('[PARAGRAPH_INIT] ERROR: text is undefined/null', { text, fontSize })
+    }
+  }
 
   private wrapLines(maxWidth: number): string[] {
-    const words = this.text.split(' ')
+    // Defensive: ensure text is a string
+    const textToWrap = typeof this.text === 'string' ? this.text : String(this.text || '')
+    const words = textToWrap.split(' ')
     const lines: string[] = []
     let currentLine = ''
     const charWidth = this.fontSize * 0.55
@@ -71,7 +77,7 @@ class Paragraph implements Block {
   measure(): number {
     const lines = this.wrapLines(CONTENT_WIDTH - 40)
     const height = lines.length * LINE_HEIGHT
-    console.log(`[PARAGRAPH_MEASURE] text="${this.text.substring(0, 50)}...", lines=${lines.length}, height=${height}`)
+    console.log(`[PARAGRAPH_MEASURE] text="${this.text ? String(this.text).substring(0, 50) : 'UNDEFINED'}...", lines=${lines.length}, height=${height}`)
     return height
   }
 
@@ -83,13 +89,22 @@ class Paragraph implements Block {
     console.log(`[PARAGRAPH_RENDER_START] y=${y}, contentWidth=${contentWidth}, wrappingWidth=${wrappingWidth}, lines=${lines.length}`)
 
     lines.forEach((line, idx) => {
-      console.log(`  Line ${idx + 1}/${lines.length}: y=${currentY}, text="${line.substring(0, 60)}"`)
-      page.drawText(line, {
-        x: x + 20,
-        y: currentY,
-        size: this.fontSize,
-        color: BLACK,
-      })
+      try {
+        console.log(`  Line ${idx + 1}/${lines.length}: y=${currentY}, text="${line.substring(0, 60)}"`)
+        page.drawText(line, {
+          x: x + 20,
+          y: currentY,
+          size: this.fontSize,
+          color: BLACK,
+        })
+      } catch (e) {
+        console.error('[PARAGRAPH_DRAW_ERROR]', { 
+          lineIndex: idx, 
+          line: line.substring(0, 100), 
+          error: e instanceof Error ? e.message : String(e)
+        })
+        throw e
+      }
       currentY -= LINE_HEIGHT
     })
 
@@ -100,19 +115,29 @@ class Paragraph implements Block {
 }
 
 class Heading implements Block {
-  constructor(private text: string) {}
+  constructor(private text: string) {
+    if (text === null || text === undefined) {
+      console.error('[HEADING_INIT] ERROR: text is undefined/null', { text })
+    }
+  }
 
   measure(): number {
     return LINE_HEIGHT + 6
   }
 
   render(page: PDFPage, x: number, y: number, contentWidth: number): RenderResult {
-    page.drawText(this.text, {
-      x: x + 20,
-      y,
-      size: 12,
-      color: ORANGE,
-    })
+    try {
+      const textToRender = typeof this.text === 'string' ? this.text : String(this.text || '')
+      page.drawText(textToRender, {
+        x: x + 20,
+        y,
+        size: 12,
+        color: ORANGE,
+      })
+    } catch (e) {
+      console.error('[HEADING_DRAW_ERROR]', { text: this.text, error: e instanceof Error ? e.message : String(e) })
+      throw e
+    }
     const actualHeight = LINE_HEIGHT + 6
     console.log(`[HEADING_RENDER] text="${this.text}", height=${actualHeight}, y=${y}`)
     return { height: actualHeight }
@@ -120,20 +145,34 @@ class Heading implements Block {
 }
 
 class LabelValue implements Block {
-  constructor(private label: string, private value: string) {}
+  constructor(private label: string, private value: string) {
+    if (label === null || label === undefined) {
+      console.error('[LABELVALUE_INIT] ERROR: label is undefined/null', { label, value })
+    }
+    if (value === null || value === undefined) {
+      console.error('[LABELVALUE_INIT] ERROR: value is undefined/null', { label, value })
+    }
+  }
 
   measure(): number {
     return LINE_HEIGHT
   }
 
   render(page: PDFPage, x: number, y: number, contentWidth: number): RenderResult {
-    const text = `${this.label} ${this.value}`
-    page.drawText(text, {
-      x: x + 20,
-      y,
-      size: 10,
-      color: BLACK,
-    })
+    try {
+      const labelText = typeof this.label === 'string' ? this.label : String(this.label || '')
+      const valueText = typeof this.value === 'string' ? this.value : String(this.value || '')
+      const text = `${labelText} ${valueText}`
+      page.drawText(text, {
+        x: x + 20,
+        y,
+        size: 10,
+        color: BLACK,
+      })
+    } catch (e) {
+      console.error('[LABELVALUE_DRAW_ERROR]', { label: this.label, value: this.value, error: e instanceof Error ? e.message : String(e) })
+      throw e
+    }
     const actualHeight = LINE_HEIGHT
     console.log(`[LABELVALUE_RENDER] label="${this.label}", height=${actualHeight}, y=${y}`)
     return { height: actualHeight }
@@ -141,10 +180,16 @@ class LabelValue implements Block {
 }
 
 class NumberedList implements Block {
-  constructor(private items: string[], private fontSize: number = 10) {}
+  constructor(private items: string[], private fontSize: number = 10) {
+    if (!Array.isArray(items)) {
+      console.error('[NUMBEREDLIST_INIT] ERROR: items is not an array', { items, type: typeof items })
+    }
+  }
 
   private wrapLines(text: string, maxWidth: number): string[] {
-    const words = text.split(' ')
+    // Defensive: ensure text is a string
+    const textToWrap = typeof text === 'string' ? text : String(text || '')
+    const words = textToWrap.split(' ')
     const lines: string[] = []
     let currentLine = ''
     const charWidth = this.fontSize * 0.55
@@ -167,7 +212,8 @@ class NumberedList implements Block {
     let height = 0
     let totalLines = 0
     this.items.forEach(item => {
-      const lines = this.wrapLines(item, CONTENT_WIDTH - 80)
+      const itemText = typeof item === 'string' ? item : String(item || '')
+      const lines = this.wrapLines(itemText, CONTENT_WIDTH - 80)
       totalLines += lines.length
       height += lines.length * LINE_HEIGHT
     })
@@ -184,46 +230,67 @@ class NumberedList implements Block {
     let itemsDrawn = 0
 
     this.items.forEach((item, index) => {
-      const lines = this.wrapLines(item, contentWidth - 80)
-      linesPerItem.push(lines.length)
+      try {
+        const itemText = typeof item === 'string' ? item : String(item || '')
+        const lines = this.wrapLines(itemText, contentWidth - 80)
+        linesPerItem.push(lines.length)
 
-      // Draw number
-      page.drawText(`${index + 1}.`, {
-        x: x + 30,
-        y: currentY,
-        size: this.fontSize,
-        color: BLACK,
-      })
+        // Draw number
+        try {
+          page.drawText(`${index + 1}.`, {
+            x: x + 30,
+            y: currentY,
+            size: this.fontSize,
+            color: BLACK,
+          })
+        } catch (e) {
+          console.error('[NUMBEREDLIST_NUMBER_ERROR]', { itemIndex: index, error: e instanceof Error ? e.message : String(e) })
+          throw e
+        }
 
-      // Draw first line of item
-      page.drawText(lines[0], {
-        x: x + 50,
-        y: currentY,
-        size: this.fontSize,
-        color: BLACK,
-      })
+        // Draw first line of item
+        try {
+          page.drawText(lines[0], {
+            x: x + 50,
+            y: currentY,
+            size: this.fontSize,
+            color: BLACK,
+          })
+        } catch (e) {
+          console.error('[NUMBEREDLIST_FIRSTLINE_ERROR]', { itemIndex: index, firstLine: lines[0], error: e instanceof Error ? e.message : String(e) })
+          throw e
+        }
 
-      currentY -= LINE_HEIGHT
-      totalHeight += LINE_HEIGHT
-      itemsDrawn++
-
-      // Draw continuation lines
-      lines.slice(1).forEach(line => {
-        page.drawText(line, {
-          x: x + 50,
-          y: currentY,
-          size: this.fontSize,
-          color: BLACK,
-        })
         currentY -= LINE_HEIGHT
         totalHeight += LINE_HEIGHT
         itemsDrawn++
-      })
 
-      // Spacing between items
-      if (index < this.items.length - 1) {
-        currentY -= 2
-        totalHeight += 2
+        // Draw continuation lines
+        lines.slice(1).forEach((line, lineIdx) => {
+          try {
+            page.drawText(line, {
+              x: x + 50,
+              y: currentY,
+              size: this.fontSize,
+              color: BLACK,
+            })
+          } catch (e) {
+            console.error('[NUMBEREDLIST_CONTINUATION_ERROR]', { itemIndex: index, lineIndex: lineIdx, line, error: e instanceof Error ? e.message : String(e) })
+            throw e
+          }
+          currentY -= LINE_HEIGHT
+          totalHeight += LINE_HEIGHT
+          itemsDrawn++
+        })
+
+        // Spacing between items
+        if (index < this.items.length - 1) {
+          currentY -= 2
+          totalHeight += 2
+        }
+      } catch (e) {
+        console.error('[NUMBEREDLIST_ITEM_ERROR]', { itemIndex: index, item, error: e instanceof Error ? e.message : String(e) })
+        throw e
       }
     })
 

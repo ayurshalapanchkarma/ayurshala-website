@@ -33,6 +33,40 @@ export async function POST(req: NextRequest) {
       patient_uhid: data.patient_uhid || 'unknown',
     })
 
+    // ── Log all incoming fields to identify undefined values ──
+    console.log('[PDF] Input fields:', {
+      patient_uhid: { value: data.patient_uhid, type: typeof data.patient_uhid },
+      patient_name: { value: data.patient_name, type: typeof data.patient_name },
+      age: { value: data.age, type: typeof data.age },
+      sex: { value: data.sex, type: typeof data.sex },
+      diagnosis: { value: data.diagnosis, type: typeof data.diagnosis },
+      complaints: { value: Array.isArray(data.complaints) ? `[${data.complaints.length} items]` : data.complaints, type: typeof data.complaints },
+      history_present_complaints: { value: data.history_present_complaints, type: typeof data.history_present_complaints },
+      past_history_medical: { value: data.past_history_medical, type: typeof data.past_history_medical },
+      past_history_surgical: { value: data.past_history_surgical, type: typeof data.past_history_surgical },
+      medication_administered: { value: data.medication_administered, type: typeof data.medication_administered },
+      day_of_therapy: { value: data.day_of_therapy, type: typeof data.day_of_therapy },
+      pradhan_vedna: { value: Array.isArray(data.pradhan_vedna) ? `[${data.pradhan_vedna.length} items]` : data.pradhan_vedna, type: typeof data.pradhan_vedna },
+      vitals_bp: { value: data.vitals_bp, type: typeof data.vitals_bp },
+      vitals_hr: { value: data.vitals_hr, type: typeof data.vitals_hr },
+      vitals_nadi: { value: data.vitals_nadi, type: typeof data.vitals_nadi },
+      oe_mala: { value: data.oe_mala, type: typeof data.oe_mala },
+      oe_mutra: { value: data.oe_mutra, type: typeof data.oe_mutra },
+      oe_jihwa: { value: data.oe_jihwa, type: typeof data.oe_jihwa },
+      oe_shuda: { value: data.oe_shuda, type: typeof data.oe_shuda },
+      oe_nidra: { value: data.oe_nidra, type: typeof data.oe_nidra },
+      therapies: { value: Array.isArray(data.therapies) ? `[${data.therapies.length} items]` : data.therapies, type: typeof data.therapies },
+      investigations: { value: data.investigations, type: typeof data.investigations },
+      findings_discharge: { value: data.findings_discharge, type: typeof data.findings_discharge },
+      condition_discharge: { value: data.condition_discharge, type: typeof data.condition_discharge },
+      advice_discharge: { value: data.advice_discharge, type: typeof data.advice_discharge },
+      medicines: { value: Array.isArray(data.medicines) ? `[${data.medicines.length} items]` : data.medicines, type: typeof data.medicines },
+      cautions: { value: data.cautions, type: typeof data.cautions },
+      pathya: { value: data.pathya, type: typeof data.pathya },
+      apathya: { value: data.apathya, type: typeof data.apathya },
+      doctor_name: { value: data.doctor_name, type: typeof data.doctor_name },
+    })
+
     if (!data.doctor_name) {
       return NextResponse.json({ error: 'Doctor name required' }, { status: 400 })
     }
