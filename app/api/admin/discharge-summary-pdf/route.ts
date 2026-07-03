@@ -390,7 +390,7 @@ function buildDischargeSummaryHtml(summary: any): string {
     ${complaints.length > 0 ? `
     <div class="section-title">COMPLAINTS ON ADMISSION</div>
     <div class="list">
-      ${complaints.map(c => `<div class="list-item">• ${escapeHtml(c)}</div>`).join('')}
+      ${complaints.map((c: any) => `<div class="list-item">• ${escapeHtml(c)}</div>`).join('')}
     </div>
     ` : ''}
 
@@ -398,7 +398,7 @@ function buildDischargeSummaryHtml(summary: any): string {
     ${therapies.length > 0 ? `
     <div class="section-title">THERAPIES / PROCEDURES</div>
     <div class="list">
-      ${therapies.map(t => `<div class="list-item">• ${escapeHtml(t)}</div>`).join('')}
+      ${therapies.map((t: any) => `<div class="list-item">• ${escapeHtml(t)}</div>`).join('')}
     </div>
     ` : ''}
 
@@ -416,7 +416,7 @@ function buildDischargeSummaryHtml(summary: any): string {
         </tr>
       </thead>
       <tbody>
-        ${medicines.map(m => `
+        ${medicines.map((m: any) => `
         <tr>
           <td>${escapeHtml(m.name || '')}</td>
           <td>${escapeHtml(m.dosage || '')}</td>
