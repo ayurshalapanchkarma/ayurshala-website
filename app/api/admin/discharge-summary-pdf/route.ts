@@ -148,14 +148,18 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      margin: 0;
-      padding: 0;
       box-sizing: border-box;
     }
 
     @page {
       size: A4;
       margin: 0;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
     }
 
     body {
@@ -166,26 +170,59 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       font-size: 11px;
     }
 
-    .container {
-      max-width: 210mm;
-      background: white;
-      border: 1.5px solid #f97316;
-      border-radius: 8px;
-      padding: 18mm;
+    img,
+    table,
+    pre,
+    code {
+      max-width: 100%;
     }
 
-    /* Header - exactly like certificate */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    td,
+    th {
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    p,
+    li {
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
+    /* Page container - bordered box */
+    .page {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 100vh;
+      border: 1.5px solid #f97316;
+      padding: 18mm;
+      position: relative;
+      background: #fff;
+      page-break-after: always;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    /* Header */
     .header {
       text-align: center;
       margin-bottom: 0;
     }
 
     .logo {
-      width: 140px;
-      max-width: 150px;
+      width: 130px;
+      max-width: 130px;
       height: auto;
-      margin: 0 auto 8px;
       display: block;
+      margin: 0 auto 8px;
     }
 
     .clinic-name {
@@ -249,6 +286,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
 
     .data-field {
       flex: 1;
+      min-width: 0;
     }
 
     .data-label {
@@ -262,6 +300,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       color: #444;
       font-weight: 400;
       font-size: 10.5px;
+      word-break: break-word;
     }
 
     /* Lists */
@@ -274,12 +313,11 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       margin-bottom: 6px;
       color: #333;
       line-height: 1.45;
+      word-break: break-word;
     }
 
     /* Tables */
     table {
-      width: 100%;
-      border-collapse: collapse;
       margin: 10px 0;
       font-size: 10px;
     }
@@ -290,7 +328,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     }
 
     th {
-      padding: 6px;
+      padding: 8px;
       text-align: left;
       font-weight: 700;
       border: 0.5px solid #ddd;
@@ -298,7 +336,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     }
 
     td {
-      padding: 6px;
+      padding: 8px;
       border: 0.5px solid #ddd;
       color: #333;
       font-size: 9.5px;
@@ -315,6 +353,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       font-size: 11px;
       color: #333;
       line-height: 1.55;
+      word-break: break-word;
     }
 
     .subsection-label {
@@ -329,6 +368,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
       color: #444;
       font-size: 10.5px;
       line-height: 1.55;
+      word-break: break-word;
     }
 
     /* Footer */
@@ -360,8 +400,8 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header - exact certificate layout -->
+  <div class="page">
+    <!-- Header -->
     <div class="header">
       ${logoDataUrl ? `<img src="${logoDataUrl}" alt="Ayurshala" class="logo" />` : ''}
       <div class="clinic-name">AYURSHALA PANCHAKARMA CENTER</div>
@@ -370,7 +410,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
         Sector-130, Noida – 201301
       </div>
       <div class="clinic-contact">+91-9821224767 | ayurshalapanchkarma@gmail.com</div>
-      <div class="divider">─────────────────────</div>
+      <div class="divider"></div>
       <div class="document-title">DISCHARGE SUMMARY</div>
     </div>
 
@@ -478,7 +518,7 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string): string {
     <!-- Lifestyle -->
     ${lifestyleHtml}
 
-    <!-- Footer - exact certificate layout -->
+    <!-- Footer -->
     <div class="footer">
       <div class="signature-block">
         <div class="signature-line"></div>
