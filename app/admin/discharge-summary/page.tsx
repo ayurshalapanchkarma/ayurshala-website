@@ -61,20 +61,20 @@ export default function DischargeSummaryPage() {
 
   useEffect(() => {
     setMounted(true)
-    // Read booking_uuid from URL — this must be the database UUID (from bookings_new.id)
-    // NOT the human-readable booking_number (AYB-...).
-    // The appointments page navigates here with ?booking_uuid=<uuid>
+    // Read booking_uuid from URL
     const params = new URLSearchParams(window.location.search)
     const bookingUuid = params.get('booking_uuid')
 
+    console.log('[INIT] URL search params:', window.location.search)
+    console.log('[INIT] Extracted booking_uuid:', bookingUuid, '(type:', typeof bookingUuid + ')')
+    
     if (bookingUuid) {
-      console.log('[FRONTEND] booking_uuid from URL:', bookingUuid)
+      console.log('[INIT] Setting bookingId to:', bookingUuid)
       setBookingId(bookingUuid)
       loadDischargeSummary(bookingUuid)
       loadBookingData(bookingUuid)
     } else {
-      console.warn('[FRONTEND] No booking_uuid in URL — page must be opened from an appointment')
-      // Leave bookingId null — the render guard below will show the error UI
+      console.warn('[INIT] No booking_uuid in URL — page must be opened from an appointment')
     }
   }, [])
 
@@ -243,6 +243,9 @@ export default function DischargeSummaryPage() {
   }
 
   async function saveDischargeSummary() {
+    console.log('[SAVE] Starting save...')
+    console.log('[SAVE] Current bookingId state:', bookingId, '(type:', typeof bookingId + ')')
+    
     // CRITICAL: Validate booking_id exists before attempting save
     if (!bookingId || bookingId === 'null' || bookingId === 'undefined') {
       alert('Error: No appointment selected. Please open the discharge summary from an appointment.')
@@ -260,8 +263,8 @@ export default function DischargeSummaryPage() {
         ...form,
         booking_uuid: bookingId,
       }
-      console.log('[FRONTEND] POST payload:', JSON.stringify(payload, null, 2))
-      console.log('[FRONTEND] booking_id:', bookingId)
+      console.log('[SAVE] Payload booking_uuid:', bookingId)
+      console.log('[SAVE] Full payload:', JSON.stringify(payload, null, 2))
 
       const res = await fetch('/api/admin/discharge-summary/save', {
         method: 'POST',
@@ -269,13 +272,17 @@ export default function DischargeSummaryPage() {
         body: JSON.stringify(payload),
       })
       const result = await res.json()
-      console.log('[FRONTEND] API response:', result)
-      if (!res.ok) throw new Error(result.message || result.error || 'Save failed')
+      console.log('[SAVE] Response status:', res.status)
+      console.log('[SAVE] Response body:', result)
+      
+      if (!res.ok) {
+        console.error('[SAVE] Error from API:', result)
+        throw new Error(result.message || result.error || 'Save failed')
+      }
       
       // After successful save, reload the full record from the database.
-      // This ensures React state matches what is actually persisted.
       if (result.data && bookingId) {
-        console.log('[FRONTEND] Reloading saved data from database...')
+        console.log('[SAVE] Reloading saved data from database...')
         await loadDischargeSummary(bookingId)
       }
       

@@ -154,12 +154,24 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (error) {
-        console.error('[SAVE] UPDATE failed:', error)
+        console.error('[SAVE] UPDATE failed:', {
+          errorCode: error.code,
+          errorMessage: error.message,
+          details: error.details,
+          hint: error.hint,
+          fullError: JSON.stringify(error, null, 2),
+        })
         return NextResponse.json(
           {
             success: false,
             code: 'UPDATE_FAILED',
-            message: 'Failed to update the discharge summary. Please try again.',
+            message: error.message || 'Failed to update the discharge summary. Please try again.',
+            supabaseError: {
+              code: error.code,
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+            },
           },
           { status: 500 }
         )
@@ -177,12 +189,24 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (error) {
-        console.error('[SAVE] INSERT failed:', error)
+        console.error('[SAVE] INSERT failed:', {
+          errorCode: error.code,
+          errorMessage: error.message,
+          details: error.details,
+          hint: error.hint,
+          fullError: JSON.stringify(error, null, 2),
+        })
         return NextResponse.json(
           {
             success: false,
             code: 'INSERT_FAILED',
-            message: 'Failed to save the discharge summary. Please try again.',
+            message: error.message || 'Failed to save the discharge summary. Please try again.',
+            supabaseError: {
+              code: error.code,
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+            },
           },
           { status: 500 }
         )
