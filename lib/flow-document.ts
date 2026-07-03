@@ -9,9 +9,12 @@ const PAGE_HEIGHT = 842
 const MARGIN = 40
 const CONTENT_WIDTH = PAGE_WIDTH - 2 * MARGIN
 const LINE_HEIGHT = 14
-const BOTTOM_MARGIN = 40
+const BOTTOM_MARGIN = 40  // Actual bottom margin of page
 const CENTER_X = PAGE_WIDTH / 2
 const SECTION_SPACING = 8
+
+// Page break thresholds for efficient space utilization (80-90% fill target)
+const MIN_SPACE_FOR_CONTENT = 40  // Minimum 40px to bother with a new page
 
 /**
  * ARCHITECTURAL RULES:
@@ -394,6 +397,7 @@ export class FlowDocument {
   private logoImage: PDFImage | null = null
   private blocks: Block[] = []
   private headerDrawn: boolean = false
+  private currentBlockIndex: number = 0
 
   constructor(pdfDoc: PDFDocument) {
     this.pdfDoc = pdfDoc
@@ -405,6 +409,10 @@ export class FlowDocument {
 
   addBlock(block: Block) {
     this.blocks.push(block)
+  }
+
+  private nextBlockExists(): boolean {
+    return this.currentBlockIndex + 1 < this.blocks.length
   }
 
   private drawPageBorder(page: PDFPage) {
@@ -498,15 +506,28 @@ export class FlowDocument {
   async render() {
     let page = this.createPage()
 
-    for (const block of this.blocks) {
+    for (let i = 0; i < this.blocks.length; i++) {
+      this.currentBlockIndex = i
+      const block = this.blocks[i]
       const estimatedHeight = block.measure()
-      const requiredSpace = estimatedHeight + SECTION_SPACING
-      const cursorBefore = this.currentY
+      const blockType = block.constructor.name
+      let requiredSpace = estimatedHeight + SECTION_SPACING
+      
+      // SPECIAL CASE: Headings should keep at least one content line with them
+      if (blockType === 'Heading' && this.nextBlockExists()) {
+        requiredSpace = estimatedHeight + SECTION_SPACING + LINE_HEIGHT + SECTION_SPACING
+      }
 
-      // CRITICAL: Check if block fits
-      if (this.currentY - requiredSpace < BOTTOM_MARGIN + 20) {
+      // Page break logic: Break if content won't fit
+      // Available space = current Y - bottom margin
+      const availableSpace = this.currentY - BOTTOM_MARGIN
+      const fitsOnCurrentPage = availableSpace >= requiredSpace
+      const isAtPageTop = Math.abs(this.currentY - (PAGE_HEIGHT - MARGIN - 20)) < 5  // Within 5px of top
+
+      if (!fitsOnCurrentPage && !isAtPageTop) {
+        // Create new page (don't break if we just started a page)
         page = this.createPage()
-        console.log(`[PAGE_BREAK] Created new page. EstimatedHeight=${estimatedHeight}, Required=${requiredSpace}, cursorBefore=${cursorBefore}, newCursor=${this.currentY}`)
+        console.log(`[PAGE_BREAK] Needed=${requiredSpace}px, Had=${availableSpace}px. New page at y=${this.currentY}`)
       }
 
       // Render block and GET ACTUAL HEIGHT
@@ -514,11 +535,10 @@ export class FlowDocument {
       const cursorAfter = this.currentY - result.height - SECTION_SPACING
 
       // DEBUG LOG
-      const blockName = block.constructor.name
-      console.log(`[DEBUG] ${blockName}`)
+      console.log(`[DEBUG] ${blockType}`)
       console.log(`  estimate: ${estimatedHeight}`)
       console.log(`  actual: ${result.height}`)
-      console.log(`  before: ${cursorBefore}`)
+      console.log(`  before: ${this.currentY}`)
       console.log(`  after: ${cursorAfter}`)
       console.log(`  spacing: ${SECTION_SPACING}`)
       console.log(`  page: ${this.pages.length}`)
