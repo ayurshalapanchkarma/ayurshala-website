@@ -24,11 +24,12 @@ async function launchBrowser() {
     console.log('[PDF-V2] Using puppeteer-core + chromium for Vercel')
     
     try {
-      // For Vercel, @sparticuz/chromium needs to download the binary from a URL
-      // since bundling doesn't work properly. Use the public CDN URL.
-      const chromiumUrl = 'https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.tar'
+      // For Vercel, @sparticuz/chromium downloads the binary from GitHub releases
+      // Format: https://github.com/Sparticuz/chromium/releases/download/v<VERSION>/chromium-v<VERSION>-pack.<ARCH>.tar
+      // Vercel runs on x64 architecture
+      const chromiumUrl = 'https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar'
       
-      console.log('[PDF-V2] Downloading Chromium from:', chromiumUrl)
+      console.log('[PDF-V2] Downloading Chromium from GitHub releases')
       const executable = await chromium.executablePath(chromiumUrl)
       console.log('[PDF-V2] Chromium executable path:', executable)
       
