@@ -1,0 +1,96 @@
+/**
+ * Print CSS for PDF rendering
+ * Used by both browser print and Puppeteer
+ */
+
+@page {
+  size: A4;
+  margin: 12mm 16mm;
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Page headers and footers repeat on every page */
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  /* Prevent unwanted page breaks */
+  .no-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .signature-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .medicine-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .table-row {
+    break-inside: avoid;
+    page-page-inside: avoid;
+  }
+
+  /* Force page break before */
+  .page-break-before {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Force page break after */
+  .page-break-after {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  /* Header only on first page (managed by component) */
+  .header {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Footer appears on every page */
+  .footer {
+    break-before: avoid;
+    page-break-before: avoid;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  tbody tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
