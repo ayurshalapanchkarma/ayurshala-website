@@ -123,6 +123,9 @@ function buildDischargeSummaryHtml(summary: any): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Discharge Summary - ${escapeHtml(summary.patient_name)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       -webkit-print-color-adjust: exact !important;
@@ -133,152 +136,188 @@ function buildDischargeSummaryHtml(summary: any): string {
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: white;
-      color: #111827;
-      line-height: 1.5;
+      color: #1a1008;
+      line-height: 1.6;
+      font-size: 10px;
     }
 
     @page {
       size: A4;
-      margin: 18mm;
+      margin: 0;
     }
 
     .container {
       max-width: 210mm;
+      height: 297mm;
       background: white;
-      border: 4px solid #f97316;
+      border: 2px solid #f97316;
+      border-radius: 10px;
       padding: 20px;
+      margin: 0 auto;
     }
 
     /* Header */
     .header {
       text-align: center;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #f97316;
-      padding-bottom: 16px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
     }
 
     .logo {
-      max-width: 70px;
+      max-width: 200px;
       height: auto;
-      margin: 0 auto 16px;
+      margin: 0 auto 12px;
       display: block;
     }
 
     .clinic-name {
-      font-size: 14px;
-      font-weight: bold;
-      color: #111827;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
+      font-family: 'Marcellus', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1008;
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
     }
 
     .clinic-address {
-      font-size: 10px;
+      font-size: 9px;
       color: #6b7280;
       line-height: 1.4;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .clinic-contact {
-      font-size: 9px;
-      color: #6b7280;
-      margin-bottom: 12px;
+      font-size: 8px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #f97316, transparent);
+      margin: 8px 0;
     }
 
     .document-title {
+      font-family: 'Marcellus', serif;
       font-size: 16px;
-      font-weight: bold;
+      font-weight: 600;
       color: #f97316;
-      margin-top: 12px;
+      margin-top: 8px;
       letter-spacing: 0.5px;
     }
 
     /* Section Titles */
     .section-title {
-      font-size: 12px;
-      font-weight: bold;
-      padding: 12px 0 8px 0;
-      margin: 16px 0 12px 0;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 10px 0 6px 0;
+      margin: 14px 0 10px 0;
       text-transform: uppercase;
       border-bottom: 2px solid #f97316;
-      color: #111827;
+      color: #f97316;
+      letter-spacing: 0.3px;
     }
 
-    /* Data rows */
-    .data-row {
+    /* Two-column data layout */
+    .data-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      margin-bottom: 12px;
-      font-size: 10px;
+      gap: 24px;
+      margin-bottom: 10px;
+      font-size: 9px;
     }
 
-    .data-field {
+    .data-row {
       display: grid;
       grid-template-columns: auto 1fr;
       gap: 8px;
+      margin-bottom: 6px;
     }
 
     .data-label {
-      font-weight: bold;
-      color: #111827;
+      font-weight: 600;
+      color: #1a1008;
       white-space: nowrap;
     }
 
     .data-value {
-      color: #111827;
+      color: #374151;
     }
 
     /* Lists */
     .list {
-      margin-left: 20px;
-      font-size: 10px;
+      margin-left: 12px;
+      font-size: 9px;
     }
 
     .list-item {
-      margin-bottom: 8px;
-      color: #111827;
+      margin-bottom: 6px;
+      color: #374151;
+      line-height: 1.4;
     }
 
     /* Tables */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 12px 0;
-      font-size: 10px;
+      margin: 10px 0;
+      font-size: 8px;
     }
 
     thead {
-      background-color: #f3f4f6;
-      color: #111827;
+      background-color: #f97316;
+      color: white;
     }
 
     th {
-      padding: 8px;
+      padding: 6px;
       text-align: left;
-      font-weight: bold;
+      font-weight: 600;
       border: 0.5px solid #d1d5db;
     }
 
     td {
-      padding: 8px;
+      padding: 6px;
       border: 0.5px solid #d1d5db;
-      color: #111827;
+      color: #374151;
     }
 
     tbody tr:nth-child(even) {
-      background-color: #f3f4f6;
+      background-color: #f9fafb;
+    }
+
+    /* Content blocks */
+    .content-block {
+      margin: 8px 0;
+      font-size: 9px;
+      color: #374151;
+      line-height: 1.5;
+    }
+
+    .subsection-label {
+      font-weight: 600;
+      color: #f97316;
+      margin-bottom: 3px;
+      font-size: 9px;
+    }
+
+    .subsection-value {
+      margin-left: 8px;
+      color: #374151;
+      font-size: 9px;
     }
 
     /* Footer */
     .footer {
-      margin-top: 40px;
+      margin-top: 32px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      font-size: 9px;
+      gap: 32px;
+      font-size: 8px;
     }
 
     .signature-block {
@@ -286,33 +325,15 @@ function buildDischargeSummaryHtml(summary: any): string {
     }
 
     .signature-line {
-      border-top: 1px solid #111827;
-      margin-bottom: 8px;
-      height: 40px;
+      border-top: 1px solid #1a1008;
+      margin-bottom: 6px;
+      height: 32px;
     }
 
     .signature-label {
-      font-size: 9px;
-      color: #111827;
-    }
-
-    /* Content blocks */
-    .content-block {
-      margin: 12px 0;
-      font-size: 10px;
-      color: #111827;
-      line-height: 1.5;
-    }
-
-    .subsection-label {
-      font-weight: bold;
-      color: #f97316;
-      margin-bottom: 4px;
-    }
-
-    .subsection-value {
-      margin-left: 12px;
-      color: #111827;
+      font-size: 8px;
+      color: #1a1008;
+      font-weight: 500;
     }
 
     page-break-inside: avoid;
@@ -322,58 +343,58 @@ function buildDischargeSummaryHtml(summary: any): string {
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <img src="/ayurshala_text.png" alt="Ayurshala" class="logo" />
+      <img src="/ayurshala_text.png" alt="Ayurshala" class="logo" onerror="this.style.display='none'" />
       <div class="clinic-name">AYURSHALA PANCHAKARMA CENTER</div>
       <div class="clinic-address">
-        SP-28, Wajidpur,<br />
-        Sector-130, Noida – 201301
+        SP-28, Wajidpur, Sector-130, Noida – 201301
       </div>
       <div class="clinic-contact">+91-9821224767 | ayurshalapanchkarma@gmail.com</div>
+      <div class="divider"></div>
       <div class="document-title">DISCHARGE SUMMARY</div>
     </div>
 
     <!-- Patient Information -->
     <div class="section-title">PATIENT INFORMATION</div>
-    <div class="data-row">
-      <div class="data-field">
-        <span class="data-label">UHID:</span>
-        <span class="data-value">${escapeHtml(summary.patient_uhid || '—')}</span>
+    <div class="data-grid">
+      <div>
+        <div class="data-row">
+          <span class="data-label">UHID:</span>
+          <span class="data-value">${escapeHtml(summary.patient_uhid || '—')}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Patient:</span>
+          <span class="data-value">${escapeHtml(summary.patient_name || '—')}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Age:</span>
+          <span class="data-value">${escapeHtml(summary.age || '—')}</span>
+        </div>
       </div>
-      <div class="data-field">
-        <span class="data-label">Date:</span>
-        <span class="data-value">${escapeHtml(summary.dod_date || '—')}</span>
-      </div>
-    </div>
-    <div class="data-row">
-      <div class="data-field">
-        <span class="data-label">Patient:</span>
-        <span class="data-value">${escapeHtml(summary.patient_name || '—')}</span>
-      </div>
-      <div class="data-field">
-        <span class="data-label">Doctor:</span>
-        <span class="data-value">${escapeHtml(summary.doctor_name || '—')}</span>
-      </div>
-    </div>
-    <div class="data-row">
-      <div class="data-field">
-        <span class="data-label">Age / Sex:</span>
-        <span class="data-value">${escapeHtml(summary.age || '')} / ${escapeHtml(summary.sex || '—')}</span>
-      </div>
-      <div class="data-field">
-        <span class="data-label">Nationality:</span>
-        <span class="data-value">${escapeHtml(summary.nationality || '—')}</span>
+      <div>
+        <div class="data-row">
+          <span class="data-label">Date:</span>
+          <span class="data-value">${escapeHtml(summary.dod_date || '—')}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Doctor:</span>
+          <span class="data-value">${escapeHtml(summary.doctor_name || '—')}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Nationality:</span>
+          <span class="data-value">${escapeHtml(summary.nationality || '—')}</span>
+        </div>
       </div>
     </div>
 
     <!-- Admission & Discharge -->
     ${summary.doa_date || summary.dod_date ? `
     <div class="section-title">ADMISSION & DISCHARGE</div>
-    <div class="data-row">
-      <div class="data-field">
+    <div class="data-grid">
+      <div class="data-row">
         <span class="data-label">Admission:</span>
         <span class="data-value">${escapeHtml(summary.doa_date || '')} ${escapeHtml(summary.doa_time || '')}</span>
       </div>
-      <div class="data-field">
+      <div class="data-row">
         <span class="data-label">Discharge:</span>
         <span class="data-value">${escapeHtml(summary.dod_date || '')} ${escapeHtml(summary.dod_time || '')}</span>
       </div>
