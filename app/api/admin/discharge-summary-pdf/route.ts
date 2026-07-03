@@ -1,499 +1,485 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { PDFDocument, rgb } from 'pdf-lib'
-import QRCode from 'qrcode'
-import fs from 'fs'
-import path from 'path'
-import { APP_URL } from '@/lib/constants'
+import { createClient } from '@supabase/supabase-js'
+import puppeteerCore from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Design system - reused from certificates
-const ORANGE = rgb(249 / 255, 115 / 255, 22 / 255)
-const BLACK = rgb(17 / 255, 24 / 255, 39 / 255)
-const GRAY = rgb(107 / 255, 114 / 255, 128 / 255)
-const LIGHT_GRAY = rgb(243 / 255, 244 / 255, 246 / 255)
-const WHITE = rgb(255 / 255, 255 / 255, 255 / 255)
+async function launchBrowser() {
+  const isVercel = !!process.env.VERCEL
+  
+  console.log('[PDF] Environment:', { isVercel, env: process.env.VERCEL_ENV })
 
-// Page dimensions (A4)
-const PAGE_WIDTH = 595
-const PAGE_HEIGHT = 842
-const MARGIN = 18 * 2.834 // 18mm in points
-
-// Border as single source of truth
-const BORDER_LEFT = MARGIN
-const BORDER_RIGHT = PAGE_WIDTH - MARGIN
-const BORDER_TOP = PAGE_HEIGHT - MARGIN
-const BORDER_BOTTOM = MARGIN
-const BORDER_WIDTH = BORDER_RIGHT - BORDER_LEFT
-const BORDER_CENTER_X = BORDER_LEFT + BORDER_WIDTH / 2
-
-const CONTENT_LEFT = BORDER_LEFT + 20
-const CONTENT_WIDTH = BORDER_WIDTH - 40
-const SAFETY_MARGIN = 20
-
-// Typography
-const HEADER_FONT_SIZE = 14
-const SECTION_TITLE_FONT_SIZE = 12
-const BODY_FONT_SIZE = 10
-const SMALL_FONT_SIZE = 9
-
-function drawBorder(page: any) {
-  page.drawRectangle({
-    x: BORDER_LEFT,
-    y: BORDER_BOTTOM,
-    width: BORDER_WIDTH,
-    height: BORDER_TOP - BORDER_BOTTOM,
-    borderColor: ORANGE,
-    borderWidth: 4,
-  })
-}
-
-function drawCenteredText(page: any, text: string, y: number, fontSize: number, color: any): void {
-  const textWidth = text.length * 0.55 * fontSize
-  const x = BORDER_CENTER_X - textWidth / 2
-  page.drawText(text, {
-    x: x,
-    y: y,
-    size: fontSize,
-    color: color,
-  })
-}
-
-function drawHeader(page: any, logo: any): number {
-  let y = BORDER_TOP - 20
-
-  // Logo - 70px, centered
-  page.drawImage(logo, {
-    x: BORDER_CENTER_X - 35,
-    y: y - 70,
-    width: 70,
-    height: 70,
-  })
-  y -= 70 + 16
-
-  // Clinic name
-  drawCenteredText(page, 'AYURSHALA PANCHAKARMA CENTER', y, HEADER_FONT_SIZE, BLACK)
-  y -= HEADER_FONT_SIZE + 12
-
-  // Address
-  drawCenteredText(page, 'SP-28, Wajidpur,', y, 10, BLACK)
-  y -= 10 + 4
-  drawCenteredText(page, 'Sector-130, Noida – 201301', y, 10, BLACK)
-  y -= 10 + 8
-
-  // Contact
-  drawCenteredText(page, '+91-9821224767 | ayurshalapanchkarma@gmail.com', y, 9, GRAY)
-  y -= 9 + 12
-
-  // Divider
-  page.drawLine({
-    start: { x: CONTENT_LEFT, y: y },
-    end: { x: BORDER_RIGHT - 20, y: y },
-    color: ORANGE,
-    width: 1,
-  })
-  y -= 8
-
-  // Title
-  drawCenteredText(page, 'DISCHARGE SUMMARY', y, 16, ORANGE)
-  y -= 16 + 20
-
-  return y
-}
-
-function drawSectionTitle(page: any, title: string, y: number): number {
-  page.drawRectangle({
-    x: CONTENT_LEFT,
-    y: y - SECTION_TITLE_FONT_SIZE - 4,
-    width: CONTENT_WIDTH,
-    height: SECTION_TITLE_FONT_SIZE + 8,
-    color: ORANGE,
-  })
-
-  page.drawText(title.toUpperCase(), {
-    x: CONTENT_LEFT + 8,
-    y: y - SECTION_TITLE_FONT_SIZE - 2,
-    size: SECTION_TITLE_FONT_SIZE,
-    color: WHITE,
-  })
-
-  return y - SECTION_TITLE_FONT_SIZE - 12
-}
-
-function drawTwoColumnData(page: any, y: number, left: { label: string; value: string }, right: { label: string; value: string }): number {
-  const midX = BORDER_CENTER_X
-
-  // Left column
-  page.drawText(left.label + ':', {
-    x: CONTENT_LEFT,
-    y: y,
-    size: BODY_FONT_SIZE,
-    color: BLACK,
-  })
-  page.drawText(left.value, {
-    x: CONTENT_LEFT + 80,
-    y: y,
-    size: BODY_FONT_SIZE,
-    color: BLACK,
-  })
-
-  // Right column
-  page.drawText(right.label + ':', {
-    x: midX + 20,
-    y: y,
-    size: BODY_FONT_SIZE,
-    color: BLACK,
-  })
-  page.drawText(right.value, {
-    x: midX + 100,
-    y: y,
-    size: BODY_FONT_SIZE,
-    color: BLACK,
-  })
-
-  return y - BODY_FONT_SIZE - 8
+  if (isVercel) {
+    console.log('[PDF] Using puppeteer-core + chromium for Vercel')
+    
+    try {
+      const chromiumUrl = 'https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar'
+      
+      console.log('[PDF] Downloading Chromium from GitHub releases')
+      const executable = await chromium.executablePath(chromiumUrl)
+      console.log('[PDF] Chromium executable path:', executable)
+      
+      if (!executable) {
+        throw new Error('Chromium executable path is undefined')
+      }
+      
+      return await puppeteerCore.launch({
+        args: chromium.args,
+        executablePath: executable,
+        headless: true,
+      } as any)
+    } catch (error) {
+      console.error('[PDF] Failed to launch Chromium on Vercel:', error instanceof Error ? error.message : String(error))
+      throw error
+    }
+  } else {
+    console.log('[PDF] Using puppeteer-core for local development')
+    return await puppeteerCore.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    } as any)
+  }
 }
 
 export async function POST(req: NextRequest) {
-  const { booking_uuid } = await req.json()
-
-  if (!booking_uuid) {
-    return NextResponse.json({ error: 'booking_uuid required' }, { status: 400 })
-  }
-
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-  const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
 
   try {
-    // Load discharge summary
-    const { data: summary, error: summaryError } = await supabaseClient
+    const rawBody = await req.json()
+    const { booking_uuid } = rawBody
+
+    if (!booking_uuid) {
+      return NextResponse.json(
+        { error: 'booking_uuid is required' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
+
+    // Load discharge summary from database
+    const { data: summary, error: summaryError } = await supabase
       .from('discharge_summaries')
       .select('*')
       .eq('booking_id', booking_uuid)
       .single()
 
     if (summaryError || !summary) {
-      return NextResponse.json({ error: 'Discharge summary not found' }, { status: 404 })
-    }
-
-    // Load logo
-    const logoPath = path.join(process.cwd(), 'public', 'ayurshala_text.png')
-    if (!fs.existsSync(logoPath)) {
-      return NextResponse.json({ error: 'Logo missing' }, { status: 500 })
-    }
-    const logoBytes = fs.readFileSync(logoPath)
-
-    // Create PDF
-    const pdfDoc = await PDFDocument.create()
-    const logo = await pdfDoc.embedPng(logoBytes)
-
-    // Generate QR code
-    const qrUrl = `${APP_URL}/certificates/verify?document=discharge-${summary.id}`
-    const qrCodeImage = await QRCode.toDataURL(qrUrl, { width: 100 })
-    const qrBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64')
-    const qr = await pdfDoc.embedPng(qrBuffer)
-
-    // Create page
-    const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-    drawBorder(page)
-
-    let y = drawHeader(page, logo)
-
-    // Patient Information section
-    y = drawSectionTitle(page, 'PATIENT INFORMATION', y)
-    y = drawTwoColumnData(page, y, 
-      { label: 'UHID', value: summary.patient_uhid || '—' },
-      { label: 'Date', value: summary.dod_date || '—' }
-    )
-    y = drawTwoColumnData(page, y,
-      { label: 'Patient', value: summary.patient_name || '—' },
-      { label: 'Doctor', value: summary.doctor_name || '—' }
-    )
-    y = drawTwoColumnData(page, y,
-      { label: 'Age / Sex', value: (summary.age ? summary.age + ' / ' : '') + (summary.sex || '—') },
-      { label: 'Nationality', value: summary.nationality || '—' }
-    )
-    y -= 8
-
-    // Admission/Discharge dates
-    if (summary.doa_date || summary.dod_date) {
-      y = drawSectionTitle(page, 'ADMISSION & DISCHARGE', y)
-      y = drawTwoColumnData(page, y,
-        { label: 'Admission', value: summary.doa_date ? `${summary.doa_date} ${summary.doa_time || ''}` : '—' },
-        { label: 'Discharge', value: summary.dod_date ? `${summary.dod_date} ${summary.dod_time || ''}` : '—' }
+      return NextResponse.json(
+        { error: 'Discharge summary not found. Please save first.' },
+        { status: 404 }
       )
-      y -= 8
     }
 
-    // Diagnosis
-    if (summary.diagnosis) {
-      y = drawSectionTitle(page, 'DIAGNOSIS', y)
-      page.drawText(summary.diagnosis, {
-        x: CONTENT_LEFT,
-        y: y,
-        size: BODY_FONT_SIZE,
-        color: BLACK,
-        maxWidth: CONTENT_WIDTH,
-      })
-      y -= BODY_FONT_SIZE + 12
-    }
+    // Build HTML with certificate-style CSS
+    const html = buildDischargeSummaryHtml(summary)
 
-    // Complaints
-    if (summary.complaints && Array.isArray(summary.complaints) && summary.complaints.length > 0) {
-      y = drawSectionTitle(page, 'COMPLAINTS ON ADMISSION', y)
-      for (const complaint of summary.complaints) {
-        page.drawText('• ' + complaint, {
-          x: CONTENT_LEFT + 10,
-          y: y,
-          size: BODY_FONT_SIZE,
-          color: BLACK,
-          maxWidth: CONTENT_WIDTH - 20,
-        })
-        y -= BODY_FONT_SIZE + 6
-      }
-      y -= 2
-    }
+    // Generate PDF with Puppeteer
+    console.log('[PDF] Launching browser...')
+    const browser = await launchBrowser()
+    console.log('[PDF] Browser launched successfully')
 
-    // Therapies
-    if (summary.therapies && Array.isArray(summary.therapies) && summary.therapies.length > 0) {
-      y = drawSectionTitle(page, 'THERAPIES / PROCEDURES', y)
-      for (const therapy of summary.therapies) {
-        page.drawText('• ' + therapy, {
-          x: CONTENT_LEFT + 10,
-          y: y,
-          size: BODY_FONT_SIZE,
-          color: BLACK,
-          maxWidth: CONTENT_WIDTH - 20,
-        })
-        y -= BODY_FONT_SIZE + 6
-      }
-      y -= 2
-    }
+    const page = await browser.newPage()
+    await page.setContent(html, { waitUntil: 'domcontentloaded' } as any)
 
-    // Medicines
-    if (summary.medicines && Array.isArray(summary.medicines) && summary.medicines.length > 0) {
-      y = drawSectionTitle(page, 'MEDICATIONS', y)
-      
-      // Table header with orange background
-      const tableHeaderY = y
-      page.drawRectangle({
-        x: CONTENT_LEFT,
-        y: tableHeaderY - 16,
-        width: CONTENT_WIDTH,
-        height: 16,
-        color: ORANGE,
-      })
-
-      const colWidths = [100, 70, 100, 70, 50]
-      let xPos = CONTENT_LEFT + 4
-      const headers = ['Medicine', 'Dosage', 'Instructions', 'Schedule', 'Duration']
-      
-      for (let i = 0; i < headers.length; i++) {
-        page.drawText(headers[i], {
-          x: xPos,
-          y: tableHeaderY - 12,
-          size: 8,
-          color: WHITE,
-        })
-        xPos += colWidths[i]
-      }
-
-      y = tableHeaderY - 18
-
-      // Table rows with zebra striping
-      for (let idx = 0; idx < summary.medicines.length; idx++) {
-        const med = summary.medicines[idx]
-        const rowY = y - 2
-        
-        // Zebra striping
-        if (idx % 2 === 1) {
-          page.drawRectangle({
-            x: CONTENT_LEFT,
-            y: rowY - BODY_FONT_SIZE - 6,
-            width: CONTENT_WIDTH,
-            height: BODY_FONT_SIZE + 8,
-            color: LIGHT_GRAY,
-          })
-        }
-
-        // Draw row
-        xPos = CONTENT_LEFT + 4
-        const row = [med.name || '', med.dosage || '', med.instructions || '', med.schedule || '', med.duration || '']
-        
-        for (let i = 0; i < row.length; i++) {
-          page.drawText(row[i].substring(0, 20), {
-            x: xPos,
-            y: rowY,
-            size: 8,
-            color: BLACK,
-          })
-          xPos += colWidths[i]
-        }
-
-        // Row border
-        page.drawRectangle({
-          x: CONTENT_LEFT,
-          y: rowY - BODY_FONT_SIZE - 6,
-          width: CONTENT_WIDTH,
-          height: BODY_FONT_SIZE + 8,
-          borderColor: GRAY,
-          borderWidth: 0.5,
-        })
-
-        y -= BODY_FONT_SIZE + 10
-      }
-
-      y -= 4
-    }
-
-    // Advice
-    if (summary.advice_discharge) {
-      y = drawSectionTitle(page, 'ADVICE ON DISCHARGE', y)
-      page.drawText(summary.advice_discharge, {
-        x: CONTENT_LEFT,
-        y: y,
-        size: BODY_FONT_SIZE,
-        color: BLACK,
-        maxWidth: CONTENT_WIDTH,
-      })
-      y -= BODY_FONT_SIZE + 12
-    }
-
-    // Pathya / Apathya
-    if (summary.pathya || summary.apathya || summary.cautions) {
-      y = drawSectionTitle(page, 'LIFESTYLE & RESTRICTIONS', y)
-      
-      if (summary.pathya) {
-        page.drawText('Pathya (Recommended):', {
-          x: CONTENT_LEFT,
-          y: y,
-          size: BODY_FONT_SIZE,
-          color: ORANGE,
-        })
-        page.drawText(summary.pathya, {
-          x: CONTENT_LEFT + 10,
-          y: y - 10,
-          size: BODY_FONT_SIZE - 1,
-          color: BLACK,
-          maxWidth: CONTENT_WIDTH - 20,
-        })
-        y -= 24
-      }
-
-      if (summary.apathya) {
-        page.drawText('Apathya (Avoid):', {
-          x: CONTENT_LEFT,
-          y: y,
-          size: BODY_FONT_SIZE,
-          color: ORANGE,
-        })
-        page.drawText(summary.apathya, {
-          x: CONTENT_LEFT + 10,
-          y: y - 10,
-          size: BODY_FONT_SIZE - 1,
-          color: BLACK,
-          maxWidth: CONTENT_WIDTH - 20,
-        })
-        y -= 24
-      }
-
-      if (summary.cautions) {
-        page.drawText('Cautions:', {
-          x: CONTENT_LEFT,
-          y: y,
-          size: BODY_FONT_SIZE,
-          color: ORANGE,
-        })
-        page.drawText(summary.cautions, {
-          x: CONTENT_LEFT + 10,
-          y: y - 10,
-          size: BODY_FONT_SIZE - 1,
-          color: BLACK,
-          maxWidth: CONTENT_WIDTH - 20,
-        })
-        y -= 24
-      }
-    }
-
-    y -= 20
-
-    // Footer
-    const SIG_WIDTH = 160
-    const QR_SIZE = 50
-    const patientX = CONTENT_LEFT
-    const doctorX = BORDER_RIGHT - SIG_WIDTH - 20
-
-    // Signature lines
-    page.drawLine({
-      start: { x: patientX, y: y },
-      end: { x: patientX + SIG_WIDTH, y: y },
-      color: BLACK,
-      width: 1,
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      margin: { top: '18mm', right: '18mm', bottom: '18mm', left: '18mm' },
+      printBackground: true,
+      preferCSSPageSize: true,
     })
 
-    page.drawLine({
-      start: { x: doctorX, y: y },
-      end: { x: doctorX + SIG_WIDTH, y: y },
-      color: BLACK,
-      width: 1,
-    })
+    console.log('[PDF] PDF generated, size:', pdfBuffer.length, 'bytes')
 
-    page.drawText('Patient Signature', {
-      x: patientX,
-      y: y - 12,
-      size: 9,
-      color: BLACK,
-    })
+    await browser.close()
 
-    page.drawText('Dr. ' + (summary.doctor_name || ''), {
-      x: doctorX,
-      y: y - 12,
-      size: 9,
-      color: BLACK,
-    })
-
-    page.drawText('Ayurshala Panchakarma Center', {
-      x: doctorX,
-      y: y - 22,
-      size: 8,
-      color: BLACK,
-    })
-
-    // QR Code
-    const qrX = doctorX + (SIG_WIDTH - QR_SIZE) / 2
-    page.drawImage(qr, {
-      x: qrX,
-      y: BORDER_BOTTOM + 20,
-      width: QR_SIZE,
-      height: QR_SIZE,
-    })
-
-    page.drawText('Scan to verify', {
-      x: doctorX + 30,
-      y: BORDER_BOTTOM + 10,
-      size: 7,
-      color: GRAY,
-    })
-
-    const pdfBytes = await pdfDoc.save()
-
-    return new NextResponse(Buffer.from(pdfBytes), {
+    return new NextResponse(Buffer.from(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="Discharge_Summary_${summary.patient_uhid || 'PATIENT'}.pdf"`,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'X-PDF-Renderer': 'pdf-lib',
+        'X-PDF-Renderer': 'puppeteer',
       },
     })
   } catch (error) {
-    console.error('[Discharge PDF]', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    )
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('[PDF] Error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
+}
+
+function buildDischargeSummaryHtml(summary: any): string {
+  const complaints = Array.isArray(summary.complaints) ? summary.complaints : []
+  const medicines = Array.isArray(summary.medicines) ? summary.medicines : []
+  const therapies = Array.isArray(summary.therapies) ? summary.therapies : []
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discharge Summary - ${escapeHtml(summary.patient_name)}</title>
+  <style>
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: white;
+      color: #111827;
+      line-height: 1.5;
+    }
+
+    @page {
+      size: A4;
+      margin: 18mm;
+    }
+
+    .container {
+      max-width: 210mm;
+      background: white;
+      border: 4px solid #f97316;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #f97316;
+      padding-bottom: 16px;
+    }
+
+    .logo {
+      max-width: 70px;
+      height: auto;
+      margin: 0 auto 16px;
+      display: block;
+    }
+
+    .clinic-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: #111827;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .clinic-address {
+      font-size: 10px;
+      color: #6b7280;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .clinic-contact {
+      font-size: 9px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+
+    .document-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #f97316;
+      margin-top: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Section Titles */
+    .section-title {
+      background-color: #f97316;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 8px 12px;
+      margin: 24px 0 12px 0;
+      text-transform: uppercase;
+    }
+
+    /* Data rows */
+    .data-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 12px;
+      font-size: 10px;
+    }
+
+    .data-field {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+    }
+
+    .data-label {
+      font-weight: bold;
+      color: #111827;
+      white-space: nowrap;
+    }
+
+    .data-value {
+      color: #111827;
+    }
+
+    /* Lists */
+    .list {
+      margin-left: 20px;
+      font-size: 10px;
+    }
+
+    .list-item {
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 10px;
+    }
+
+    thead {
+      background-color: #f97316;
+      color: white;
+    }
+
+    th {
+      padding: 8px;
+      text-align: left;
+      font-weight: bold;
+      border: 0.5px solid #d1d5db;
+    }
+
+    td {
+      padding: 8px;
+      border: 0.5px solid #d1d5db;
+      color: #111827;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f3f4f6;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      font-size: 9px;
+    }
+
+    .signature-block {
+      text-align: center;
+    }
+
+    .signature-line {
+      border-top: 1px solid #111827;
+      margin-bottom: 8px;
+      height: 40px;
+    }
+
+    .signature-label {
+      font-size: 9px;
+      color: #111827;
+    }
+
+    /* Content blocks */
+    .content-block {
+      margin: 12px 0;
+      font-size: 10px;
+      color: #111827;
+      line-height: 1.5;
+    }
+
+    .subsection-label {
+      font-weight: bold;
+      color: #f97316;
+      margin-bottom: 4px;
+    }
+
+    .subsection-value {
+      margin-left: 12px;
+      color: #111827;
+    }
+
+    page-break-inside: avoid;
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <img src="/ayurshala_text.png" alt="Ayurshala" class="logo" />
+      <div class="clinic-name">AYURSHALA PANCHAKARMA CENTER</div>
+      <div class="clinic-address">
+        SP-28, Wajidpur,<br />
+        Sector-130, Noida – 201301
+      </div>
+      <div class="clinic-contact">+91-9821224767 | ayurshalapanchkarma@gmail.com</div>
+      <div class="document-title">DISCHARGE SUMMARY</div>
+    </div>
+
+    <!-- Patient Information -->
+    <div class="section-title">PATIENT INFORMATION</div>
+    <div class="data-row">
+      <div class="data-field">
+        <span class="data-label">UHID:</span>
+        <span class="data-value">${escapeHtml(summary.patient_uhid || '—')}</span>
+      </div>
+      <div class="data-field">
+        <span class="data-label">Date:</span>
+        <span class="data-value">${escapeHtml(summary.dod_date || '—')}</span>
+      </div>
+    </div>
+    <div class="data-row">
+      <div class="data-field">
+        <span class="data-label">Patient:</span>
+        <span class="data-value">${escapeHtml(summary.patient_name || '—')}</span>
+      </div>
+      <div class="data-field">
+        <span class="data-label">Doctor:</span>
+        <span class="data-value">${escapeHtml(summary.doctor_name || '—')}</span>
+      </div>
+    </div>
+    <div class="data-row">
+      <div class="data-field">
+        <span class="data-label">Age / Sex:</span>
+        <span class="data-value">${escapeHtml(summary.age || '')} / ${escapeHtml(summary.sex || '—')}</span>
+      </div>
+      <div class="data-field">
+        <span class="data-label">Nationality:</span>
+        <span class="data-value">${escapeHtml(summary.nationality || '—')}</span>
+      </div>
+    </div>
+
+    <!-- Admission & Discharge -->
+    ${summary.doa_date || summary.dod_date ? `
+    <div class="section-title">ADMISSION & DISCHARGE</div>
+    <div class="data-row">
+      <div class="data-field">
+        <span class="data-label">Admission:</span>
+        <span class="data-value">${escapeHtml(summary.doa_date || '')} ${escapeHtml(summary.doa_time || '')}</span>
+      </div>
+      <div class="data-field">
+        <span class="data-label">Discharge:</span>
+        <span class="data-value">${escapeHtml(summary.dod_date || '')} ${escapeHtml(summary.dod_time || '')}</span>
+      </div>
+    </div>
+    ` : ''}
+
+    <!-- Diagnosis -->
+    ${summary.diagnosis ? `
+    <div class="section-title">DIAGNOSIS</div>
+    <div class="content-block">${escapeHtml(summary.diagnosis)}</div>
+    ` : ''}
+
+    <!-- Complaints -->
+    ${complaints.length > 0 ? `
+    <div class="section-title">COMPLAINTS ON ADMISSION</div>
+    <div class="list">
+      ${complaints.map(c => `<div class="list-item">• ${escapeHtml(c)}</div>`).join('')}
+    </div>
+    ` : ''}
+
+    <!-- Therapies -->
+    ${therapies.length > 0 ? `
+    <div class="section-title">THERAPIES / PROCEDURES</div>
+    <div class="list">
+      ${therapies.map(t => `<div class="list-item">• ${escapeHtml(t)}</div>`).join('')}
+    </div>
+    ` : ''}
+
+    <!-- Medicines -->
+    ${medicines.length > 0 ? `
+    <div class="section-title">MEDICATIONS</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Medicine</th>
+          <th>Dosage</th>
+          <th>Instructions</th>
+          <th>Schedule</th>
+          <th>Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${medicines.map(m => `
+        <tr>
+          <td>${escapeHtml(m.name || '')}</td>
+          <td>${escapeHtml(m.dosage || '')}</td>
+          <td>${escapeHtml(m.instructions || '')}</td>
+          <td>${escapeHtml(m.schedule || '')}</td>
+          <td>${escapeHtml(m.duration || '')}</td>
+        </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    ` : ''}
+
+    <!-- Advice -->
+    ${summary.advice_discharge ? `
+    <div class="section-title">ADVICE ON DISCHARGE</div>
+    <div class="content-block">${escapeHtml(summary.advice_discharge)}</div>
+    ` : ''}
+
+    <!-- Lifestyle -->
+    ${summary.pathya || summary.apathya || summary.cautions ? `
+    <div class="section-title">LIFESTYLE & RESTRICTIONS</div>
+    ${summary.pathya ? `
+    <div class="content-block">
+      <div class="subsection-label">Pathya (Recommended)</div>
+      <div class="subsection-value">${escapeHtml(summary.pathya)}</div>
+    </div>
+    ` : ''}
+    ${summary.apathya ? `
+    <div class="content-block">
+      <div class="subsection-label">Apathya (Avoid)</div>
+      <div class="subsection-value">${escapeHtml(summary.apathya)}</div>
+    </div>
+    ` : ''}
+    ${summary.cautions ? `
+    <div class="content-block">
+      <div class="subsection-label">Cautions</div>
+      <div class="subsection-value">${escapeHtml(summary.cautions)}</div>
+    </div>
+    ` : ''}
+    ` : ''}
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="signature-block">
+        <div class="signature-line"></div>
+        <div class="signature-label">Patient Signature</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-line"></div>
+        <div class="signature-label">Dr. ${escapeHtml(summary.doctor_name || '')}</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
+function escapeHtml(text: string): string {
+  if (!text) return ''
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
 }
