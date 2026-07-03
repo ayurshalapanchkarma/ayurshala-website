@@ -69,14 +69,19 @@ class Paragraph implements Block {
 
   measure(): number {
     const lines = this.wrapLines(CONTENT_WIDTH - 40)
-    return lines.length * LINE_HEIGHT
+    const height = lines.length * LINE_HEIGHT
+    console.log(`[PARAGRAPH_MEASURE] text="${this.text.substring(0, 50)}...", lines=${lines.length}, height=${height}`)
+    return height
   }
 
   render(page: PDFPage, x: number, y: number, contentWidth: number): RenderResult {
-    const lines = this.wrapLines(contentWidth - 40)
+    const wrappingWidth = contentWidth - 40
+    const lines = this.wrapLines(wrappingWidth)
     let currentY = y
 
-    lines.forEach(line => {
+    console.log(`[PARAGRAPH_DEBUG] contentWidth=${contentWidth}, wrappingWidth=${wrappingWidth}, actualLines=${lines.length}`)
+
+    lines.forEach((line, idx) => {
       page.drawText(line, {
         x: x + 20,
         y: currentY,
@@ -87,7 +92,7 @@ class Paragraph implements Block {
     })
 
     const actualHeight = lines.length * LINE_HEIGHT
-    console.log(`[PARAGRAPH_RENDER] lines=${lines.length}, height=${actualHeight}, y=${y}`)
+    console.log(`[PARAGRAPH_RENDER] text="${this.text.substring(0, 50)}...", lines=${lines.length}, height=${actualHeight}, y=${y}, endY=${currentY}`)
     return { height: actualHeight }
   }
 }
@@ -162,15 +167,20 @@ class NumberedList implements Block {
       const lines = this.wrapLines(item, CONTENT_WIDTH - 80)
       height += lines.length * LINE_HEIGHT
     })
-    return height + (this.items.length - 1) * 2 // spacing between items
+    const itemSpacing = (this.items.length - 1) * 2
+    const total = height + itemSpacing
+    console.log(`[NUMBEREDLIST_MEASURE] items=${this.items.length}, itemsHeight=${height}, spacing=${itemSpacing}, total=${total}`)
+    return total
   }
 
   render(page: PDFPage, x: number, y: number, contentWidth: number): RenderResult {
     let currentY = y
     let totalHeight = 0
+    let linesPerItem: number[] = []
 
     this.items.forEach((item, index) => {
       const lines = this.wrapLines(item, contentWidth - 80)
+      linesPerItem.push(lines.length)
 
       // Draw number
       page.drawText(`${index + 1}.`, {
@@ -210,7 +220,7 @@ class NumberedList implements Block {
       }
     })
 
-    console.log(`[NUMBEREDLIST_RENDER] items=${this.items.length}, height=${totalHeight}, y=${y}`)
+    console.log(`[NUMBEREDLIST_RENDER] items=${this.items.length}, lines=${linesPerItem.join(',')}, totalHeight=${totalHeight}, y=${y}, endY=${currentY}`)
     return { height: totalHeight }
   }
 }
@@ -509,6 +519,7 @@ export class FlowDocument {
 
   async render() {
     let page = this.createPage()
+    let pageNum = 1
 
     for (let i = 0; i < this.blocks.length; i++) {
       this.currentBlockIndex = i
@@ -531,21 +542,19 @@ export class FlowDocument {
       if (!fitsOnCurrentPage && !isAtPageTop) {
         // Create new page (don't break if we just started a page)
         page = this.createPage()
-        console.log(`[PAGE_BREAK] Needed=${requiredSpace}px, Had=${availableSpace}px. New page at y=${this.currentY}`)
+        pageNum++
+        console.log(`[PAGE_BREAK] PAGE ${pageNum}: ${blockType}: Needed=${requiredSpace}px, Had=${availableSpace}px. New page at y=${this.currentY}`)
       }
 
       // Render block and GET ACTUAL HEIGHT
+      const cursorBefore = this.currentY
       const result = block.render(page, MARGIN, this.currentY, CONTENT_WIDTH)
       const cursorAfter = this.currentY - result.height - SECTION_SPACING
 
-      // DEBUG LOG
-      console.log(`[DEBUG] ${blockType}`)
-      console.log(`  estimate: ${estimatedHeight}`)
-      console.log(`  actual: ${result.height}`)
-      console.log(`  before: ${this.currentY}`)
-      console.log(`  after: ${cursorAfter}`)
-      console.log(`  spacing: ${SECTION_SPACING}`)
-      console.log(`  page: ${this.pages.length}`)
+      // DEBUG LOG - focused format for paragraph/list debugging
+      if (blockType === 'NumberedList' || blockType === 'Paragraph' || blockType === 'Heading') {
+        console.log(`[PAGE${pageNum}] ${blockType}: before=${cursorBefore}, height=${result.height}, after=${cursorAfter}`)
+      }
 
       // CRITICAL: Use returned height, not estimated
       this.currentY = cursorAfter
