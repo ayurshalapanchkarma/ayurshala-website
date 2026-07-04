@@ -17,18 +17,18 @@ interface ClinicSettings {
 }
 
 export default function ClinicSettings() {
-  const [settings, setSettings] = useState<ClinicSettings>({
-    clinicName: 'Ayurshala Panchakarma Centre',
+const defaultClinicSettings: ClinicSettings = {
+    clinicName: 'Ayurshala – Ayurveda and Panchakarma Center',
     clinicAddress: '',
     clinicPhone: '',
     clinicEmail: '',
     gstNumber: '',
     invoicePrefix: 'INV',
     pharmacyPrefix: 'PH',
-    receiptFooter: 'Thank you for visiting Ayurshala Panchakarma Centre',
+    receiptFooter: 'Thank you for choosing Ayurshala – Ayurveda and Panchakarma Center',
     defaultCurrency: 'INR',
     timezone: 'Asia/Kolkata'
-  });
+  };
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -92,15 +92,15 @@ export default function ClinicSettings() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Clinic Settings</h1>
-          <p className="text-gray-600 dark:text-gray-300">Manage Ayurshala Panchakarma Centre configuration</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Clinic Configuration</h1>
+          <p className="text-gray-600 dark:text-gray-300">Manage Ayurshala – Ayurveda and Panchakarma Center settings</p>
         </div>
 
         {/* Alert */}
         <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex gap-3">
           <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-blue-700 dark:text-blue-300">
-            These settings apply to the entire Ayurshala Panchakarma Centre clinic. Changes will affect all invoices, receipts, and reports.
+            These settings apply to Ayurshala – Ayurveda and Panchakarma Center. Changes affect all invoices, receipts, and operations.
           </p>
         </div>
 

@@ -3,14 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 // Clinic configuration stored in Supabase or environment
 // For now, use environment variables with defaults
 const getDefaultSettings = () => ({
-  clinicName: process.env.CLINIC_NAME || 'Ayurshala Panchakarma Centre',
+  clinicName: process.env.CLINIC_NAME || 'Ayurshala – Ayurveda and Panchakarma Center',
   clinicAddress: process.env.CLINIC_ADDRESS || '',
   clinicPhone: process.env.CLINIC_PHONE || '',
   clinicEmail: process.env.CLINIC_EMAIL || '',
   gstNumber: process.env.CLINIC_GST || '',
   invoicePrefix: process.env.INVOICE_PREFIX || 'INV',
   pharmacyPrefix: process.env.PHARMACY_PREFIX || 'PH',
-  receiptFooter: process.env.RECEIPT_FOOTER || 'Thank you for visiting Ayurshala Panchakarma Centre',
+  receiptFooter: process.env.RECEIPT_FOOTER || 'Thank you for choosing Ayurshala – Ayurveda and Panchakarma Center',
   defaultCurrency: 'INR',
   timezone: 'Asia/Kolkata'
 });

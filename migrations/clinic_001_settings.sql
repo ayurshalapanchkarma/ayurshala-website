@@ -29,7 +29,7 @@ CREATE INDEX idx_clinic_settings_active ON clinic_settings(is_active);
 -- ============================================================
 CREATE TABLE IF NOT EXISTS clinic_info (
   uuid                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  clinic_name           TEXT        NOT NULL DEFAULT 'Ayurshala Panchakarma Centre',
+  clinic_name           TEXT        NOT NULL DEFAULT 'Ayurshala – Ayurveda and Panchakarma Center',
   clinic_short_name     TEXT        DEFAULT 'Ayurshala',
   clinic_address        TEXT,
   clinic_city           TEXT,
@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS clinic_info (
   registration_number   TEXT,                           -- Clinic registration
   license_number        TEXT,
   established_year      INTEGER,
+  specialization        TEXT        DEFAULT 'Ayurveda and Panchakarma',
   default_currency      TEXT        DEFAULT 'INR',
   timezone              TEXT        DEFAULT 'Asia/Kolkata',
   invoice_prefix        TEXT        DEFAULT 'INV',
@@ -68,15 +69,17 @@ INSERT INTO clinic_info (
   clinic_short_name,
   owner_name,
   owner_title,
+  specialization,
   receipt_footer_text,
   receipt_header_text
 ) VALUES (
-  'Ayurshala Panchakarma Centre',
+  'Ayurshala – Ayurveda and Panchakarma Center',
   'Ayurshala',
   'Dr. Sanjay',
   'Dr.',
-  'Thank you for visiting Ayurshala Panchakarma Centre',
-  'Ayurshala Panchakarma Centre - Panchakarma & Wellness'
+  'Ayurveda and Panchakarma',
+  'Thank you for choosing Ayurshala – Ayurveda and Panchakarma Center',
+  'Ayurshala – Ayurveda and Panchakarma Center'
 )
 ON CONFLICT DO NOTHING;
 
@@ -84,8 +87,9 @@ ON CONFLICT DO NOTHING;
 -- SEED: Default Settings
 -- ============================================================
 INSERT INTO clinic_settings (setting_key, setting_value, data_type, description, is_system_setting) VALUES
-  ('clinic.name', 'Ayurshala Panchakarma Centre', 'STRING', 'Clinic display name', TRUE),
+  ('clinic.name', 'Ayurshala – Ayurveda and Panchakarma Center', 'STRING', 'Clinic display name', TRUE),
   ('clinic.owner', 'Dr. Sanjay', 'STRING', 'Clinic owner (administrator)', TRUE),
+  ('clinic.specialization', 'Ayurveda and Panchakarma', 'STRING', 'Clinic specialization', TRUE),
   ('clinic.gst_registered', 'false', 'BOOLEAN', 'Is clinic GST registered?', FALSE),
   ('currency.default', 'INR', 'STRING', 'Default currency code', TRUE),
   ('invoice.prefix', 'INV', 'STRING', 'Invoice number prefix', FALSE),
