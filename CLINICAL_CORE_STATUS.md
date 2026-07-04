@@ -168,12 +168,11 @@
 4. Sprint 6: Follow-up & Clinical Timeline (~5 hours)
 5. Build check: `npm run build` (verify 0 errors)
 
-**Phase 2: Full Runtime Verification** (After all 6 sprints coded)
+**Phase 2: Primary End-to-End Verification** (After all 6 sprints coded)
 1. Deploy all 6 migrations to Supabase
-2. Run end-to-end workflow tests (time depends on coverage)
-3. Exercise complete clinical workflows across modules
-4. Document results
-5. Fix any bugs found immediately
+2. Run end-to-end workflow tests (exercise complete clinical workflows)
+3. Document results
+4. Fix any bugs found (as needed before production)
 
 **Phase 3: Production Release**
 1. Tag: `git tag clinical-core-complete`
