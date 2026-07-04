@@ -207,24 +207,28 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string, stampDataU
     .page {
       box-sizing: border-box;
       width: 100%;
-      min-height: calc(297mm - 20mm);
+      height: 273mm;
       border: 2px solid #f97316;
       padding: 16mm;
       background: #fff;
       position: relative;
       page-break-after: always;
       page-break-inside: avoid;
+      display: flex;
+      flex-direction: column;
     }
 
     .page:last-child {
       page-break-after: auto;
-      min-height: auto;
+      height: auto;
+      min-height: 273mm;
     }
 
     /* Header */
     .header {
       text-align: center;
       margin-bottom: 0;
+      flex-shrink: 0;
     }
 
     .logo {
@@ -381,18 +385,23 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string, stampDataU
       word-break: break-word;
     }
 
-    /* Content area - normal block flow for page breaks */
+    /* Content area - flex to fill space, push footer to bottom */
     .content {
-      display: block;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: visible;
     }
 
-    /* Footer */
+    /* Footer - stays at bottom */
     .footer {
-      margin-top: 30px;
+      margin-top: auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 40px;
       font-size: 9px;
+      flex-shrink: 0;
     }
 
     .signature-block {
