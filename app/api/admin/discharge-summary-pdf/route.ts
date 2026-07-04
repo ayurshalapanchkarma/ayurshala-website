@@ -203,24 +203,19 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string, stampDataU
       word-break: break-word;
     }
 
-    /* Page container - fixed A4 frame with complete border */
+    /* Page container - bordered box */
     .page {
       box-sizing: border-box;
       width: 100%;
-      height: 273mm;
-      border: 2px solid #f97316;
+      min-height: 273mm;
       padding: 16mm;
       background: #fff;
-      position: relative;
+      border: 2px solid #f97316;
       page-break-after: always;
-      page-break-inside: avoid;
-      overflow: visible;
     }
 
     .page:last-child {
       page-break-after: auto;
-      min-height: 273mm;
-      height: auto;
     }
 
     /* Header */
