@@ -1,7 +1,7 @@
-# Clinical Core EMR — Sprints 1–2 Implementation Complete; Sprints 3–6 Planned; Runtime Verification Pending
+# Clinical Core EMR — Sprints 1–2 Implementation Complete; Sprints 3–6 Planned; Runtime Verification Pending Before Production
 
-**Last Updated**: 2026-07-05 00:39 UTC  
-**Current State**: Sprints 1-2 implementation complete (2500+ lines, build passing); awaiting runtime verification; Sprints 3-6 planned
+**Last Updated**: 2026-07-05 00:41 UTC  
+**Current State**: Sprints 1-2 implementation complete (2500+ lines, build passing); awaiting runtime verification before production; Sprints 3-6 planned
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Sprint | Scope | Status |
 |--------|-------|--------|
-| 1 | Patient Visit & Vitals | ✅ Code complete |
-| 2 | Consultation & SOAP Notes | ✅ Code complete |
-| 3 | Ayurvedic Assessment | 📋 Planned |
+| 1 | Patient Visit & Vitals | ✅ Implementation complete |
+| 2 | Consultation & SOAP Notes | ✅ Implementation complete |
+| 3 | Ayurvedic Assessment | 🚀 Next |
 | 4 | Diagnosis & Prescription | 📋 Planned |
 | 5 | Panchakarma & Therapy | 📋 Planned |
 | 6 | Follow-up & Clinical Timeline | 📋 Planned |
@@ -168,7 +168,7 @@
 4. Sprint 6: Follow-up & Clinical Timeline (~5 hours)
 5. Build check: `npm run build` (verify 0 errors)
 
-**Phase 2: Primary End-to-End Verification** (After all 6 sprints coded)
+### Phase 2: Primary End-to-End Verification** (After all 6 sprints coded)
 1. Deploy all 6 migrations to Supabase
 2. Run end-to-end workflow tests (exercise complete clinical workflows)
 3. Document results
@@ -179,6 +179,42 @@
 2. Deploy to production via Vercel
 3. Health checks pass
 4. Dr. Sanjay can use complete clinical system
+
+---
+
+## Comprehensive Verification Plan
+
+After all six sprints are complete, verify complete patient journeys:
+
+**Primary Workflows to Verify**:
+- Appointment creation → Visit check-in
+- Visit check-in → Vitals recording
+- Vitals complete → Doctor consultation
+- Consultation → Ayurvedic assessment
+- Assessment → Diagnosis recording
+- Diagnosis → Prescription generation
+- Prescription → Pharmacy dispensing
+- Pharmacy → Inventory deduction
+- Visit complete → Billing generation
+- Panchakarma workflow (if applicable)
+- Visit completion → Follow-up creation
+
+**Verification Steps**:
+1. Create patient and appointment
+2. Check in at reception (vitals)
+3. Assign to doctor (queue)
+4. Doctor opens consultation (SOAP)
+5. Doctor completes assessment (Ayurvedic)
+6. Doctor records diagnosis
+7. Doctor generates prescription
+8. Pharmacy dispenses prescription
+9. Inventory updates automatically
+10. Billing generated for visit
+11. Follow-up scheduled (if needed)
+
+**Expected Result**: Complete patient journey visible from all touchpoints (reception, doctor, admin, pharmacy, billing).
+
+**Fix and Deploy**: Any bugs found → fix immediately → re-verify → deploy to production.
 
 ## Architectural Rules (Locked)
 
@@ -251,7 +287,24 @@ Visit (single anchor for all clinical data)
 **Verification**: ⏳ Awaiting runtime verification before production  
 **Architecture**: ✅ Locked (Visit anchor, 6 constraints, additive changes only)  
 
-**Workflow**: Finish coding Sprints 3-6 → Full runtime verification → Fix bugs → Production release
+**Workflow**: Finish coding Sprints 3-6 → Primary end-to-end verification → Fix bugs → Production release
+
+---
+
+## Definition of Done (Every Sprint)
+
+Each sprint is considered **implementation complete** only when:
+
+- ✅ **Database migration** written (reversible if practical)
+- ✅ **Backend service** implemented (with all required methods)
+- ✅ **API endpoints** implemented (with auth checks and error handling)
+- ✅ **Frontend pages** implemented (responsive, user-tested flow)
+- ✅ **TypeScript build** passes with zero errors (`npm run build`)
+- ✅ **Visit model integration** confirmed (all records link via `visit_uuid`)
+- ✅ **CLINICAL_CORE_STATUS.md** updated (status table, any relevant notes)
+- ✅ **One implementation commit** for the sprint (clear message, all code included)
+
+**No sprint advances to verification phase until all 8 criteria met.**
 
 ---
 
