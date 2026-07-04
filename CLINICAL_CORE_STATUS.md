@@ -161,30 +161,78 @@
 
 ## Implementation Roadmap
 
-**Phase 1: Complete All Sprints** (Ongoing)
-1. Sprint 3: Ayurvedic Assessment (~5 hours)
-2. Sprint 4: Diagnosis & Prescription (~5 hours)
-3. Sprint 5: Panchakarma & Therapy (~5 hours)
-4. Sprint 6: Follow-up & Clinical Timeline (~5 hours)
-5. Build check: `npm run build` (verify 0 errors)
+**Sprint 3: Ayurvedic Assessment**
+1. Implement migration → service → API → UI
+2. Build: `npm run build` (verify 0 errors)
+3. Quick smoke test (10-20 min, assess workflow)
+4. Update `CLINICAL_CORE_STATUS.md`
+5. One implementation commit
 
-### Phase 2: Primary End-to-End Verification** (After all 6 sprints coded)
+**Sprint 4: Diagnosis & Prescription**
+1. Implement migration → service → API → UI
+2. Build: `npm run build` (verify 0 errors)
+3. Quick smoke test (10-20 min, diagnosis & prescription workflow)
+4. Update `CLINICAL_CORE_STATUS.md`
+5. One implementation commit
+
+**Sprint 5: Panchakarma & Therapy**
+1. Implement migration → service → API → UI
+2. Build: `npm run build` (verify 0 errors)
+3. Quick smoke test (10-20 min, therapy workflow)
+4. Update `CLINICAL_CORE_STATUS.md`
+5. One implementation commit
+
+**Sprint 6: Follow-up & Clinical Timeline**
+1. Implement migration → service → API → UI
+2. Build: `npm run build` (verify 0 errors)
+3. Quick smoke test (10-20 min, timeline workflow)
+4. Update `CLINICAL_CORE_STATUS.md`
+5. One implementation commit
+
+**After All Sprints Complete**:
 1. Deploy all 6 migrations to Supabase
-2. Run end-to-end workflow tests (exercise complete clinical workflows)
-3. Document results
-4. Fix any bugs found (as needed before production)
-
-**Phase 3: Production Release**
-1. Tag: `git tag clinical-core-complete`
-2. Deploy to production via Vercel
-3. Health checks pass
-4. Dr. Sanjay can use complete clinical system
+2. Primary end-to-end verification (all 11 workflows)
+3. Fix bugs (as needed)
+4. Tag: `git tag clinical-core-complete`
+5. Deploy to production via Vercel
 
 ---
 
-## Comprehensive Verification Plan
+## Verification Strategy
 
-After all six sprints are complete, verify complete patient journeys:
+### Per-Sprint Quick Smoke Tests (After Each Sprint Builds)
+
+After each sprint's `npm run build` succeeds, run a 10-20 minute smoke test to catch integration issues early:
+
+**Sprint 3 Smoke Test** (Ayurvedic Assessment):
+- Create assessment for existing visit
+- Verify data persists
+- Finalize assessment, confirm immutable
+- Check timeline event logged
+
+**Sprint 4 Smoke Test** (Diagnosis & Prescription):
+- Create diagnosis linked to visit + assessment
+- Create prescription linked to diagnosis
+- Verify prescription includes patient/visit context
+- Check timeline events
+
+**Sprint 5 Smoke Test** (Panchakarma & Therapy):
+- Create treatment plan linked to visit
+- Schedule therapy session
+- Verify session shows in queue
+- Check timeline events
+
+**Sprint 6 Smoke Test** (Follow-up & Timeline):
+- Create follow-up linked to visit
+- Verify follow-up visible in patient record
+- Check complete timeline for visit
+- Verify all events in chronological order
+
+**Benefit**: Catches schema conflicts, FK issues, and integration problems while the code is fresh.
+
+### Comprehensive End-to-End Verification (After All 6 Sprints Complete)
+
+After all sprints coded and quick tests pass, run complete patient journeys:
 
 **Primary Workflows to Verify**:
 - Appointment creation → Visit check-in
@@ -214,7 +262,7 @@ After all six sprints are complete, verify complete patient journeys:
 
 **Expected Result**: Complete patient journey visible from all touchpoints (reception, doctor, admin, pharmacy, billing).
 
-**Fix and Deploy**: Any bugs found → fix immediately → re-verify → deploy to production.
+**Resolution**: Fix any bugs found → re-verify → deploy to production.
 
 ## Architectural Rules (Locked)
 
