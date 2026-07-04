@@ -1,21 +1,21 @@
 # Clinical Core EMR — Sprint 3 Ready to Implement
 
-**Last Updated**: 2026-07-05 00:47 UTC  
-**Build Status**: ✅ Passing (0 errors, 9.5s)  
-**Production Status**: ⏳ Pending runtime verification before release
+**Last Updated**: 2026-07-05 00:48 UTC  
+**Build**: ✅ Passing (0 TypeScript errors)  
+**Production**: ⏳ Pending runtime verification before release
 
 ---
 
-## Current Implementation Status
+## Current Project State
 
 | Sprint | Scope | Status |
 |--------|-------|--------|
-| 1 | Patient Visit & Vitals | ✅ Implementation complete |
-| 2 | Consultation & SOAP Notes | ✅ Implementation complete |
-| 3 | Ayurvedic Assessment | 🚀 Ready to implement |
-| 4 | Diagnosis & Prescription | 📋 Planned |
-| 5 | Panchakarma & Therapy | 📋 Planned |
-| 6 | Follow-up & Clinical Timeline | 📋 Planned |
+| ✅ 1 | Patient Visit & Vitals | Implementation complete |
+| ✅ 2 | Consultation & SOAP Notes | Implementation complete |
+| 🚀 3 | Ayurvedic Assessment | Ready to implement |
+| 📋 4 | Diagnosis & Prescription | Planned |
+| 📋 5 | Panchakarma & Therapy | Planned |
+| 📋 6 | Follow-up & Clinical Timeline | Planned |
 
 ---
 
@@ -23,7 +23,7 @@
 
 ### Implement Only
 
-- Prakriti (constitution assessment)
+- Prakriti (constitution)
 - Vikriti (current imbalance)
 - Nadi Pariksha (pulse assessment)
 - Dashavidha Pariksha (10-fold examination)
@@ -34,131 +34,97 @@
 - Satva (mental clarity)
 - Assessment summary (clinical observations)
 
-### Architectural Decision
+### Out of Scope
 
-- **Structured relational fields** (not JSON blob)
-- **Strong typing** on each observation
-- **Foreign key to visit_uuid** (no duplication)
-- **Analytics-friendly schema** (enables reporting)
-- **Optional free-text summary** (doctor observations)
+- Diagnosis
+- Prescription
+- Panchakarma workflow
+- Billing integration
+
+### Architecture
+
+- Structured relational schema
+- Strongly typed fields
+- Foreign key to `visit_uuid`
+- No duplicated patient or booking data
+- Optional clinical summary
 
 ### Sprint 3 Deliverables
 
-**Database Migration**:
-- Assessment table with structured columns
-- Indexes on visit_uuid, doctor_uuid, status, created_at
-- RLS policies (doctor owner, reception read, admin all)
-- Timeline trigger for ASSESSMENT_COMPLETED event
-
-**Backend Service**:
-- `createAssessment()` → DRAFT status
-- `getAssessment()` → fetch with context
-- `updateAssessment()` → partial updates, reject if finalized
-- `finalizeAssessment()` → status→FINALIZED, immutable
-
-**API Endpoints**:
-- POST `/api/emr/visits/[visitId]/assessment` → create
-- GET `/api/emr/visits/[visitId]/assessment` → fetch
-- PUT `/api/emr/visits/[visitId]/assessment` → update/finalize
-
-**Frontend**:
-- Assessment form (all fields, dosha display)
-- Finalized read-only view (form disabled)
-
-**Build & Test**:
-- `npm run build` → zero TypeScript errors
-- Smoke test: Create → refresh → finalize → immutable → timeline logged once
-- Regression: Sprint 1 (check-in/vitals) unchanged, Sprint 2 (consultation) unchanged
-
-**Commit**:
-- One implementation commit (all code included)
-- Update `CLINICAL_CORE_STATUS.md` if needed
-
-### Out of Scope (Defer to Sprint 4)
-
-- ❌ Diagnosis or condition names
-- ❌ Treatment recommendations
-- ❌ Prescription generation
-- ❌ Pharmacy integration
+| Component | Deliverable |
+|-----------|-------------|
+| **Database** | Migration, indexes, RLS, timeline trigger |
+| **Backend** | Create, Get, Update, Finalize methods |
+| **API** | POST, GET, PUT endpoints |
+| **Frontend** | Assessment form + finalized read-only view |
+| **Build** | Zero TypeScript errors |
+| **Verification** | Smoke test + regression test |
+| **Git** | One implementation commit |
 
 ---
 
-## Development Pattern (Sprints 3-6)
-
-For each remaining sprint:
+## Development Pattern
 
 ```
-Migration (tables, indexes, RLS, triggers)
+Migration
     ↓
-Service (implement required methods)
+Service
     ↓
-API (create endpoints)
+API
     ↓
-UI (build forms and views)
+UI
     ↓
-Build (npm run build, verify 0 errors)
+Build
     ↓
-Smoke Test (DB + API + UI + persistence + immutability)
+Smoke Test
     ↓
-Regression Test (Sprints 1-N workflows unchanged)
+Regression Test
     ↓
-Implementation Commit (one commit per sprint)
-    ↓
-Next Sprint
+Commit
 ```
+
+---
+
+## Clinical Data Model
+
+```
+Visit (Primary Clinical Anchor)
+├── Vitals                  ✅ Sprint 1
+├── Consultation & SOAP     ✅ Sprint 2
+├── Ayurvedic Assessment    🚀 Sprint 3
+├── Diagnosis               📋 Sprint 4
+├── Prescription            📋 Sprint 4
+├── Panchakarma             📋 Sprint 5
+└── Follow-up               📋 Sprint 6
+```
+
+All clinical records reference `visit_uuid`. Schema evolution remains additive.
 
 ---
 
 ## Repository Rules
 
-✅ **One implementation commit per sprint**  
-✅ **One status file** (`CLINICAL_CORE_STATUS.md`)  
-✅ **No duplicate planning documents**  
-✅ **Git history documents implementation progress**  
+✅ One implementation commit per sprint  
+✅ One status document (`CLINICAL_CORE_STATUS.md`)  
+✅ No duplicate planning/status documents  
+✅ Git history records implementation progress  
 
 ---
 
-## Architecture (Locked)
+## Next Milestone
 
-```
-Patient
-    ↓
-Booking
-    ↓
-Visit (single clinical anchor)
-    ├── Vitals (Sprint 1) ✅
-    ├── Consultation & SOAP (Sprint 2) ✅
-    ├── Ayurvedic Assessment (Sprint 3)
-    ├── Diagnosis & Prescription (Sprint 4)
-    ├── Panchakarma & Therapy (Sprint 5)
-    └── Follow-up & Clinical Timeline (Sprint 6)
-```
+Complete Sprint 3:
 
-**Design Principles**:
-- All records link to `visit_uuid` (no duplicates)
-- Additive schema evolution only (no Visit rewrites)
-- Structured fields for analytics
-- Immutable finalization (status FINALIZED blocks edits)
+1. Implement database migration
+2. Implement service layer
+3. Implement API
+4. Implement UI
+5. Pass build (`npm run build`)
+6. Pass Sprint 3 smoke test
+7. Verify Sprint 1–2 regressions
+8. Create Sprint 3 implementation commit
+9. Continue to Sprint 4
 
 ---
 
-## Release Path (After Sprints 3-6 Complete)
-
-1. Deploy all 6 database migrations to Supabase
-2. Execute comprehensive end-to-end verification
-3. Fix any defects discovered during verification
-4. Tag release: `git tag clinical-core-complete`
-5. Deploy to production via Vercel
-
----
-
-## Project State
-
-✅ Sprint 1: Implemented  
-✅ Sprint 2: Implemented  
-🚀 Sprint 3: Ready to build  
-✅ Architecture: Locked (Visit anchor, additive changes)  
-✅ Build: Passing  
-⏳ Runtime verification: Required before production  
-
-**Next Milestone**: Complete Sprint 3 → pass build + smoke test → confirm no regressions → one implementation commit → move to Sprint 4.
+**State**: Sprints 1-2 implemented, Sprint 3 ready to code. Build passing. Runtime verification pending before production release.
