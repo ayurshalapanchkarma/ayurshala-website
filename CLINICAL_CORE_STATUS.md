@@ -409,3 +409,64 @@ Each sprint must pass before production release.
 
 Do NOT create new planning/status documents after each sprint. Update CLINICAL_CORE_STATUS.md instead.  
 
+
+
+---
+
+## Sprint 3: Ayurvedic Assessment — Implementation Checklist
+
+**Scope** (Locked, No Expansion):
+- Prakriti, Vikriti (constitution and imbalance)
+- Nadi Pariksha (pulse assessment)
+- Dashavidha Pariksha (10-fold examination)
+- Ashtavidha Pariksha (8-fold examination)
+- Agni, Kostha, Ojas, Satva (functional assessments)
+- Assessment summary (free-text observations)
+
+**Architecture**: Structured fields (not JSON blob). Typed columns for each observation.
+
+**Implementation Checklist**:
+
+### Migration
+- [ ] `emr_ayurvedic_assessment` table
+  - UUID PK, FK to visit_uuid UNIQUE
+  - Columns: prakriti, vikriti, nadi_description, sara_assessment, samhanana_assessment, pramana_assessment, satmya_assessment, satva_level, ahara_assessment, vyayama_assessment, nidra_assessment
+  - Columns: nadi_exam, mala_exam, mutra_exam, jivha_exam, shabda_exam, sparsha_exam, drk_exam, akriti_exam
+  - Columns: agni_level, ojas_level, summary
+  - Metadata: doctor_uuid, created_by, updated_by, timestamps
+- [ ] Enum: `emr_assessment_status` (DRAFT, FINALIZED)
+- [ ] Indexes: visit_uuid, doctor_uuid, status, created_at
+- [ ] RLS: doctor owns, reception views, admin all
+- [ ] Trigger: Auto-log ASSESSMENT_COMPLETED on finalization
+
+### Service (`lib/emr/ayurvedic-assessment.service.ts`)
+- [ ] `createAssessment(visitUuid, doctorUuid, data)` → DRAFT
+- [ ] `getAssessment(visitUuid)` → with doctor name
+- [ ] `updateAssessment(visitUuid, doctorUuid, data)` → partial, reject if finalized
+- [ ] `finalizeAssessment(visitUuid, doctorUuid)` → FINALIZED, immutable
+- [ ] Validation: At least one field required, reject edits if finalized
+
+### API (3 Endpoints)
+- [ ] POST `/api/emr/visits/[visitId]/assessment` → create
+- [ ] GET `/api/emr/visits/[visitId]/assessment` → fetch
+- [ ] PUT `/api/emr/visits/[visitId]/assessment` → update/finalize
+
+### UI (2 Pages)
+- [ ] Assessment form page (all fields, dosha display, finalize)
+- [ ] Read-only view (finalized state, form disabled)
+
+### Build & Test
+- [ ] `npm run build` → 0 errors
+- [ ] Smoke: Create → refresh → finalize → immutable → timeline logged once
+- [ ] Regression: Sprint 1 check-in/vitals works, Sprint 2 consultation works
+- [ ] API: 200/201/400/401/403 correct
+
+### Commit
+- [ ] One implementation commit (all code included)
+- [ ] Update CLINICAL_CORE_STATUS.md if needed
+
+**Out of Scope** (Defer to Sprint 4):
+- Diagnosis or condition names
+- Treatment recommendations
+- Prescription planning
+
