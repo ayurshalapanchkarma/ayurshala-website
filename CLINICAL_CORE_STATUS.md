@@ -159,27 +159,38 @@
 
 ---
 
-## Next Steps
+## Implementation Roadmap
 
-**Phase 1: Complete Implementation** (Ongoing)
-1. Finish Sprint 3 code (Ayurvedic Assessment)
-2. Finish Sprint 4 code (Diagnosis & Prescription)
-3. Finish Sprint 5 code (Panchakarma & Therapy)
-4. Finish Sprint 6 code (Follow-up & Timeline)
+**Phase 1: Complete All Sprints** (Ongoing)
+1. Sprint 3: Ayurvedic Assessment (~5 hours)
+2. Sprint 4: Diagnosis & Prescription (~5 hours)
+3. Sprint 5: Panchakarma & Therapy (~5 hours)
+4. Sprint 6: Follow-up & Clinical Timeline (~5 hours)
+5. Build check: `npm run build` (verify 0 errors)
 
-**Phase 2: Runtime Verification** (After all sprints coded)
+**Phase 2: Full Runtime Verification** (After all 6 sprints coded)
 1. Deploy all 6 migrations to Supabase
-2. Run verification tests (13 + 10 + 11 + X + X + X tests)
-3. Document results
-4. Fix any bugs found
+2. Run end-to-end workflow tests (time depends on coverage)
+3. Exercise complete clinical workflows across modules
+4. Document results
+5. Fix any bugs found immediately
 
 **Phase 3: Production Release**
 1. Tag: `git tag clinical-core-complete`
 2. Deploy to production via Vercel
 3. Health checks pass
-4. Dr. Sanjay can use full system
+4. Dr. Sanjay can use complete clinical system
 
-**Key Principle**: Do not change Visit model. Implement improvements as additive changes only.
+## Architectural Rules (Locked)
+
+✅ **Visit is Primary Anchor**: All clinical data links to `emr_visit.uuid`  
+✅ **No Duplicate Data**: Reference visit_uuid, never copy patient or booking data  
+✅ **Additive Changes Only**: Do not modify Visit model. Improvements added as new tables/fields  
+✅ **Self-Contained Sprints**: Each sprint independently verifiable  
+✅ **RLS Consistent**: Same security model (doctor/reception/admin) across all sprints  
+✅ **Timeline Integration**: Important actions auto-logged to `emr_visit_timeline`  
+✅ **One Record Per Type**: One consultation, one assessment, one diagnosis per visit  
+✅ **Immutable Finalization**: Status FINALIZED blocks edits (same as Sprints 1-2)
 
 ---
 
