@@ -161,76 +161,94 @@
 
 ## Implementation Roadmap
 
-**Sprint 3: Ayurvedic Assessment**
-1. Implement migration → service → API → UI
-2. Build: `npm run build` (verify 0 errors)
-3. Quick smoke test (10-20 min, assess workflow)
-4. Update `CLINICAL_CORE_STATUS.md`
-5. One implementation commit
+**Each Sprint Follows This Exact Sequence**:
 
-**Sprint 4: Diagnosis & Prescription**
-1. Implement migration → service → API → UI
-2. Build: `npm run build` (verify 0 errors)
-3. Quick smoke test (10-20 min, diagnosis & prescription workflow)
-4. Update `CLINICAL_CORE_STATUS.md`
-5. One implementation commit
+```
+1. Migration (create tables, enum, indexes, RLS, triggers)
+     ↓
+2. Service (implement all methods, error handling)
+     ↓
+3. API (create endpoints with auth checks)
+     ↓
+4. UI (build forms, lists, navigation flows)
+     ↓
+5. Build (npm run build, verify 0 errors)
+     ↓
+6. Smoke Test (DB + API + UI verification, page refresh data persistence)
+     ↓
+7. Regression (verify Sprints 1-N workflows unchanged)
+     ↓
+8. Commit (one implementation commit per sprint)
+```
 
-**Sprint 5: Panchakarma & Therapy**
-1. Implement migration → service → API → UI
-2. Build: `npm run build` (verify 0 errors)
-3. Quick smoke test (10-20 min, therapy workflow)
-4. Update `CLINICAL_CORE_STATUS.md`
-5. One implementation commit
-
-**Sprint 6: Follow-up & Clinical Timeline**
-1. Implement migration → service → API → UI
-2. Build: `npm run build` (verify 0 errors)
-3. Quick smoke test (10-20 min, timeline workflow)
-4. Update `CLINICAL_CORE_STATUS.md`
-5. One implementation commit
+**Sprint 3** → Ayurvedic Assessment  
+**Sprint 4** → Diagnosis & Prescription  
+**Sprint 5** → Panchakarma & Therapy  
+**Sprint 6** → Follow-up & Clinical Timeline  
 
 **After All Sprints Complete**:
+```
 1. Deploy all 6 migrations to Supabase
-2. Primary end-to-end verification (all 11 workflows)
-3. Fix bugs (as needed)
-4. Tag: `git tag clinical-core-complete`
+     ↓
+2. Comprehensive end-to-end verification (all 11 workflows)
+     ↓
+3. Fix bugs (if any found)
+     ↓
+4. Tag: git tag clinical-core-complete
+     ↓
 5. Deploy to production via Vercel
+```
 
 ---
 
 ## Verification Strategy
 
-### Per-Sprint Quick Smoke Tests (After Each Sprint Builds)
+### Per-Sprint Smoke Test Pattern (After Build Succeeds)
 
-After each sprint's `npm run build` succeeds, run a 10-20 minute smoke test to catch integration issues early:
+Every sprint smoke test verifies **three things**:
+
+1. **Database State**
+   - Correct rows created in new tables
+   - Foreign keys to `visit_uuid` valid
+   - Timeline entries logged (exactly once per action)
+   - No orphaned records
+
+2. **API Responses**
+   - Status codes correct (200, 201, 400, 401, 403)
+   - Response payloads contain expected fields
+   - Error messages clear and actionable
+   - Auth checks enforced
+
+3. **UI Flow**
+   - Form submission creates/updates record
+   - **Page refresh persists data** (not just client state)
+   - Disabled states enforced (e.g., cannot edit FINALIZED)
+   - Navigation flows as expected
 
 **Sprint 3 Smoke Test** (Ayurvedic Assessment):
-- Create assessment for existing visit
-- Verify data persists
-- Finalize assessment, confirm immutable
-- Check timeline event logged
+- [ ] Create assessment for existing visit → verify in DB, API returns 201, form reloads with data
+- [ ] Finalize assessment → verify immutable in DB, API rejects edit, UI disables form
+- [ ] Check timeline → ASSESSMENT_COMPLETED event logged exactly once
+- [ ] Regression: Verify Sprint 1-2 workflows still work (check-in, vitals, consultation, queue)
 
 **Sprint 4 Smoke Test** (Diagnosis & Prescription):
-- Create diagnosis linked to visit + assessment
-- Create prescription linked to diagnosis
-- Verify prescription includes patient/visit context
-- Check timeline events
+- [ ] Create diagnosis linked to assessment → verify DB state, API response, UI persists
+- [ ] Create prescription linked to diagnosis → verify context (patient, visit, doctor)
+- [ ] Check timeline events logged correctly
+- [ ] Regression: Verify Sprints 1-3 workflows unchanged
 
 **Sprint 5 Smoke Test** (Panchakarma & Therapy):
-- Create treatment plan linked to visit
-- Schedule therapy session
-- Verify session shows in queue
-- Check timeline events
+- [ ] Create treatment plan → verify DB state and API
+- [ ] Schedule therapy session → verify queue appearance
+- [ ] Check timeline events
+- [ ] Regression: Verify Sprints 1-4 workflows unchanged
 
-**Sprint 6 Smoke Test** (Follow-up & Timeline):
-- Create follow-up linked to visit
-- Verify follow-up visible in patient record
-- Check complete timeline for visit
-- Verify all events in chronological order
+**Sprint 6 Smoke Test** (Follow-up & Clinical Timeline):
+- [ ] Create follow-up → verify DB state and API
+- [ ] Check complete timeline for visit (all events in order)
+- [ ] Regression: Verify all prior sprints unchanged
 
-**Benefit**: Catches schema conflicts, FK issues, and integration problems while the code is fresh.
-
-### Comprehensive End-to-End Verification (After All 6 Sprints Complete)
+### Comprehensive End-to-End Verification (After All Sprints)
 
 After all sprints coded and quick tests pass, run complete patient journeys:
 
