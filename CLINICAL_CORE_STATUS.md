@@ -103,6 +103,17 @@ All clinical records reference `visit_uuid`. Schema evolution remains additive.
 
 ---
 
+## Definition of Done (Every Sprint)
+
+Before moving to next sprint, verify:
+
+✅ **Database migration succeeds on clean database**  
+✅ **Database migration succeeds on existing dev database (no data loss)**  
+✅ **Build passes** (`npm run build`, 0 errors)  
+✅ **Smoke tests pass** (feature works, data persists after refresh)  
+✅ **Regression tests pass** (prior sprints unchanged)  
+✅ **One implementation commit** (all code included)
+
 ## Repository Rules
 
 ✅ One implementation commit per sprint  
