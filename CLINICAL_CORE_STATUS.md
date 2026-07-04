@@ -1,7 +1,7 @@
 # Clinical Core EMR — Sprints 1–2 Implementation Complete; Sprints 3–6 Planned; Runtime Verification Pending
 
 **Last Updated**: 2026-07-05 00:39 UTC  
-**Current State**: Sprints 1-2 code complete (2500+ lines, build passing); Sprints 3-6 planned; runtime verification after all sprints coded
+**Current State**: Sprints 1-2 implementation complete (2500+ lines, build passing); awaiting runtime verification; Sprints 3-6 planned
 
 ---
 
@@ -247,10 +247,10 @@ Visit (single anchor for all clinical data)
 
 ## Implementation Status
 
-**Sprints 1-2**: ✅ Code complete (2500+ lines)  
+**Sprints 1-2**: ✅ Implementation complete (2500+ lines that builds successfully)  
 **Build**: ✅ Passing (0 errors, 9.5s)  
-**Implementation**: ✅ Complete for Sprints 1-2, pending runtime verification before production  
-**Architecture**: ✅ Locked (Visit anchor, no duplicate clinical data)  
+**Verification**: ⏳ Awaiting runtime verification before production  
+**Architecture**: ✅ Locked (Visit anchor, 6 constraints, additive changes only)  
 
 **Workflow**: Finish coding Sprints 3-6 → Full runtime verification → Fix bugs → Production release
 
