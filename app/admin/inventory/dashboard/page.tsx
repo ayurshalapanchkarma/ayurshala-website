@@ -1,96 +1,235 @@
 'use client'
 
-import Link from 'next/link'
-import { Package, Layers, Users, TrendingUp, AlertTriangle, Clock, ShoppingCart, Truck, Plus } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { BarChart3, Package, AlertTriangle, TrendingUp, DollarSign, Clock } from 'lucide-react'
+import { toast } from 'sonner'
 
-export default function InventoryDashboard() {
+interface DashboardData {
+  stock: {
+    totalProducts: number
+    totalActiveProducts: number
+    lowStockCount: number
+    expiringCount: number
+    outOfStockCount: number
+    totalInventoryValue: number
+  }
+  purchaseOrders: {
+    draft: number
+    pending: number
+    approved: number
+    partiallyReceived: number
+    totalValuePending: number
+  }
+  grn: {
+    draft: number
+    posted: number
+    totalPostedToday: number
+    totalPostedThisMonth: number
+  }
+  lastUpdated: string
+}
+
+export default function DashboardPage() {
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchDashboard()
+    const interval = setInterval(fetchDashboard, 30000) // Refresh every 30 seconds
+    return () => clearInterval(interval)
+  }, [])
+
+  async function fetchDashboard() {
+    try {
+      const response = await fetch('/api/inventory/dashboard')
+      if (!response.ok) throw new Error('Failed to fetch')
+
+      const data: DashboardData = await response.json()
+      setDashboard(data)
+    } catch (error) {
+      console.error('Error:', error)
+      if (loading) toast.error('Failed to fetch dashboard')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-gray-500">Loading dashboard...</div>
+      </div>
+    )
+  }
+
+  if (!dashboard) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-500">Failed to load dashboard</div>
+      </div>
+    )
+  }
+
+  const StatCard = ({
+    icon: Icon,
+    label,
+    value,
+    trend,
+    trendUp,
+  }: {
+    icon: React.ComponentType<{ size: number }>
+    label: string
+    value: string | number
+    trend?: string
+    trendUp?: boolean
+  }) => (
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">{label}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{value}</p>
+          {trend && (
+            <p className={`text-sm mt-2 ${trendUp ? 'text-green-600' : 'text-red-600'}`}>
+              {trend}
+            </p>
+          )}
+        </div>
+        <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg">
+          <Icon size={24} className="text-blue-600 dark:text-blue-300" />
+        </div>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="p-6 space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Products', value: '0', icon: Package, color: 'blue' },
-          { label: 'Categories', value: '0', icon: Layers, color: 'purple' },
-          { label: 'Suppliers', value: '0', icon: Users, color: 'green' },
-          { label: 'Stock Value', value: '₹0', icon: TrendingUp, color: 'amber' },
-          { label: 'Low Stock', value: '0', icon: AlertTriangle, color: 'red' },
-          { label: 'Expiring Soon', value: '0', icon: Clock, color: 'orange' },
-          { label: 'Pending POs', value: '0', icon: ShoppingCart, color: 'indigo' },
-          { label: 'Today\'s GRN', value: '0', icon: Truck, color: 'cyan' },
-        ].map((kpi, i) => {
-          const Icon = kpi.icon
-          const colorMap: Record<string, string> = {
-            blue: 'bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400',
-            purple: 'bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400',
-            green: 'bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400',
-            amber: 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400',
-            red: 'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400',
-            orange: 'bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400',
-            indigo: 'bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400',
-            cyan: 'bg-cyan-50 dark:bg-cyan-950/20 text-cyan-600 dark:text-cyan-400',
-          }
-          return (
-            <div key={i} className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
-              <div className={`w-10 h-10 rounded-lg ${colorMap[kpi.color]} flex items-center justify-center mb-3`}>
-                <Icon className="w-5 h-5" />
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{kpi.label}</p>
-              <p className="text-2xl font-semibold text-slate-900 dark:text-white">{kpi.value}</p>
-            </div>
-          )
-        })}
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Inventory Dashboard</h1>
+        <p className="text-sm text-gray-500">
+          Last updated: {new Date(dashboard.lastUpdated).toLocaleTimeString()}
+        </p>
       </div>
 
-      {/* Quick Actions */}
+      {/* Stock Overview */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: 'Create Product', href: '/admin/inventory/products/create', icon: Package },
-            { label: 'Create PO', href: '/admin/inventory/purchase-orders', icon: ShoppingCart },
-            { label: 'Receive GRN', href: '/admin/inventory/grn', icon: Truck },
-            { label: 'Adjust Stock', href: '/admin/inventory/adjustments', icon: TrendingUp },
-          ].map((action, i) => {
-            const Icon = action.icon
-            return (
-              <Link key={i} href={action.href} className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 transition text-center">
-                <div className="bg-orange-50 dark:bg-orange-950/20 w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                </div>
-                <p className="text-xs font-medium text-slate-900 dark:text-white">{action.label}</p>
-              </Link>
-            )
-          })}
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Stock Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard
+            icon={Package}
+            label="Total Products"
+            value={dashboard.stock.totalProducts}
+          />
+          <StatCard
+            icon={TrendingUp}
+            label="Active Products"
+            value={dashboard.stock.totalActiveProducts}
+          />
+          <StatCard
+            icon={DollarSign}
+            label="Inventory Value"
+            value={`₹${(dashboard.stock.totalInventoryValue / 100000).toFixed(1)}L`}
+          />
         </div>
       </div>
 
-      {/* Inventory Modules */}
+      {/* Alerts */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Inventory Modules</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {[
-            { label: 'Masters', items: 5, color: 'blue' },
-            { label: 'Procurement', items: 3, color: 'green' },
-            { label: 'Stock', items: 4, color: 'purple' },
-            { label: 'Monitoring', items: 2, color: 'amber' },
-            { label: 'Reports', items: 1, color: 'indigo' },
-            { label: 'Settings', items: 1, color: 'gray' },
-          ].map((module, i) => {
-            const colorMap: Record<string, string> = {
-              blue: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50',
-              green: 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900/50',
-              purple: 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-900/50',
-              amber: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50',
-              indigo: 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/50',
-              gray: 'bg-gray-50 dark:bg-gray-950/20 border-gray-200 dark:border-gray-900/50',
-            }
-            return (
-              <div key={i} className={`${colorMap[module.color]} rounded-lg p-4 border cursor-pointer hover:shadow-md transition`}>
-                <p className="font-medium text-slate-900 dark:text-white">{module.label}</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{module.items} items</p>
-              </div>
-            )
-          })}
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Critical Alerts</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard
+            icon={AlertTriangle}
+            label="Low Stock Items"
+            value={dashboard.stock.lowStockCount}
+            trendUp={false}
+          />
+          <StatCard
+            icon={Clock}
+            label="Expiring Soon (90 days)"
+            value={dashboard.stock.expiringCount}
+            trendUp={false}
+          />
+          <StatCard
+            icon={Package}
+            label="Out of Stock"
+            value={dashboard.stock.outOfStockCount}
+            trendUp={false}
+          />
+        </div>
+      </div>
+
+      {/* Purchase Orders */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Purchase Orders</h2>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <StatCard
+            icon={Clock}
+            label="Draft"
+            value={dashboard.purchaseOrders.draft}
+          />
+          <StatCard
+            icon={Clock}
+            label="Pending"
+            value={dashboard.purchaseOrders.pending}
+          />
+          <StatCard
+            icon={BarChart3}
+            label="Approved"
+            value={dashboard.purchaseOrders.approved}
+          />
+          <StatCard
+            icon={TrendingUp}
+            label="Partially Received"
+            value={dashboard.purchaseOrders.partiallyReceived}
+          />
+          <StatCard
+            icon={DollarSign}
+            label="Pending Value"
+            value={`₹${(dashboard.purchaseOrders.totalValuePending / 100000).toFixed(1)}L`}
+          />
+        </div>
+      </div>
+
+      {/* GRN Summary */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Goods Receipt</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <StatCard
+            icon={Clock}
+            label="Draft GRNs"
+            value={dashboard.grn.draft}
+          />
+          <StatCard
+            icon={BarChart3}
+            label="Posted GRNs"
+            value={dashboard.grn.posted}
+          />
+          <StatCard
+            icon={DollarSign}
+            label="Today's Receipt"
+            value={`₹${(dashboard.grn.totalPostedToday / 1000).toFixed(0)}K`}
+          />
+          <StatCard
+            icon={TrendingUp}
+            label="This Month"
+            value={`₹${(dashboard.grn.totalPostedThisMonth / 100000).toFixed(1)}L`}
+          />
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg p-6">
+          <h3 className="font-bold text-green-900 dark:text-green-100 mb-2">Healthy Inventory</h3>
+          <p className="text-sm text-green-700 dark:text-green-200">
+            {dashboard.stock.totalActiveProducts} products in stock with good availability
+          </p>
+        </div>
+        <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6">
+          <h3 className="font-bold text-yellow-900 dark:text-yellow-100 mb-2">Attention Required</h3>
+          <p className="text-sm text-yellow-700 dark:text-yellow-200">
+            {dashboard.stock.lowStockCount + dashboard.stock.expiringCount} items need attention
+          </p>
         </div>
       </div>
     </div>

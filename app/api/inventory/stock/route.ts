@@ -1,6 +1,6 @@
 /**
- * Batch Management API - Module 3
- * List all product batches with filters
+ * Stock Management API - Module 4
+ * GET current stock with filters and pagination
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -12,20 +12,20 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
     const search = searchParams.get('search') || ''
-    const status = searchParams.get('status') || ''
-    const expiring_soon = searchParams.get('expiring_soon') === 'true'
+    const category_uuid = searchParams.get('category_uuid') || ''
+    const low_stock_only = searchParams.get('low_stock_only') === 'true'
 
-    const result = await StockService.getAllBatches({
+    const result = await StockService.getCurrentStock({
       page,
       pageSize,
       search,
-      status,
-      expiring_soon,
+      category_uuid,
+      low_stock_only,
     })
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('GET /api/inventory/batches error:', error)
-    return NextResponse.json({ error: 'Failed to fetch batches' }, { status: 500 })
+    console.error('GET /api/inventory/stock error:', error)
+    return NextResponse.json({ error: 'Failed to fetch current stock' }, { status: 500 })
   }
 }

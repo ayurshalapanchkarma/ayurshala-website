@@ -1,125 +1,284 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Plus, Search, Eye, Edit, Loader } from 'lucide-react'
-import { PurchaseOrderService } from '@/lib/inventory'
+import {
+  Plus,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Edit2,
+  Trash2,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+} from 'lucide-react'
+import { toast } from 'sonner'
+
+interface PurchaseOrder {
+  uuid: string
+  po_number: string
+  supplier_uuid: string
+  status: 'draft' | 'pending' | 'approved' | 'partially_received' | 'received' | 'cancelled'
+  order_date: string
+  expected_delivery_date?: string
+  subtotal_amount: number
+  tax_amount: number
+  total_amount: number
+  created_at: string
+  supplier?: { company_name: string }
+}
+
+interface ListResponse {
+  data: PurchaseOrder[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+const statusColors = {
+  draft: 'bg-gray-100 text-gray-800 border-gray-300',
+  pending: 'bg-blue-100 text-blue-800 border-blue-300',
+  approved: 'bg-green-100 text-green-800 border-green-300',
+  partially_received: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+  received: 'bg-purple-100 text-purple-800 border-purple-300',
+  cancelled: 'bg-red-100 text-red-800 border-red-300',
+}
+
+const statusIcons = {
+  draft: Clock,
+  pending: AlertCircle,
+  approved: CheckCircle,
+  partially_received: Clock,
+  received: CheckCircle,
+  cancelled: AlertCircle,
+}
 
 export default function PurchaseOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([])
+  const [orders, setOrders] = useState<PurchaseOrder[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
-  const pageSize = 10
+  const [totalPages, setTotalPages] = useState(1)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null)
+
+  const pageSize = 20
 
   useEffect(() => {
-    loadOrders()
-  }, [])
+    fetchOrders()
+  }, [page, search, status])
 
-  async function loadOrders() {
+  async function fetchOrders() {
     try {
       setLoading(true)
-      const data = await PurchaseOrderService.getPurchaseOrders()
-      setOrders(data || [])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load purchase orders')
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+        search,
+        status,
+      })
+
+      const response = await fetch(`/api/inventory/purchase-orders?${params}`)
+      if (!response.ok) throw new Error('Failed to fetch')
+
+      const data: ListResponse = await response.json()
+      setOrders(data.data)
+      setTotalPages(data.totalPages)
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to fetch purchase orders')
     } finally {
       setLoading(false)
     }
   }
 
-  const filtered = orders.filter(
-    o => !o.is_deleted && (o.po_number?.includes(searchTerm) || o.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
-  const totalPages = Math.ceil(filtered.length / pageSize)
+  async function handleDelete(id: string) {
+    if (!confirm('Are you sure?')) return
 
-  if (loading) {
-    return <div className="p-8 flex justify-center"><Loader className="animate-spin" size={40} /></div>
+    try {
+      const response = await fetch(`/api/inventory/purchase-orders/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) throw new Error('Failed to delete')
+      toast.success('Purchase order cancelled')
+      fetchOrders()
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to cancel purchase order')
+    }
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Purchase Orders</h1>
-        <Link
-          href="/admin/inventory/purchase-orders/create"
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Purchase Orders</h1>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
-          <Plus size={20} /> Create PO
-        </Link>
+          <Plus size={20} />
+          New Purchase Order
+        </button>
       </div>
 
-      {error && <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 p-4 rounded"><p className="text-red-700 dark:text-red-400">{error}</p></div>}
+      {/* Filters */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search PO number..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setPage(1)
+              }}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-lg border p-6 mb-6">
-        <div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-700 rounded-lg px-4 py-2">
-          <Search size={20} className="text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by PO number or supplier..."
-            value={searchTerm}
+          <select
+            value={status}
             onChange={(e) => {
-              setSearchTerm(e.target.value)
+              setStatus(e.target.value)
               setPage(1)
             }}
-            className="flex-1 bg-transparent outline-none text-sm"
-          />
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          >
+            <option value="">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="partially_received">Partially Received</option>
+            <option value="received">Received</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
         </div>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border p-12 text-center text-gray-600">No purchase orders found</div>
-      ) : (
-        <>
-          <div className="bg-white dark:bg-slate-800 rounded-lg border overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b">
+      {/* Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                  PO Number
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                  Supplier
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                  Order Date
+                </th>
+                <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                  Amount
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {loading ? (
                 <tr>
-                  <th className="px-6 py-3 text-left font-semibold">PO Number</th>
-                  <th className="px-6 py-3 text-left font-semibold">Supplier</th>
-                  <th className="px-6 py-3 text-left font-semibold">Amount</th>
-                  <th className="px-6 py-3 text-left font-semibold">Status</th>
-                  <th className="px-6 py-3 text-left font-semibold">Date</th>
-                  <th className="px-6 py-3 text-center font-semibold">Actions</th>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    Loading...
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-                {paginated.map((po) => (
-                  <tr key={po.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <td className="px-6 py-4 font-medium">{po.po_number}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{po.supplier_name || '-'}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">₹{po.total_amount || 0}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        po.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        po.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {po.status || 'pending'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{new Date(po.created_at).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-center flex gap-3 justify-center">
-                      <Link href={`/admin/inventory/purchase-orders/${po.id}`} className="text-blue-600"><Eye size={18} /></Link>
-                      <Link href={`/admin/inventory/purchase-orders/${po.id}/edit`} className="text-amber-600"><Edit size={18} /></Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ) : orders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    No purchase orders found
+                  </td>
+                </tr>
+              ) : (
+                orders.map((order) => {
+                  const StatusIcon = statusIcons[order.status]
+                  return (
+                    <tr key={order.uuid} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                        {order.po_number}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                        {order.supplier?.company_name || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                        {new Date(order.order_date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-right text-gray-900 dark:text-white">
+                        ₹{order.total_amount.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border ${statusColors[order.status]}`}>
+                          <StatusIcon size={14} />
+                          {order.status.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-right space-x-2">
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        {order.status === 'draft' && (
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="text-green-600 hover:text-green-800"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                        )}
+                        {order.status === 'draft' && (
+                          <button
+                            onClick={() => handleDelete(order.uuid)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 px-6 py-4 flex items-center justify-between">
+          <div className="text-sm text-gray-700 dark:text-gray-300">
+            Page {page} of {totalPages}
           </div>
-          <div className="mt-6 flex justify-between items-center">
-            <p className="text-sm text-gray-600">Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, filtered.length)} of {filtered.length}</p>
-            <div className="flex gap-2">
-              <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50 text-sm">Previous</button>
-              <span className="px-4 py-2 text-sm text-gray-600">Page {page} of {totalPages}</span>
-              <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-4 py-2 bg-primary-600 text-white rounded disabled:opacity-50 text-sm">Next</button>
-            </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+              className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   )
 }

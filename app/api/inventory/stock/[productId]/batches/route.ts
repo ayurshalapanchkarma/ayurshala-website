@@ -6,12 +6,12 @@ export async function GET(
   { params }: { params: { productId: string } }
 ) {
   try {
-    const stock = await StockService.getProductStock(params.productId)
-    return NextResponse.json({ stock })
+    const batches = await StockService.getProductBatches(params.productId)
+    return NextResponse.json({ batches })
   } catch (error) {
-    console.error('GET /api/inventory/stock/[productId] error:', error)
+    console.error('GET /api/inventory/stock/[productId]/batches error:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch product stock' },
+      { error: 'Failed to fetch product batches' },
       { status: 500 }
     )
   }
