@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { CategoryService } from '@/lib/inventory/category-service-v2'
+import { ManufacturerService } from '@/lib/inventory/manufacturer-service-v2'
 import { ValidationError } from '@/lib/inventory/validators'
 
 export const dynamic = 'force-dynamic'
@@ -9,12 +9,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const category = await CategoryService.getCategoryById(params.id)
-    return NextResponse.json(category)
+    const mfr = await ManufacturerService.getManufacturerById(params.id)
+    return NextResponse.json(mfr)
   } catch (error: any) {
-    console.error('Error fetching category:', error)
+    console.error('Error fetching manufacturer:', error)
     return NextResponse.json(
-      { error: error.message || 'Category not found' },
+      { error: error.message || 'Manufacturer not found' },
       { status: 404 }
     )
   }
@@ -26,7 +26,7 @@ export async function PUT(
 ) {
   try {
     const input = await request.json()
-    const result = await CategoryService.updateCategory(params.id, input)
+    const result = await ManufacturerService.updateManufacturer(params.id, input)
     return NextResponse.json(result)
   } catch (error: any) {
     if (error instanceof ValidationError) {
@@ -35,9 +35,9 @@ export async function PUT(
         { status: 400 }
       )
     }
-    console.error('Error updating category:', error)
+    console.error('Error updating manufacturer:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to update category' },
+      { error: error.message || 'Failed to update manufacturer' },
       { status: 500 }
     )
   }
@@ -48,12 +48,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await CategoryService.deleteCategory(params.id)
+    await ManufacturerService.deleteManufacturer(params.id)
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('Error deleting category:', error)
+    console.error('Error deleting manufacturer:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to delete category' },
+      { error: error.message || 'Failed to delete manufacturer' },
       { status: 500 }
     )
   }

@@ -1,39 +1,60 @@
-import { NextResponse } from 'next/server'
-import { ProductService } from '@/lib/inventory/product.service'
-import { handleApiError, successResponse, parseBody } from '@/lib/inventory/api-helper'
+import { NextRequest, NextResponse } from 'next/server'
+import { ProductService } from '@/lib/inventory/product-service-v2'
+import { ValidationError } from '@/lib/inventory/validators'
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export const dynamic = 'force-dynamic'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { id } = await params
-    const product = await ProductService.getProductById(id)
-    const suppliers = await ProductService.getProductSuppliers(id)
-
-    return successResponse({
-      ...product,
-      suppliers,
-    })
-  } catch (error) {
-    return handleApiError(error)
+    const product = await ProductService.getProductById(params.id)
+    return NextResponse.json(product)
+  } catch (error: any) {
+    console.error('Error fetching product:', error)
+    return NextResponse.json(
+      { error: error.message || 'Product not found' },
+      { status: 404 }
+    )
   }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { id } = await params
-    const body = await parseBody(request)
-    const product = await ProductService.updateProduct(id, body as any)
-    return successResponse(product)
-  } catch (error) {
-    return handleApiError(error)
+    const input = await request.json()
+    const result = await ProductService.updateProduct(params.id, input)
+    return NextResponse.json(result)
+  } catch (error: any) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      )
+    }
+    console.error('Error updating product:', error)
+    return NextResponse.json(
+      { error: error.message || 'Failed to update product' },
+      { status: 500 }
+    )
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { id } = await params
-    await ProductService.deleteProduct(id)
-    return successResponse({ success: true })
-  } catch (error) {
-    return handleApiError(error)
+    await ProductService.deleteProduct(params.id)
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('Error deleting product:', error)
+    return NextResponse.json(
+      { error: error.message || 'Failed to delete product' },
+      { status: 500 }
+    )
   }
 }

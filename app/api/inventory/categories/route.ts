@@ -1,28 +1,48 @@
-import { NextResponse } from 'next/server'
-import { CategoryService } from '@/lib/inventory/category.service'
-import { handleApiError, successResponse, parseBody } from '@/lib/inventory/api-helper'
+import { NextRequest, NextResponse } from 'next/server'
+import { CategoryService } from '@/lib/inventory/category-service-v2'
+import { ValidationError } from '@/lib/inventory/validators'
 
-export async function GET() {
+export const dynamic = 'force-dynamic'
+
+export async function GET(request: NextRequest) {
   try {
-    console.log('[API] GET /api/inventory/categories')
-    const categories = await CategoryService.getCategories()
-    console.log('[API] GET /api/inventory/categories - success, count:', categories.length)
-    return successResponse(categories)
+    const searchParams = request.nextUrl.searchParams
+    const options = {
+      search: searchParams.get('search') || '',
+      page: parseInt(searchParams.get('page') || '1'),
+      pageSize: parseInt(searchParams.get('pageSize') || '10'),
+      sortBy: (searchParams.get('sortBy') || 'display_order') as any,
+      sortOrder: (searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc',
+      includeDeleted: searchParams.get('includeDeleted') === 'true',
+    }
+
+    const result = await CategoryService.getCategories(options)
+    return NextResponse.json(result)
   } catch (error) {
-    console.error('[API] GET /api/inventory/categories - error:', error)
-    return handleApiError(error)
+    console.error('Error fetching categories:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch categories' },
+      { status: 500 }
+    )
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await parseBody(request)
-    console.log('[API] POST /api/inventory/categories - body:', body)
-    const category = await CategoryService.createCategory(body as any)
-    console.log('[API] POST /api/inventory/categories - created:', category.id)
-    return successResponse(category, 201)
-  } catch (error) {
-    console.error('[API] POST /api/inventory/categories - error:', error)
-    return handleApiError(error)
+    const input = await request.json()
+    const result = await CategoryService.createCategory(input)
+    return NextResponse.json(result, { status: 201 })
+  } catch (error: any) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      )
+    }
+    console.error('Error creating category:', error)
+    return NextResponse.json(
+      { error: error.message || 'Failed to create category' },
+      { status: 500 }
+    )
   }
 }

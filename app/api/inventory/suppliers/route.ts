@@ -1,28 +1,48 @@
-import { NextResponse } from 'next/server'
-import { SupplierService } from '@/lib/inventory/supplier.service'
-import { handleApiError, successResponse, parseBody } from '@/lib/inventory/api-helper'
+import { NextRequest, NextResponse } from 'next/server'
+import { SupplierService } from '@/lib/inventory/supplier-service-v2'
+import { ValidationError } from '@/lib/inventory/validators'
 
-export async function GET(request: Request) {
+export const dynamic = 'force-dynamic'
+
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const activeOnly = searchParams.get('active_only') === 'true'
+    const searchParams = request.nextUrl.searchParams
+    const options = {
+      search: searchParams.get('search') || '',
+      page: parseInt(searchParams.get('page') || '1'),
+      pageSize: parseInt(searchParams.get('pageSize') || '10'),
+      sortBy: (searchParams.get('sortBy') || 'company_name') as any,
+      sortOrder: (searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc',
+      includeDeleted: searchParams.get('includeDeleted') === 'true',
+    }
 
-    const suppliers = activeOnly
-      ? await SupplierService.getActiveSuppliers()
-      : await SupplierService.getSuppliers()
-
-    return successResponse(suppliers)
+    const result = await SupplierService.getSuppliers(options)
+    return NextResponse.json(result)
   } catch (error) {
-    return handleApiError(error)
+    console.error('Error fetching suppliers:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch suppliers' },
+      { status: 500 }
+    )
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await parseBody(request)
-    const supplier = await SupplierService.createSupplier(body as any)
-    return successResponse(supplier, 201)
-  } catch (error) {
-    return handleApiError(error)
+    const input = await request.json()
+    const result = await SupplierService.createSupplier(input)
+    return NextResponse.json(result, { status: 201 })
+  } catch (error: any) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      )
+    }
+    console.error('Error creating supplier:', error)
+    return NextResponse.json(
+      { error: error.message || 'Failed to create supplier' },
+      { status: 500 }
+    )
   }
 }
