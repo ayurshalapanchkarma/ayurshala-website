@@ -1,57 +1,136 @@
-# Clinical Core EMR — Current Status (Sprint 2)
+# Clinical Core EMR — Status & Progress
 
-**As of**: Sunday, 2026-07-05  
-**Overall Status**: 🚀 Two Sprints Developed, Code Complete, Ready for Testing  
+**Last Updated**: 2026-07-05 00:33 UTC  
+**Overall Status**: Two sprints coded, build passing, runtime verification pending
 
 ---
 
-## Sprint Progress
+## Sprint Status Summary
 
-### Sprint 1: Patient Visit ✅ CODE COMPLETE
-**Status**: Code complete, build passing, ready for runtime verification  
-**Tag**: `clinical-core-sprint1-code` (stable checkpoint)  
+| Sprint | Feature | Code | Build | Runtime | Sign-Off | Frozen |
+|--------|---------|------|-------|---------|----------|--------|
+| 1 | Patient Visit | ✅ | ✅ | ⏳ | ⏳ | ⏳ |
+| 2 | Consultation & SOAP | ✅ | ✅ | ⏳ | ⏳ | ⏳ |
+| 3 | Ayurvedic Assessment | ⏳ | — | — | — | — |
+| 4 | Diagnosis & Prescription | ⏳ | — | — | — | — |
+| 5 | Panchakarma & Therapy | ⏳ | — | — | — | — |
+| 6 | Follow-up & Clinical Timeline | ⏳ | — | — | — | — |
 
-**What It Does**:
-- Patient check-in workflow
-- Vitals recording (height, weight, temp, BP, HR, RR, SpO2, and BMI auto-calc)
-- Doctor queue with patient waiting times
-- Visit status state machine (CHECKED_IN → IN_CONSULTATION → PRESCRIPTION_READY → COMPLETED)
-- Timeline event logging
+---
 
-**Files**:
-- `migrations/sprint1_patient_visit.sql` — Database (180 lines)
-- `lib/emr/visit.service.ts` — Backend (300+ lines)
-- `app/api/emr/visits/*.ts` — 4 API route files (7 endpoints)
-- `app/reception/checkin/page.tsx` — Check-in UI (150+ lines)
-- `app/reception/vitals/[visitId]/page.tsx` — Vitals UI (180+ lines)
-- `app/doctor/queue/page.tsx` — Queue dashboard (180+ lines)
-- `app/doctor/visit/[visitId]/page.tsx` — Visit details (200+ lines)
+## Sprint 1: Patient Visit
 
-### Sprint 2: Consultation & SOAP Notes ✅ CODE COMPLETE
-**Status**: Code complete, build passing, ready for runtime verification  
-**Tag**: `clinical-core-sprint2-code` (about to be created)  
+**Code Status**: ✅ Complete (180 lines migration, 300+ backend, 200+ API, 750+ frontend)  
+**Build Status**: ✅ Passing  
+**Runtime Status**: ⏳ Pending verification
 
-**What It Does**:
+**Core Functionality**:
+- Patient check-in with chief complaint
+- Vitals recording (height, weight, temperature, BP, HR, RR, SpO2, BMI auto-calc)
+- Doctor queue with real-time status and wait times
+- Visit status state machine (CHECKED_IN → IN_CONSULTATION → PRESCRIPTION_READY → THERAPY_ASSIGNED → COMPLETED, any → CANCELLED)
+- Timeline event logging (automatic: CHECK_IN, VITALS_RECORDED, status changes)
+
+**Critical Requirements** (must verify):
+- [ ] UNIQUE(visit_number, visit_date) prevents duplicates
+- [ ] Concurrent check-ins get sequential visit numbers
+- [ ] Visit number resets daily (VIS-YYYYMMDD-NNNN)
+- [ ] BMI calculated and persisted
+- [ ] Status transitions enforced (no backward moves)
+- [ ] Timeline events logged exactly once per action
+- [ ] Cancelled bookings handled (reject or create walk-in)
+
+---
+
+## Sprint 2: Consultation & SOAP Notes
+
+**Code Status**: ✅ Complete (140 lines migration, 300+ backend, 140 API, 470+ frontend)  
+**Build Status**: ✅ Passing  
+**Runtime Status**: ⏳ Pending verification
+
+**Core Functionality**:
 - Doctor captures SOAP notes (Subjective, Objective, Assessment, Plan)
-- Clinical examination recording
-- Additional notes for flags/concerns
+- Clinical examination findings
+- Additional flags/concerns notes
 - Save as draft (repeatable)
-- Finalize consultation (immutable after)
-- Timeline integration (CONSULTATION_COMPLETED event)
+- Finalize consultation (immutable state transition)
+- Timeline integration (CONSULTATION_COMPLETED event on finalization)
 
-**Files**:
-- `migrations/sprint2_consultation_soap.sql` — Database (140 lines)
-- `lib/emr/consultation.service.ts` — Backend (300+ lines)
-- `app/api/emr/visits/[visitId]/consultation/route.ts` — API (140 lines)
-- `app/doctor/consultation/[visitId]/page.tsx` — SOAP form (280+ lines)
-- `app/doctor/consultations/page.tsx` — List consultations (190+ lines)
+**Critical Requirements** (must verify):
+- [ ] UNIQUE(visit_uuid) constraint prevents multiple consultations per visit
+- [ ] Two simultaneous browser tabs creating consultation → only one succeeds
+- [ ] Save Draft is idempotent (multiple saves, one record)
+- [ ] Finalize is irreversible (API rejects edits after FINALIZED)
+- [ ] Timeline events written exactly once on finalization
+- [ ] Frontend blocks edit UI when finalized
+- [ ] API endpoint rejects updates to finalized consultation
+- [ ] Deleting visit cascades and orphans consultation safely (FK ON DELETE CASCADE)
+- [ ] Doctor ownership enforced (RLS + service layer)
+- [ ] Admin can override and edit finalized (if policy allows)
+
+---
+
+## Runtime Verification Roadmap
+
+### Before Sprint 1 Sign-Off
+
+**Database Level**:
+1. Check visit number uniqueness and daily reset
+   ```sql
+   SELECT visit_date, visit_number, COUNT(*) FROM emr_visit 
+   GROUP BY visit_date, visit_number HAVING COUNT(*) > 1;
+   -- Expected: 0 rows
+   ```
+
+2. Verify concurrent visit number generation (5 simultaneous check-ins)
+
+3. Check BMI persistence matches calculation
+
+4. Verify status transition enforcement (no backwards moves)
+
+5. Verify timeline events are exactly once per action
+
+**API Level**:
+6. Create visit, verify visit_number returned
+7. Record vitals, verify BMI auto-calculated
+8. Update status, verify transitions valid
+9. Get timeline, verify events match
+
+**UI Level**:
+10. Load reception check-in, create visit, verify redirect
+11. Load vitals form, enter data, verify BMI displays
+12. Load doctor queue, verify visits with tokens
+13. Load visit details, verify vitals and timeline
+
+### Before Sprint 2 Sign-Off
+
+**Database Level**:
+1. Verify UNIQUE(visit_uuid) prevents multiple consultations
+2. Test concurrent creation (2 tabs simultaneously)
+3. Verify idempotent Save Draft (5 PUTs, 1 record)
+4. Verify immutable Finalization (UPDATE fails on FINALIZED)
+5. Verify timeline event written exactly once
+6. Verify cascading delete (delete visit → consultation orphaned safely)
+
+**API Level**:
+7. Create consultation, verify DRAFT status
+8. Finalize consultation, verify FINALIZED status
+9. Attempt update after finalize → verify error
+10. Attempt second consultation for same visit → verify error
+
+**UI Level**:
+11. Load consultation form, verify empty
+12. Save as Draft, reload, verify persists
+13. Finalize, verify redirect
+14. Reopen consultation, verify disabled
+15. List consultations, verify status badges
 
 ---
 
 ## Build Status
 
 ```
-✅ npm run build: PASSING
+✅ npm run build: PASSING (9.5s)
 ✅ TypeScript: 0 errors
 ✅ All imports: RESOLVING
 ✅ Routes: GENERATED
@@ -63,283 +142,152 @@
 
 ---
 
-## Roadmap: Six Sprints Total
+## Roadmap: Six Sprints
 
-| Sprint | Module | Status | Lines | Anchor |
-|--------|--------|--------|-------|--------|
-| 1 | Patient Visit | ✅ Code Complete | 1000+ | emr_visit.uuid |
-| 2 | Consultation & SOAP | ✅ Code Complete | 1050+ | emr_visit.uuid |
-| 3 | Ayurvedic Assessment | ⏳ Not Started | — | emr_visit.uuid |
-| 4 | Diagnosis & Prescription | ⏳ Not Started | — | emr_visit.uuid |
-| 5 | Panchakarma Therapy | ⏳ Not Started | — | emr_visit.uuid |
-| 6 | Follow-up & Timeline | ⏳ Not Started | — | emr_visit.uuid |
+| Sprint | Feature | Status | Scope |
+|--------|---------|--------|-------|
+| 1 | Patient Visit | ✅ Code | Check-in, vitals, queue, status |
+| 2 | Consultation & SOAP | ✅ Code | SOAP notes, clinical exam, finalization |
+| 3 | Ayurvedic Assessment | ⏳ Next | Prakriti, Vikriti, Nadi, Doshas, Agni, Ojas |
+| 4 | Diagnosis & Prescription | ⏳ Later | Diagnosis records, prescription generation |
+| 5 | Panchakarma & Therapy | ⏳ Later | Treatment plans, therapy sessions |
+| 6 | Follow-up & Timeline | ⏳ Later | Follow-up scheduling, complete timeline |
 
-**All sprints link to single Visit anchor** — No duplicate clinical data across system
-
----
-
-## What's Ready to Deploy
-
-### Code ✅
-- All TypeScript compiles without errors
-- All API endpoints tested in development
-- All UI pages built and responsive
-- Production build succeeds
-
-### Database ✅
-- Sprint 1 migration ready (idempotent)
-- Sprint 2 migration ready (idempotent)
-- RLS policies defined
-- Triggers and functions ready
-
-### Deployment Pipeline ✅
-- Vercel auto-deploy configured
-- Health check endpoint ready
-- Rollback procedures documented
-- Database migration strategy documented
+**Architecture**: All link to `emr_visit.uuid` anchor. No duplicate clinical data.
 
 ---
 
-## What's NOT Done Yet
+## Next Sprint: Ayurvedic Assessment (Sprint 3)
 
-### Runtime Verification ⏳
-- Database migrations not yet deployed to Supabase
-- Verification tests not yet run
-- UI flows not yet tested in browser
-- API endpoints not yet verified with real database
+**Focus**: Ayurvedic clinical assessment data only.
 
-### Future Sprints ⏳
-- Sprint 3 (Ayurvedic Assessment)
-- Sprint 4 (Diagnosis & Prescription)
-- Sprint 5 (Panchakarma Therapy)
-- Sprint 6 (Follow-up & Timeline)
+**Scope (Locked)**:
+- Prakriti (constitution type: Vata, Pitta, Kapha, combinations)
+- Vikriti (current imbalance)
+- Nadi Pariksha (pulse assessment)
+- Dashavidha Pariksha (10 diagnostic methods)
+- Ashtavidha Pariksha (8 diagnostic examinations)
+- Agni status (digestive fire assessment)
+- Ojas level (vital essence assessment)
+- Satva level (mental clarity assessment)
+- General observations/notes
 
-### Full System Testing ⏳
-- Integration tests across all 6 sprints
-- Load testing
-- Security audit
-- User acceptance testing (UAT)
+**Out of Scope** (defer to Sprint 4):
+- Diagnosis/condition names
+- Prescription generation
+- Treatment planning
 
----
-
-## How to Proceed
-
-### Immediate (Next < 1 hour)
-
-**Option A: Run Runtime Verification Now**
-1. Deploy Sprint 1 migration to Supabase
-2. Deploy Sprint 2 migration to Supabase
-3. Run 16 verification tests (8 per sprint)
-4. Document results
-5. Tag both sprints
-6. Deploy to production via Vercel
-
-**Option B: Continue Coding (Defer Testing)**
-1. Begin Sprint 3 (Ayurvedic Assessment)
-2. Build more features while code is fresh
-3. Run all verification tests together later
-4. Risk: If Sprint 1-2 have bugs, Sprint 3 will be harder to debug
-
-**Recommended**: Option A (verify before adding Sprint 3)
+**Implementation Plan**:
+1. Create `emr_ayurvedic_assessment` table (FK to visit)
+2. Build `AyurvedicAssessmentService` (4 methods)
+3. Add 3 API endpoints (create, get, update)
+4. Build 2 UI pages (assessment form, list)
+5. Build: ~3-4 hours, then verify
 
 ---
 
-## Documentation Overview
+## Files to Maintain
 
-### Quick Start
-- `START_HERE_CLINICAL_CORE.md` — 5-minute orientation
+**Single Source of Truth**:
+- `CLINICAL_CORE_STATUS.md` — This file (updated after each sprint)
 
-### Architecture & Planning
-- `AYURSHALA_ROADMAP_COMPLETE.md` — All 6 sprints overview
-- `CLINICAL_CORE_FRAMEWORK.md` — Discipline and rules
+**Reference Guides**:
+- `START_HERE_CLINICAL_CORE.md` — Quick orientation
 - `DEPLOYMENT_PIPELINE.md` — How to deploy safely
+- `CLINICAL_CORE_FRAMEWORK.md` — Discipline and rules
 
-### Sprint 1 Details
-- `SPRINT1_PATIENT_VISIT.md` — Full implementation guide
-- `SPRINT1_SAFETY_DECISIONS.md` — Edge cases and concurrency
-- `SPRINT1_FINAL_VERIFICATION.md` — 7 verification tests
-- `SPRINT1_LOCK.md` — Acceptance criteria
-
-### Sprint 2 Details
-- `SPRINT2_CONSULTATION_SOAP.md` — Full specification
-- `SPRINT2_CODE_COMPLETE.md` — Implementation details
-- `SPRINT2_READY_FOR_VERIFICATION.md` — Quick orientation
-- `SPRINT2_SESSION_SUMMARY.md` — What was built this session
-
-### Reference
-- `README_CLINICAL_CORE_STATUS.md` — Status recap
-- `CLINICAL_CORE_STATUS.md` — This file
+**Implementation Details**:
+- Each sprint's migration and code files
+- See `lib/emr/` for services
+- See `app/api/emr/` for endpoints
+- See `app/doctor/` and `app/reception/` for UI
 
 ---
 
-## Key Decisions Locked (Cannot Change)
+## Key Architecture
 
-✅ **Single Visit Anchor**: All 6 sprints link to emr_visit.uuid  
-✅ **One Consultation Per Visit**: No multi-consultation design  
-✅ **Immutable Finalization**: Once finalized, cannot edit  
-✅ **Doctor Ownership**: Only creator can edit  
-✅ **RLS Security Model**: Same across all sprints  
-✅ **Timeline Integration**: Auto-log events to emr_visit_timeline  
-✅ **No Duplicate Data**: Always reference, never copy  
-
----
-
-## Git Tags
-
-| Tag | Description | Status |
-|-----|-------------|--------|
-| `clinical-core-sprint1-code` | Sprint 1 checkpoint (stable) | ✅ Created |
-| `clinical-core-sprint2-code` | Sprint 2 checkpoint (about to create) | ⏳ Pending |
-| `clinical-core-sprint1` | Sprint 1 runtime verified + signed off | ⏳ After tests |
-| `clinical-core-sprint2` | Sprint 2 runtime verified + signed off | ⏳ After tests |
-
----
-
-## Code Statistics
-
-| Component | Lines | Status |
-|-----------|-------|--------|
-| Sprint 1 Migrations | 180 | ✅ Complete |
-| Sprint 1 Backend | 300+ | ✅ Complete |
-| Sprint 1 API | 200+ | ✅ Complete |
-| Sprint 1 Frontend | 750+ | ✅ Complete |
-| Sprint 2 Migrations | 140 | ✅ Complete |
-| Sprint 2 Backend | 300+ | ✅ Complete |
-| Sprint 2 API | 140 | ✅ Complete |
-| Sprint 2 Frontend | 470+ | ✅ Complete |
-| **Total** | **~2500+** | ✅ Complete |
-
----
-
-## Deployment Status
-
-### Code ✅
-- Ready to deploy via Vercel
-- Build passing
-- No TypeScript errors
-
-### Database ✅
-- Migrations idempotent
-- Ready to execute in Supabase
-- RLS policies in place
-
-### Testing ⏳
-- Unit tests (code-level): Ready
-- Integration tests (API + DB): Pending runtime
-- UI tests (browser): Pending runtime
-- End-to-end tests: Pending full system
-
-### Production ⏳
-- Code: Ready
-- Database: Ready to apply
-- Testing: Required before production
-- Monitoring: Health check endpoint ready
-
----
-
-## Timeline Estimate
-
-### This Week (Already Done)
-- ✅ Sprint 1: Code complete
-- ✅ Sprint 2: Code complete
-- ⏳ Sprint 1: Runtime verification (< 1 hour)
-- ⏳ Sprint 2: Runtime verification (< 1 hour)
-
-### Next Week (Planned)
-- ⏳ Sign-off and tag both sprints
-- ⏳ Deploy to production
-- ⏳ Sprint 3: Ayurvedic Assessment (code, < 3 hours)
-- ⏳ Sprint 3: Runtime verification (< 1 hour)
-
-### Weeks 2-3
-- ⏳ Sprint 4: Diagnosis & Prescription
-- ⏳ Sprint 5: Panchakarma Therapy
-- ⏳ Sprint 6: Follow-up & Timeline
-
-### Week 4
-- ⏳ Full system integration testing
-- ⏳ UAT with Dr. Sanjay
-- ⏳ Production deployment
-
----
-
-## Critical Path (Next Action)
-
-### THIS TASK (CHOOSE ONE):
-
-**A) Run Verification Tests Now** ← RECOMMENDED
-```bash
-# 1. Deploy Sprint 1 migration
-# 2. Deploy Sprint 2 migration
-# 3. Run 16 tests (8 per sprint)
-# 4. Document results
-# 5. Tag both sprints
-# Estimated time: 1-2 hours
+```
+Patient
+    ↓
+Booking
+    ↓
+Visit (anchor point for all clinical data)
+    ├── Vitals (Sprint 1)
+    ├── Consultation & SOAP (Sprint 2)
+    ├── Ayurvedic Assessment (Sprint 3, incoming)
+    ├── Diagnosis (Sprint 4)
+    ├── Prescription (Sprint 4)
+    ├── Panchakarma Plan (Sprint 5)
+    ├── Therapy Sessions (Sprint 5)
+    └── Follow-ups (Sprint 6)
 ```
 
-**B) Continue to Sprint 3**
-```bash
-# 1. Create Sprint 3 spec
-# 2. Code Ayurvedic Assessment
-# 3. Build and commit
-# 4. Later: Run all tests together
-# Risk: Harder to debug if Sprint 1-2 have bugs
-# Estimated time: 3-4 hours for Sprint 3
+**No duplicate data**: Each clinical record links to Visit via foreign key.
+
+---
+
+## Constraints & Discipline
+
+✅ **One record per type per visit**: e.g., one consultation, one assessment, one diagnosis  
+✅ **Immutable after finalization**: Status FINALIZED blocks edits  
+✅ **Doctor ownership**: Only creator can edit (RLS + service layer)  
+✅ **Timeline integration**: Important actions logged automatically  
+✅ **RLS enforced**: Doctor/reception/admin access control  
+✅ **Backward compatible**: Each sprint frozen after sign-off  
+
+---
+
+## Code Status
+
+**Written**: 2500+ lines (Sprints 1-2)  
+**Build**: ✅ Passing (0 errors, 9.5s)  
+**Runtime**: ⏳ Pending verification  
+**Production**: ⏳ After tests pass  
+
+**Next Action**: Verify Sprints 1-2, then begin Sprint 3
+
+---
+
+## Verification Checklist (Before Sign-Off)
+
+Each sprint must pass before freezing:
+
+**Sprint 1 (13 checks)**:
+- [ ] Daily visit number reset works
+- [ ] Concurrent check-ins get unique numbers
+- [ ] BMI auto-calculated correctly
+- [ ] Status transitions enforced
+- [ ] Timeline events (exactly one per action)
+- [ ] API create returns visit_number
+- [ ] API vitals calculates BMI
+- [ ] UI check-in → vitals flow works
+- [ ] UI queue displays correctly
+- [ ] UI visit details shows data
+- [ ] Cannot move backward in status
+- [ ] Cancelled booking handled
+- [ ] RLS blocks cross-doctor access
+
+**Sprint 2 (10 checks)**:
+- [ ] UNIQUE(visit_uuid) enforced
+- [ ] Concurrent creation (only 1 succeeds)
+- [ ] Save Draft is idempotent
+- [ ] Finalize is irreversible
+- [ ] Timeline event logged once
+- [ ] API rejects edits to finalized
+- [ ] UI disables form when finalized
+- [ ] Cascading delete works
+- [ ] RLS enforces doctor ownership
+- [ ] List page filters work
+
+---
+
+## Commit History
+
+```
+✅ clinical-core-sprint1-code (tag: stable checkpoint)
+✅ Sprint 2 implementation + documentation
+✅ Status update (this commit)
 ```
 
-### RECOMMENDATION
-Run verification tests first (Option A). It's faster, safer, and gives confidence before building Sprint 3.
-
----
-
-## Summary
-
-| Aspect | Status | Details |
-|--------|--------|---------|
-| **Code** | ✅ Complete | 2500+ lines, zero errors |
-| **Build** | ✅ Passing | 9.5s, production-ready |
-| **Architecture** | ✅ Locked | Single anchor, 6-sprint roadmap |
-| **Documentation** | ✅ Complete | 15+ guides, comprehensive |
-| **Database** | ✅ Ready | 2 migrations, idempotent |
-| **Deployment** | ✅ Ready | Vercel auto-deploy configured |
-| **Testing** | ⏳ Next | Runtime verification required |
-| **Production** | ⏳ Ready | After tests pass |
-
----
-
-## Next Steps
-
-1. **Verify Sprint 1** (< 1 hour)
-   - Deploy migration
-   - Run 7 tests
-   - Fix any bugs
-   - Sign-off
-
-2. **Verify Sprint 2** (< 1 hour)
-   - Deploy migration
-   - Run 8 tests
-   - Fix any bugs
-   - Sign-off
-
-3. **Tag & Freeze** (< 10 minutes)
-   - Tag both sprints
-   - Push to GitHub
-   - Mark frozen (no changes except bug fixes)
-
-4. **Deploy to Production** (< 10 minutes)
-   - Vercel auto-deploys on next push
-   - Health check passes
-   - Dr. Sanjay can use the system
-
-5. **Begin Sprint 3** (3-4 hours)
-   - Build Ayurvedic Assessment
-   - Link to Visit + Consultation anchor
-   - Code complete, ready for tests
-
----
-
-**Status**: 🟢 Ready for runtime verification  
-**Build**: ✅ Passing  
-**Next**: Deploy migrations and run tests  
-**Timeline**: 1-2 hours to verify both sprints, then production ready  
+Next: Verify → Sign-off → Tag → Begin Sprint 3  
 
