@@ -549,23 +549,29 @@ export class StockService {
     totalInventoryValue: number
   }> {
     try {
-      const [productsRes, batchesRes] = await Promise.all([
+      const [productsRes, batchesRes, currentStockRes] = await Promise.all([
         getSupabase()
           .from('inv_products')
-          .select('uuid, is_active')
+          .select('uuid, is_active, reorder_level')
           .eq('is_deleted', false),
         getSupabase()
           .from('inv_product_batches')
           .select('expiry_date, purchase_price, available_quantity, status')
           .eq('is_active', true)
-          .eq('status', 'good')
+          .eq('status', 'good'),
+        getSupabase()
+          .from('inv_stock_movements')
+          .select('product_uuid, after_stock')
+          .eq('is_active', true)
       ])
 
       if (productsRes.error) throw productsRes.error
       if (batchesRes.error) throw batchesRes.error
+      if (currentStockRes.error) throw currentStockRes.error
 
       const products = productsRes.data as any[]
       const batches = batchesRes.data as any[]
+      const movements = currentStockRes.data as any[]
 
       const today = new Date()
       const futureDate = new Date()
@@ -577,6 +583,22 @@ export class StockService {
         return expiry >= today && expiry <= futureDate
       }).length
 
+      // Calculate current stock per product from latest movements
+      const stockByProduct = new Map<string, number>()
+      movements.forEach(m => {
+        stockByProduct.set(m.product_uuid, m.after_stock || 0)
+      })
+
+      const lowStockCount = products.filter(p => {
+        const stock = stockByProduct.get(p.uuid) || 0
+        return stock > 0 && stock <= (p.reorder_level || 10)
+      }).length
+
+      const outOfStockCount = products.filter(p => {
+        const stock = stockByProduct.get(p.uuid) || 0
+        return stock === 0
+      }).length
+
       const totalInventoryValue = batches.reduce((sum, batch) => {
         return sum + (batch.purchase_price * batch.available_quantity)
       }, 0)
@@ -584,9 +606,9 @@ export class StockService {
       return {
         totalProducts: products.length,
         totalActiveProducts: products.filter(p => p.is_active).length,
-        lowStockCount: 0, // Will be calculated separately
+        lowStockCount,
         expiringCount,
-        outOfStockCount: 0, // Will be calculated separately
+        outOfStockCount,
         totalInventoryValue,
       }
     } catch (error) {
