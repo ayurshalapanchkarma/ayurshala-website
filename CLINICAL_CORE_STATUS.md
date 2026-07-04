@@ -7,14 +7,16 @@
 
 ## Sprint Status Summary
 
-| Sprint | Feature | Code | Build | Runtime | Sign-Off | Frozen |
-|--------|---------|------|-------|---------|----------|--------|
-| 1 | Patient Visit | ✅ | ✅ | ⏳ | ⏳ | ⏳ |
-| 2 | Consultation & SOAP | ✅ | ✅ | ⏳ | ⏳ | ⏳ |
-| 3 | Ayurvedic Assessment | ⏳ | — | — | — | — |
-| 4 | Diagnosis & Prescription | ⏳ | — | — | — | — |
-| 5 | Panchakarma & Therapy | ⏳ | — | — | — | — |
-| 6 | Follow-up & Clinical Timeline | ⏳ | — | — | — | — |
+| Sprint | Scope | Status |
+|--------|-------|--------|
+| 1 | Patient Visit & Vitals | ✅ Code complete |
+| 2 | Consultation & SOAP Notes | ✅ Code complete |
+| 3 | Ayurvedic Assessment | 📋 Planned |
+| 4 | Diagnosis & Prescription | 📋 Planned |
+| 5 | Panchakarma & Therapy | 📋 Planned |
+| 6 | Follow-up & Clinical Timeline | 📋 Planned |
+
+**Workflow**: Sprints 1-6 → Full runtime verification → Fix bugs → Production release
 
 ---
 
@@ -157,32 +159,27 @@
 
 ---
 
-## Next Sprint: Ayurvedic Assessment (Sprint 3)
+## Next Steps
 
-**Focus**: Ayurvedic clinical assessment data only.
+**Phase 1: Complete Implementation** (Ongoing)
+1. Finish Sprint 3 code (Ayurvedic Assessment)
+2. Finish Sprint 4 code (Diagnosis & Prescription)
+3. Finish Sprint 5 code (Panchakarma & Therapy)
+4. Finish Sprint 6 code (Follow-up & Timeline)
 
-**Scope (Locked)**:
-- Prakriti (constitution type: Vata, Pitta, Kapha, combinations)
-- Vikriti (current imbalance)
-- Nadi Pariksha (pulse assessment)
-- Dashavidha Pariksha (10 diagnostic methods)
-- Ashtavidha Pariksha (8 diagnostic examinations)
-- Agni status (digestive fire assessment)
-- Ojas level (vital essence assessment)
-- Satva level (mental clarity assessment)
-- General observations/notes
+**Phase 2: Runtime Verification** (After all sprints coded)
+1. Deploy all 6 migrations to Supabase
+2. Run verification tests (13 + 10 + 11 + X + X + X tests)
+3. Document results
+4. Fix any bugs found
 
-**Out of Scope** (defer to Sprint 4):
-- Diagnosis/condition names
-- Prescription generation
-- Treatment planning
+**Phase 3: Production Release**
+1. Tag: `git tag clinical-core-complete`
+2. Deploy to production via Vercel
+3. Health checks pass
+4. Dr. Sanjay can use full system
 
-**Implementation Plan**:
-1. Create `emr_ayurvedic_assessment` table (FK to visit)
-2. Build `AyurvedicAssessmentService` (4 methods)
-3. Add 3 API endpoints (create, get, update)
-4. Build 2 UI pages (assessment form, list)
-5. Build: ~3-4 hours, then verify
+**Key Principle**: Do not change Visit model. Implement improvements as additive changes only.
 
 ---
 
@@ -204,25 +201,25 @@
 
 ---
 
-## Key Architecture
+## Architecture (Locked)
 
 ```
 Patient
-    ↓
+   ↓
 Booking
-    ↓
-Visit (anchor point for all clinical data)
-    ├── Vitals (Sprint 1)
-    ├── Consultation & SOAP (Sprint 2)
-    ├── Ayurvedic Assessment (Sprint 3, incoming)
-    ├── Diagnosis (Sprint 4)
-    ├── Prescription (Sprint 4)
-    ├── Panchakarma Plan (Sprint 5)
-    ├── Therapy Sessions (Sprint 5)
-    └── Follow-ups (Sprint 6)
+   ↓
+Visit (single anchor for all clinical data)
+   ├── Vitals (Sprint 1) ✅
+   ├── Consultation & SOAP (Sprint 2) ✅
+   ├── Ayurvedic Assessment (Sprint 3)
+   ├── Diagnosis & Prescription (Sprint 4)
+   ├── Panchakarma & Therapy (Sprint 5)
+   └── Follow-up & Clinical Timeline (Sprint 6)
 ```
 
-**No duplicate data**: Each clinical record links to Visit via foreign key.
+**Design Principle**: All clinical records link to Visit via foreign key. No duplicate data across sprints.
+
+**Future Changes**: Implement as additive changes only. Do not rewrite Visit model.
 
 ---
 
@@ -237,57 +234,49 @@ Visit (anchor point for all clinical data)
 
 ---
 
-## Code Status
+## Implementation Status
 
-**Written**: 2500+ lines (Sprints 1-2)  
+**Sprints 1-2**: ✅ Code complete (2500+ lines)  
 **Build**: ✅ Passing (0 errors, 9.5s)  
-**Runtime**: ⏳ Pending verification  
-**Production**: ⏳ After tests pass  
+**Implementation**: ✅ Complete for Sprints 1-2, pending runtime verification before production  
+**Architecture**: ✅ Locked (Visit anchor, no duplicate clinical data)  
 
-**Next Action**: Verify Sprints 1-2, then begin Sprint 3
-
----
-
-## Verification Checklist (Before Sign-Off)
-
-Each sprint must pass before freezing:
-
-**Sprint 1 (13 checks)**:
-- [ ] Daily visit number reset works
-- [ ] Concurrent check-ins get unique numbers
-- [ ] BMI auto-calculated correctly
-- [ ] Status transitions enforced
-- [ ] Timeline events (exactly one per action)
-- [ ] API create returns visit_number
-- [ ] API vitals calculates BMI
-- [ ] UI check-in → vitals flow works
-- [ ] UI queue displays correctly
-- [ ] UI visit details shows data
-- [ ] Cannot move backward in status
-- [ ] Cancelled booking handled
-- [ ] RLS blocks cross-doctor access
-
-**Sprint 2 (10 checks)**:
-- [ ] UNIQUE(visit_uuid) enforced
-- [ ] Concurrent creation (only 1 succeeds)
-- [ ] Save Draft is idempotent
-- [ ] Finalize is irreversible
-- [ ] Timeline event logged once
-- [ ] API rejects edits to finalized
-- [ ] UI disables form when finalized
-- [ ] Cascading delete works
-- [ ] RLS enforces doctor ownership
-- [ ] List page filters work
+**Workflow**: Finish coding Sprints 3-6 → Full runtime verification → Fix bugs → Production release
 
 ---
 
-## Commit History
+## Runtime Verification Checklist (After All Sprints Coded)
 
-```
-✅ clinical-core-sprint1-code (tag: stable checkpoint)
-✅ Sprint 2 implementation + documentation
-✅ Status update (this commit)
-```
+Each sprint must pass before production release.
 
-Next: Verify → Sign-off → Tag → Begin Sprint 3  
+**Sprint 1 (13 checks)**: Database uniqueness, concurrency, BMI, status transitions, timeline, API, UI  
+**Sprint 2 (10 checks)**: Consultation uniqueness, concurrent creation, idempotency, immutability, timeline, API, UI  
+**Sprint 3 (11 checks)**: Assessment creation, idempotency, finalization, timeline, API, UI (same pattern as Sprint 2)  
+**Sprints 4-6**: Similar verification suites (TBD as sprints are coded)
+
+**Total Expected Tests**: ~60+ (13 + 10 + 11 + estimated 10-12 each for Sprints 4-6)
+
+**Fix Phase**: Any failing tests fixed immediately before production release.
+
+---
+
+## Files to Maintain Going Forward
+
+**Single Source of Truth**:
+- `CLINICAL_CORE_STATUS.md` — This file (update after each sprint)
+
+**Reference Guides**:
+- `START_HERE_CLINICAL_CORE.md` — Quick orientation
+- `DEPLOYMENT_PIPELINE.md` — How to deploy safely
+- `CLINICAL_CORE_FRAMEWORK.md` — Project discipline and rules
+
+**Implementation Code**:
+- Migrations in `migrations/sprint*.sql`
+- Services in `lib/emr/*.service.ts`
+- API routes in `app/api/emr/**`
+- UI pages in `app/doctor/**` and `app/reception/**`
+
+**Git History**: Tells the story of progress. Each commit documents what was built.
+
+Do NOT create new planning/status documents after each sprint. Update CLINICAL_CORE_STATUS.md instead.  
 
