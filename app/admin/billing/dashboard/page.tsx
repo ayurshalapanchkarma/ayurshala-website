@@ -58,8 +58,8 @@ export default function BillingDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Billing Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-300">Hospital billing & revenue management</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Clinic Billing Dashboard</h1>
+          <p className="text-gray-600 dark:text-gray-300">Ayurshala Panchakarma Centre - Revenue & Collections</p>
         </div>
 
         {/* Key Metrics */}

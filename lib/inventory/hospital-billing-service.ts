@@ -1,6 +1,7 @@
 /**
- * Hospital Billing Service — Phase 6
- * Handles hospital invoicing, patient ledger, and financial operations
+ * Clinic Billing Service — Phase 6
+ * Handles clinic invoicing, patient ledger, and financial operations
+ * Optimized for Ayurshala Panchakarma Centre (single-location clinic)
  */
 
 import { createClient } from '@supabase/supabase-js'
