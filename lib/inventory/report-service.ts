@@ -98,7 +98,7 @@ export class ReportService {
       let query = getSupabase()
         .from('inv_products')
         .select(`
-          product_code, product_name, reorder_level,
+          uuid, product_code, product_name, reorder_level,
           category:inv_categories(name),
           unit:inv_units(name)
         `)
@@ -112,52 +112,76 @@ export class ReportService {
       const { data: products, error } = await query.order('product_name')
       if (error) throw error
 
-      const report = await Promise.all(
-        (products as any[]).map(async (product) => {
-          // Get current stock
-          const { data: stockQty } = await getSupabase()
-            .rpc('fn_get_product_stock', { p_product_uuid: product.uuid })
+      // Fetch all batches in one query (bulk instead of per-product)
+      const productUuids = (products as any[]).map(p => p.uuid)
+      
+      const { data: allBatches, error: batchErr } = await getSupabase()
+        .from('inv_product_batches')
+        .select('product_uuid, purchase_price, available_quantity')
+        .in('product_uuid', productUuids)
+        .eq('status', 'good')
+        .eq('is_active', true)
+        .gt('available_quantity', 0)
 
-          // Get batch info for valuation
-          const { data: batches } = await getSupabase()
-            .from('inv_product_batches')
-            .select('purchase_price, available_quantity')
-            .eq('product_uuid', product.uuid)
-            .eq('status', 'good')
-            .eq('is_active', true)
-            .gt('available_quantity', 0)
+      if (batchErr) throw batchErr
 
-          const currentStock = stockQty ?? 0
-          const batchCount = (batches as any[])?.length ?? 0
-          
-          // Calculate weighted average purchase price
-          let totalValue = 0
-          let totalQty = 0
-          
-          if (batches && batches.length > 0) {
-            for (const batch of batches) {
-              totalValue += batch.purchase_price * batch.available_quantity
-              totalQty += batch.available_quantity
-            }
-          }
-          
-          const avgPurchasePrice = totalQty > 0 ? totalValue / totalQty : 0
-          const stockValue = currentStock * avgPurchasePrice
+      // Group batches by product for efficient lookup
+      const batchesByProduct = new Map<string, any[]>()
+      allBatches?.forEach(batch => {
+        if (!batchesByProduct.has(batch.product_uuid)) {
+          batchesByProduct.set(batch.product_uuid, [])
+        }
+        batchesByProduct.get(batch.product_uuid)!.push(batch)
+      })
 
-          return {
-            product_code: product.product_code,
-            product_name: product.product_name,
-            category: product.category?.name || '',
-            unit: product.unit?.name || '',
-            current_stock: currentStock,
-            reorder_level: product.reorder_level || 0,
-            purchase_price: avgPurchasePrice,
-            stock_value: stockValue,
-            batch_count: batchCount,
-            status: currentStock <= (product.reorder_level || 0) ? 'Low Stock' : 'Normal',
-          } as CurrentStockReportItem
+      // Fetch all stock movements for these products to get current stock
+      const { data: movements, error: moveErr } = await getSupabase()
+        .from('inv_stock_movements')
+        .select('product_uuid, after_stock')
+        .in('product_uuid', productUuids)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+
+      if (moveErr) throw moveErr
+
+      // Get latest stock per product
+      const stockByProduct = new Map<string, number>()
+      movements?.forEach(m => {
+        if (!stockByProduct.has(m.product_uuid)) {
+          stockByProduct.set(m.product_uuid, m.after_stock || 0)
+        }
+      })
+
+      const report = (products as any[]).map((product) => {
+        const currentStock = stockByProduct.get(product.uuid) ?? 0
+        const batches = batchesByProduct.get(product.uuid) ?? []
+        const batchCount = batches.length
+
+        // Calculate weighted average purchase price
+        let totalValue = 0
+        let totalQty = 0
+
+        batches.forEach(batch => {
+          totalValue += batch.purchase_price * batch.available_quantity
+          totalQty += batch.available_quantity
         })
-      )
+
+        const avgPurchasePrice = totalQty > 0 ? totalValue / totalQty : 0
+        const stockValue = currentStock * avgPurchasePrice
+
+        return {
+          product_code: product.product_code,
+          product_name: product.product_name,
+          category: product.category?.name || '',
+          unit: product.unit?.name || '',
+          current_stock: currentStock,
+          reorder_level: product.reorder_level || 0,
+          purchase_price: avgPurchasePrice,
+          stock_value: stockValue,
+          batch_count: batchCount,
+          status: currentStock <= (product.reorder_level || 0) ? 'Low Stock' : 'Normal',
+        } as CurrentStockReportItem
+      })
 
       return report
     } catch (error) {
