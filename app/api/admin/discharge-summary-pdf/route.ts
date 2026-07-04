@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
-      margin: { top: '18mm', right: '18mm', bottom: '18mm', left: '18mm' },
+      margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' },
       printBackground: true,
       preferCSSPageSize: true,
     })
@@ -214,21 +214,19 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string, stampDataU
       position: relative;
       page-break-after: always;
       page-break-inside: avoid;
-      display: flex;
-      flex-direction: column;
+      overflow: visible;
     }
 
     .page:last-child {
       page-break-after: auto;
-      height: auto;
       min-height: 273mm;
+      height: auto;
     }
 
     /* Header */
     .header {
       text-align: center;
       margin-bottom: 0;
-      flex-shrink: 0;
     }
 
     .logo {
@@ -385,23 +383,18 @@ function buildDischargeSummaryHtml(summary: any, logoDataUrl: string, stampDataU
       word-break: break-word;
     }
 
-    /* Content area - flex to fill space, push footer to bottom */
+    /* Content area - normal block flow for page breaks */
     .content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      overflow: visible;
+      display: block;
     }
 
-    /* Footer - stays at bottom */
+    /* Footer - normal block element */
     .footer {
-      margin-top: auto;
+      margin-top: 30px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 40px;
       font-size: 9px;
-      flex-shrink: 0;
     }
 
     .signature-block {
