@@ -119,7 +119,23 @@ Before moving to next sprint, verify:
 ✅ One implementation commit per sprint  
 ✅ One status document (`CLINICAL_CORE_STATUS.md`)  
 ✅ No duplicate planning/status documents  
-✅ Git history records implementation progress  
+✅ Git history records implementation progress
+
+---
+
+## Release Gate (Must All Pass Before Production)
+
+✅ Sprints 1–6 implemented  
+✅ All database migrations succeed on clean database  
+✅ All database migrations succeed on existing dev database (no data loss)  
+✅ `npm run build` passes with zero errors  
+✅ Smoke tests pass for every sprint  
+✅ Regression tests pass across all workflows  
+✅ End-to-end patient journey verification passes  
+✅ Production environment variables and migrations applied  
+✅ Release tag created  
+✅ Production deployment succeeds  
+✅ Post-deployment health check passes  
 
 ---
 
