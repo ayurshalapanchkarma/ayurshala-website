@@ -111,15 +111,25 @@ export interface ListResponse<T> {
   totalPages: number
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-)
+// Lazy initialize Supabase client
+let supabaseClient: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (!supabaseClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) {
+      throw new Error('Supabase configuration missing')
+    }
+    supabaseClient = createClient(url, key)
+  }
+  return supabaseClient
+}
 
 export class ProductService {
   private static async generateProductCode(): Promise<string> {
     try {
-      const { data, error } = await supabase.rpc('fn_next_sequence_value', {
+      const { data, error } = await getSupabase().rpc('fn_next_sequence_value', {
         p_key: 'seq_product_last_number',
       })
 
@@ -146,7 +156,7 @@ export class ProductService {
     } = options
 
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('inv_products')
         .select('*', { count: 'exact' })
 
@@ -192,7 +202,7 @@ export class ProductService {
 
   static async getProductById(id: string): Promise<Product> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_products')
         .select('*')
         .eq('uuid', id)
@@ -218,7 +228,7 @@ export class ProductService {
     }
 
     try {
-      const { data: existing } = await supabase
+      const { data: existing } = await getSupabase()
         .from('inv_products')
         .select('uuid')
         .eq('product_name', input.product_name)
@@ -235,7 +245,7 @@ export class ProductService {
       if (!productCode) {
         productCode = await this.generateProductCode()
       } else {
-        const { data: codeExists } = await supabase
+        const { data: codeExists } = await getSupabase()
           .from('inv_products')
           .select('uuid')
           .eq('product_code', productCode)
@@ -249,7 +259,7 @@ export class ProductService {
         }
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_products')
         .insert([
           {
@@ -314,7 +324,7 @@ export class ProductService {
 
     try {
       if (input.product_name && input.product_name !== existing.product_name) {
-        const { data: duplicate } = await supabase
+        const { data: duplicate } = await getSupabase()
           .from('inv_products')
           .select('uuid')
           .eq('product_name', input.product_name)
@@ -379,7 +389,7 @@ export class ProductService {
         updateData.description = input.description?.trim() || null
       if (input.is_active !== undefined) updateData.is_active = input.is_active
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_products')
         .update(updateData)
         .eq('uuid', id)
@@ -398,7 +408,7 @@ export class ProductService {
 
   static async deleteProduct(id: string, userId?: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('inv_products')
         .update({
           is_deleted: true,
@@ -416,7 +426,7 @@ export class ProductService {
 
   static async restoreProduct(id: string, userId?: string): Promise<Product> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_products')
         .update({
           is_deleted: false,
@@ -440,7 +450,7 @@ export class ProductService {
     try {
       const existing = await this.getProductById(id)
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_products')
         .update({
           is_active: !existing.is_active,

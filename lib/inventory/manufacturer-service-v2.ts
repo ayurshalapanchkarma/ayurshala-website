@@ -59,10 +59,20 @@ export interface ListResponse<T> {
   totalPages: number
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-)
+// Lazy initialize Supabase client
+let supabaseClient: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (!supabaseClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) {
+      throw new Error('Supabase configuration missing')
+    }
+    supabaseClient = createClient(url, key)
+  }
+  return supabaseClient
+}
 
 export class ManufacturerService {
   static async getManufacturers(
@@ -78,7 +88,7 @@ export class ManufacturerService {
     } = options
 
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('inv_manufacturers')
         .select('*', { count: 'exact' })
 
@@ -116,7 +126,7 @@ export class ManufacturerService {
 
   static async getManufacturerById(id: string): Promise<Manufacturer> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_manufacturers')
         .select('*')
         .eq('uuid', id)
@@ -142,7 +152,7 @@ export class ManufacturerService {
     }
 
     try {
-      const { data: existing } = await supabase
+      const { data: existing } = await getSupabase()
         .from('inv_manufacturers')
         .select('uuid')
         .eq('manufacturer_name', input.manufacturer_name)
@@ -155,7 +165,7 @@ export class ManufacturerService {
         })
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_manufacturers')
         .insert([
           {
@@ -203,7 +213,7 @@ export class ManufacturerService {
 
     try {
       if (input.manufacturer_name && input.manufacturer_name !== existing.manufacturer_name) {
-        const { data: duplicate } = await supabase
+        const { data: duplicate } = await getSupabase()
           .from('inv_manufacturers')
           .select('uuid')
           .eq('manufacturer_name', input.manufacturer_name)
@@ -236,7 +246,7 @@ export class ManufacturerService {
       if (input.website !== undefined) updateData.website = input.website?.trim() || null
       if (input.is_active !== undefined) updateData.is_active = input.is_active
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_manufacturers')
         .update(updateData)
         .eq('uuid', id)
@@ -255,7 +265,7 @@ export class ManufacturerService {
 
   static async deleteManufacturer(id: string, userId?: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('inv_manufacturers')
         .update({
           is_deleted: true,
@@ -276,7 +286,7 @@ export class ManufacturerService {
     userId?: string
   ): Promise<Manufacturer> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_manufacturers')
         .update({
           is_deleted: false,
@@ -303,7 +313,7 @@ export class ManufacturerService {
     try {
       const existing = await this.getManufacturerById(id)
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_manufacturers')
         .update({
           is_active: !existing.is_active,

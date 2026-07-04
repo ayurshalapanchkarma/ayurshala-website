@@ -4,14 +4,21 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Loader, RotateCcw } from 'lucide-react'
 
 // Simple toast implementation
-function toast(message: string, type: 'success' | 'error' = 'success') {
-  const el = document.createElement('div')
-  el.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 ${
-    type === 'success' ? 'bg-green-600' : 'bg-red-600'
-  }`
-  el.textContent = message
-  document.body.appendChild(el)
-  setTimeout(() => el.remove(), 3000)
+const toast = {
+  success: (message: string) => {
+    const el = document.createElement('div')
+    el.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 bg-green-600'
+    el.textContent = message
+    document.body.appendChild(el)
+    setTimeout(() => el.remove(), 3000)
+  },
+  error: (message: string) => {
+    const el = document.createElement('div')
+    el.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 bg-red-600'
+    el.textContent = message
+    document.body.appendChild(el)
+    setTimeout(() => el.remove(), 3000)
+  },
 }
 
 interface Column {

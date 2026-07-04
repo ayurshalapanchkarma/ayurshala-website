@@ -4,7 +4,22 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { InventoryValidators, ValidationResult } from './validators'
+import { InventoryValidators, ValidationResult, ValidationError } from './validators'
+
+// Lazy initialize Supabase client
+let supabaseClient: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (!supabaseClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) {
+      throw new Error('Supabase configuration missing')
+    }
+    supabaseClient = createClient(url, key)
+  }
+  return supabaseClient
+}
 
 interface Category {
   uuid: string
@@ -56,11 +71,6 @@ interface ListResponse<T> {
 }
 
 export class CategoryService {
-  private static supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  )
-
   /**
    * Get all categories with pagination, search, and filtering
    */
@@ -77,7 +87,7 @@ export class CategoryService {
     } = options
 
     try {
-      let query = this.supabase
+      let query = getSupabase()
         .from('inv_categories')
         .select('*', { count: 'exact' })
 
@@ -120,7 +130,7 @@ export class CategoryService {
    */
   static async getCategoryById(id: string): Promise<Category> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await getSupabase()
         .from('inv_categories')
         .select('*')
         .eq('uuid', id)
@@ -151,7 +161,7 @@ export class CategoryService {
 
     try {
       // Check for duplicate name
-      const { data: existing } = await this.supabase
+      const { data: existing } = await getSupabase()
         .from('inv_categories')
         .select('uuid')
         .eq('name', input.name)
@@ -162,22 +172,22 @@ export class CategoryService {
         throw new ValidationError({ name: 'Category name already exists' })
       }
 
-      const { data, error } = await this.supabase
+      const insertData = {
+        name: input.name.trim(),
+        description: input.description?.trim() || null,
+        display_order: input.display_order || 0,
+        color: input.color || null,
+        icon: input.icon || null,
+        is_active: true,
+        is_deleted: false,
+        created_by: userId || null,
+      }
+
+      const { data, error } = await (getSupabase()
         .from('inv_categories')
-        .insert([
-          {
-            name: input.name.trim(),
-            description: input.description?.trim() || null,
-            display_order: input.display_order || 0,
-            color: input.color || null,
-            icon: input.icon || null,
-            is_active: true,
-            is_deleted: false,
-            created_by: userId || null,
-          },
-        ])
+        .insert([insertData] as unknown as any)
         .select()
-        .single()
+        .single())
 
       if (error) throw error
 
@@ -212,7 +222,7 @@ export class CategoryService {
     try {
       // Check for duplicate name if name is being changed
       if (input.name && input.name !== existing.name) {
-        const { data: duplicate } = await this.supabase
+        const { data: duplicate } = await getSupabase()
           .from('inv_categories')
           .select('uuid')
           .eq('name', input.name)
@@ -241,7 +251,7 @@ export class CategoryService {
       if (input.is_active !== undefined)
         updateData.is_active = input.is_active
 
-      const { data, error } = await this.supabase
+      const { data, error } = await getSupabase()
         .from('inv_categories')
         .update(updateData)
         .eq('uuid', id)
@@ -263,7 +273,7 @@ export class CategoryService {
    */
   static async deleteCategory(id: string, userId?: string): Promise<void> {
     try {
-      const { error } = await this.supabase
+      const { error } = await getSupabase()
         .from('inv_categories')
         .update({
           is_deleted: true,
@@ -284,7 +294,7 @@ export class CategoryService {
    */
   static async restoreCategory(id: string, userId?: string): Promise<Category> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await getSupabase()
         .from('inv_categories')
         .update({
           is_deleted: false,
@@ -314,7 +324,7 @@ export class CategoryService {
     try {
       const existing = await this.getCategoryById(id)
 
-      const { data, error } = await this.supabase
+      const { data, error } = await getSupabase()
         .from('inv_categories')
         .update({
           is_active: !existing.is_active,

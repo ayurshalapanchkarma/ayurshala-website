@@ -1,243 +1,683 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import Link from 'next/link'
-import { Plus, Search, Download, Edit, Trash2, Eye, Loader, AlertCircle, Check } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Edit, Trash2, X } from 'lucide-react'
+
+// Simple toast implementation
+const toast = {
+  success: (message: string) => {
+    const el = document.createElement('div')
+    el.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 bg-green-600'
+    el.textContent = message
+    document.body.appendChild(el)
+    setTimeout(() => el.remove(), 3000)
+  },
+  error: (message: string) => {
+    const el = document.createElement('div')
+    el.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 bg-red-600'
+    el.textContent = message
+    document.body.appendChild(el)
+    setTimeout(() => el.remove(), 3000)
+  },
+}
 
 interface Product {
-  id: string
-  sku: string
-  name: string
-  category_id: string
-  unit: string
-  purchase_price: number
-  sale_price: number
-  mrp: number
-  gst_percent: number
-  reorder_level: number
+  uuid: string
+  product_code: string
+  barcode?: string
+  product_name: string
+  generic_name?: string
+  category_uuid?: string
+  manufacturer_uuid?: string
+  unit_uuid?: string
+  default_supplier_uuid?: string
+  purchase_price?: number
+  selling_price?: number
+  mrp?: number
+  gst_rate?: number
+  hsn_code?: string
+  min_stock?: number
+  reorder_level?: number
+  max_stock?: number
+  batch_tracking: boolean
+  expiry_tracking: boolean
+  warehouse?: string
+  rack?: string
+  shelf?: string
+  bin?: string
+  description?: string
+  is_active: boolean
   is_deleted: boolean
+  created_at: string
+  updated_at: string
 }
 
 interface Category {
-  id: string
+  uuid: string
   name: string
 }
 
-interface Toast {
-  id: string
-  message: string
-  type: 'success' | 'error'
+interface Unit {
+  uuid: string
+  name: string
+}
+
+interface Manufacturer {
+  uuid: string
+  manufacturer_name: string
+}
+
+interface Supplier {
+  uuid: string
+  company_name: string
+}
+
+interface ListResponse {
+  data: Product[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
 }
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [sortBy, setSortBy] = useState('name')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(10)
-  const [categories, setCategories] = useState<Category[]>([])
-  const [filterCategory, setFilterCategory] = useState('')
-  const [toasts, setToasts] = useState<Toast[]>([])
-  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [totalPages, setTotalPages] = useState(1)
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<Product | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [dropdowns, setDropdowns] = useState({
+    categories: [] as Category[],
+    units: [] as Unit[],
+    manufacturers: [] as Manufacturer[],
+    suppliers: [] as Supplier[],
+  })
+  const pageSize = 10
+
+  const [formData, setFormData] = useState({
+    product_name: '',
+    generic_name: '',
+    barcode: '',
+    category_uuid: '',
+    manufacturer_uuid: '',
+    unit_uuid: '',
+    default_supplier_uuid: '',
+    purchase_price: '',
+    selling_price: '',
+    mrp: '',
+    gst_rate: '',
+    hsn_code: '',
+    min_stock: '',
+    reorder_level: '',
+    max_stock: '',
+    batch_tracking: false,
+    expiry_tracking: false,
+    warehouse: '',
+    rack: '',
+    shelf: '',
+    bin: '',
+    description: '',
+  })
+
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadDropdowns()
+    loadProducts()
+  }, [searchTerm, page])
 
-  async function loadData() {
+  async function loadDropdowns() {
+    try {
+      const [catRes, unitRes, mfrRes, supRes] = await Promise.all([
+        fetch('/api/inventory/categories?pageSize=1000'),
+        fetch('/api/inventory/units?pageSize=1000'),
+        fetch('/api/inventory/manufacturers?pageSize=1000'),
+        fetch('/api/inventory/suppliers?pageSize=1000'),
+      ])
+
+      if (catRes.ok) {
+        const catData = await catRes.json()
+        setDropdowns(prev => ({ ...prev, categories: catData.data }))
+      }
+      if (unitRes.ok) {
+        const unitData = await unitRes.json()
+        setDropdowns(prev => ({ ...prev, units: unitData.data }))
+      }
+      if (mfrRes.ok) {
+        const mfrData = await mfrRes.json()
+        setDropdowns(prev => ({ ...prev, manufacturers: mfrData.data }))
+      }
+      if (supRes.ok) {
+        const supData = await supRes.json()
+        setDropdowns(prev => ({ ...prev, suppliers: supData.data }))
+      }
+    } catch (err) {
+      console.error('Failed to load dropdown data:', err)
+    }
+  }
+
+  async function loadProducts() {
     try {
       setLoading(true)
-      setError(null)
-      const productsRes = await fetch('/api/inventory/products')
-      if (!productsRes.ok) throw new Error('Failed to load products')
-      const productsData = await productsRes.json()
-      setProducts(productsData.data || [])
+      const params = new URLSearchParams({
+        search: searchTerm,
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+      })
 
-      const categoriesRes = await fetch('/api/inventory/categories')
-      if (!categoriesRes.ok) throw new Error('Failed to load categories')
-      const categoriesData = await categoriesRes.json()
-      setCategories(categoriesData.data || [])
+      const response = await fetch(`/api/inventory/products?${params}`)
+      if (!response.ok) throw new Error('Failed to load products')
+
+      const data: ListResponse = await response.json()
+      setProducts(data.data)
+      setTotalPages(data.totalPages)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load')
+      toast.error(err instanceof Error ? err.message : 'Failed to load products')
     } finally {
       setLoading(false)
     }
   }
 
-  const filteredProducts = useMemo(() => {
-    let filtered = products.filter(p => !p.is_deleted)
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      filtered = filtered.filter(p => p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term))
-    }
-    if (filterCategory) {
-      filtered = filtered.filter(p => p.category_id === filterCategory)
-    }
-    filtered.sort((a, b) => {
-      let aVal: any = a[sortBy as keyof Product]
-      let bVal: any = b[sortBy as keyof Product]
-      if (typeof aVal === 'string') {
-        aVal = aVal.toLowerCase()
-        bVal = (bVal as string).toLowerCase()
-      }
-      const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
-      return sortOrder === 'asc' ? cmp : -cmp
-    })
-    return filtered
-  }, [products, searchTerm, filterCategory, sortBy, sortOrder])
-
-  const totalPages = Math.ceil(filteredProducts.length / pageSize)
-  const paginatedProducts = filteredProducts.slice((page - 1) * pageSize, page * pageSize)
-
-  const addToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-    const id = Date.now().toString()
-    setToasts(prev => [...prev, { id, message, type }])
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000)
-  }, [])
-
-  async function handleDelete(id: string) {
+  async function handleSave() {
     try {
-      const res = await fetch(`/api/inventory/products/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete')
-      setProducts(prev => prev.map(p => p.id === id ? { ...p, is_deleted: true } : p))
-      addToast('Deleted', 'success')
-      setDeleteId(null)
+      setErrors({})
+
+      const url = editingId
+        ? `/api/inventory/products/${editingId}`
+        : '/api/inventory/products'
+
+      const method = editingId ? 'PUT' : 'POST'
+
+      // Convert string numbers to actual numbers
+      const submitData = {
+        ...formData,
+        purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : undefined,
+        selling_price: formData.selling_price ? parseFloat(formData.selling_price) : undefined,
+        mrp: formData.mrp ? parseFloat(formData.mrp) : undefined,
+        gst_rate: formData.gst_rate ? parseFloat(formData.gst_rate) : undefined,
+        min_stock: formData.min_stock ? parseInt(formData.min_stock) : undefined,
+        reorder_level: formData.reorder_level ? parseInt(formData.reorder_level) : undefined,
+        max_stock: formData.max_stock ? parseInt(formData.max_stock) : undefined,
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submitData),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        if (result.details) {
+          setErrors(result.details)
+        }
+        throw new Error(result.error || `Failed to ${editingId ? 'update' : 'create'} product`)
+      }
+
+      toast.success(`Product ${editingId ? 'updated' : 'created'} successfully`)
+      setShowForm(false)
+      setEditingId(null)
+      setFormData({
+        product_name: '',
+        generic_name: '',
+        barcode: '',
+        category_uuid: '',
+        manufacturer_uuid: '',
+        unit_uuid: '',
+        default_supplier_uuid: '',
+        purchase_price: '',
+        selling_price: '',
+        mrp: '',
+        gst_rate: '',
+        hsn_code: '',
+        min_stock: '',
+        reorder_level: '',
+        max_stock: '',
+        batch_tracking: false,
+        expiry_tracking: false,
+        warehouse: '',
+        rack: '',
+        shelf: '',
+        bin: '',
+        description: '',
+      })
+      loadProducts()
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed', 'error')
+      toast.error(err instanceof Error ? err.message : 'Failed to save product')
     }
   }
 
-  function exportCSV() {
-    const headers = ['SKU', 'Name', 'Category', 'Sale Price', 'MRP', 'GST %']
-    const rows = filteredProducts.map(p => [
-      p.sku,
-      p.name,
-      categories.find(c => c.id === p.category_id)?.name || '-',
-      p.sale_price,
-      p.mrp,
-      p.gst_percent,
-    ])
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `products.csv`
-    a.click()
-    addToast('Exported', 'success')
+  async function handleDelete(product: Product) {
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/inventory/products/${product.uuid}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete')
+
+      toast.success('Product deleted successfully')
+      loadProducts()
+      setDeleteConfirm(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete product')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
-  if (loading) {
-    return <div className="h-screen flex items-center justify-center"><Loader className="animate-spin w-8 h-8 text-orange-600" /></div>
+  function handleEdit(product: Product) {
+    setFormData({
+      product_name: product.product_name,
+      generic_name: product.generic_name || '',
+      barcode: product.barcode || '',
+      category_uuid: product.category_uuid || '',
+      manufacturer_uuid: product.manufacturer_uuid || '',
+      unit_uuid: product.unit_uuid || '',
+      default_supplier_uuid: product.default_supplier_uuid || '',
+      purchase_price: product.purchase_price?.toString() || '',
+      selling_price: product.selling_price?.toString() || '',
+      mrp: product.mrp?.toString() || '',
+      gst_rate: product.gst_rate?.toString() || '',
+      hsn_code: product.hsn_code || '',
+      min_stock: product.min_stock?.toString() || '',
+      reorder_level: product.reorder_level?.toString() || '',
+      max_stock: product.max_stock?.toString() || '',
+      batch_tracking: product.batch_tracking || false,
+      expiry_tracking: product.expiry_tracking || false,
+      warehouse: product.warehouse || '',
+      rack: product.rack || '',
+      shelf: product.shelf || '',
+      bin: product.bin || '',
+      description: product.description || '',
+    })
+    setEditingId(product.uuid)
+    setShowForm(true)
   }
 
-  const actionButton = (
-    <Link href="/admin/inventory/products/create" className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium transition">
-      <Plus size={16} />
-      Add Product
-    </Link>
-  )
+  function handleClose() {
+    setShowForm(false)
+    setEditingId(null)
+    setErrors({})
+    setFormData({
+      product_name: '',
+      generic_name: '',
+      barcode: '',
+      category_uuid: '',
+      manufacturer_uuid: '',
+      unit_uuid: '',
+      default_supplier_uuid: '',
+      purchase_price: '',
+      selling_price: '',
+      mrp: '',
+      gst_rate: '',
+      hsn_code: '',
+      min_stock: '',
+      reorder_level: '',
+      max_stock: '',
+      batch_tracking: false,
+      expiry_tracking: false,
+      warehouse: '',
+      rack: '',
+      shelf: '',
+      bin: '',
+      description: '',
+    })
+  }
+
+  if (loading && products.length === 0) {
+    return <div className="p-8 text-center">Loading...</div>
+  }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Page Header */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Products</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage your product catalog</p>
-          </div>
-          {actionButton}
-        </div>
+    <div className="p-8 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Products</h1>
+        <button
+          onClick={() => {
+            setShowForm(true)
+            setEditingId(null)
+            setErrors({})
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          <Plus size={20} /> Add Product
+        </button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-6 space-y-4">
-          {error && <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg"><p className="text-red-900 dark:text-red-100 text-sm mb-2">{error}</p><button onClick={loadData} className="text-xs text-red-700 hover:underline">Retry</button></div>}
+      {/* Search */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value)
+            setPage(1)
+          }}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-slate-800 dark:text-white"
+        />
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-              <input type="text" placeholder="Search by name or SKU..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1) }} className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
-            </div>
-            <div className="flex gap-2">
-              <select value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1) }} className="flex-1 px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 outline-none">
-                <option value="">All Categories</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <button onClick={exportCSV} disabled={filteredProducts.length === 0} className="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 text-sm transition" title="Export CSV">
-                <Download size={16} />
+      {/* Table */}
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 dark:bg-slate-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Code</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Product</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Generic</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">MRP</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+            {products.map((product) => (
+              <tr key={product.uuid} className="hover:bg-gray-50 dark:hover:bg-slate-700">
+                <td className="px-6 py-4 text-sm font-mono text-gray-600 dark:text-gray-400">{product.product_code}</td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{product.product_name}</td>
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{product.generic_name}</td>
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">₹{product.mrp}</td>
+                <td className="px-6 py-4 text-sm">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(product)}
+                      className="text-red-600 hover:text-red-800 dark:text-red-400"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-center gap-2">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="px-4 py-2">Page {page} of {totalPages}</span>
+          <button
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {/* Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold dark:text-white">
+                {editingId ? 'Edit' : 'Add'} Product
+              </h2>
+              <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
               </button>
             </div>
-          </div>
 
-      {filteredProducts.length === 0 ? <div className="text-center py-16"><h3 className="text-lg font-semibold mb-2">No products found</h3><p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Get started by creating your first product</p><Link href="/admin/inventory/products/create" className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"><Plus size={16} />Create Product</Link></div> : <>
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => { setSortBy('sku'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>SKU</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => { setSortBy('name'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>Name</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Category</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => { setSortBy('sale_price'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>Price</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">MRP</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-              {paginatedProducts.map(p => (
-                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                  <td className="px-6 py-4 text-sm font-medium">{p.sku}</td>
-                  <td className="px-6 py-4 text-sm">{p.name}</td>
-                  <td className="px-6 py-4 text-sm">{categories.find(c => c.id === p.category_id)?.name || '-'}</td>
-                  <td className="px-6 py-4 text-sm font-semibold">₹{p.sale_price}</td>
-                  <td className="px-6 py-4 text-sm">₹{p.mrp}</td>
-                  <td className="px-6 py-4 text-sm flex gap-2">
-                    <Link href={`/admin/inventory/products/${p.id}`} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"><Eye size={16} /></Link>
-                    <Link href={`/admin/inventory/products/${p.id}/edit`} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"><Edit size={16} className="text-blue-600" /></Link>
-                    <button onClick={() => setDeleteId(p.id)} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"><Trash2 size={16} className="text-red-600" /></button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-6 flex justify-between items-center">
-          <p className="text-sm text-gray-600">{(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filteredProducts.length)} of {filteredProducts.length}</p>
-          <div className="flex gap-2">
-            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg disabled:opacity-50">Prev</button>
-            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg disabled:opacity-50">Next</button>
-          </div>
-        </div>
-      </>}
+            <div className="space-y-4 text-sm">
+              {/* Basic Info */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name *</label>
+                  <input
+                    type="text"
+                    value={formData.product_name}
+                    onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
+                    className={`w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600 ${
+                      errors.product_name ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                  {errors.product_name && <p className="text-xs text-red-600 mt-0.5">{errors.product_name}</p>}
+                </div>
 
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold mb-2">Delete?</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">Marked as deleted</p>
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteId(null)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-100">Cancel</button>
-              <button onClick={() => handleDelete(deleteId)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Generic Name</label>
+                  <input
+                    type="text"
+                    value={formData.generic_name}
+                    onChange={(e) => setFormData({ ...formData, generic_name: e.target.value })}
+                    className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                  <select
+                    value={formData.category_uuid}
+                    onChange={(e) => setFormData({ ...formData, category_uuid: e.target.value })}
+                    className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                  >
+                    <option value="">Select Category</option>
+                    {dropdowns.categories.map((cat) => (
+                      <option key={cat.uuid} value={cat.uuid}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Manufacturer</label>
+                  <select
+                    value={formData.manufacturer_uuid}
+                    onChange={(e) => setFormData({ ...formData, manufacturer_uuid: e.target.value })}
+                    className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                  >
+                    <option value="">Select Manufacturer</option>
+                    {dropdowns.manufacturers.map((mfr) => (
+                      <option key={mfr.uuid} value={mfr.uuid}>{mfr.manufacturer_name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Unit</label>
+                  <select
+                    value={formData.unit_uuid}
+                    onChange={(e) => setFormData({ ...formData, unit_uuid: e.target.value })}
+                    className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                  >
+                    <option value="">Select Unit</option>
+                    {dropdowns.units.map((unit) => (
+                      <option key={unit.uuid} value={unit.uuid}>{unit.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Default Supplier</label>
+                  <select
+                    value={formData.default_supplier_uuid}
+                    onChange={(e) => setFormData({ ...formData, default_supplier_uuid: e.target.value })}
+                    className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                  >
+                    <option value="">Select Supplier</option>
+                    {dropdowns.suppliers.map((sup) => (
+                      <option key={sup.uuid} value={sup.uuid}>{sup.company_name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Pricing */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Pricing</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  {['purchase_price', 'selling_price', 'mrp', 'gst_rate'].map((field) => (
+                    <div key={field}>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 capitalize">
+                        {field.replace(/_/g, ' ')}
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData[field as keyof typeof formData]}
+                        onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                        className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stock */}
+              <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Stock Levels</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {['min_stock', 'reorder_level', 'max_stock'].map((field) => (
+                    <div key={field}>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 capitalize">
+                        {field.replace(/_/g, ' ')}
+                      </label>
+                      <input
+                        type="number"
+                        value={formData[field as keyof typeof formData]}
+                        onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                        className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Warehouse */}
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Warehouse Location</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  {['warehouse', 'rack', 'shelf', 'bin'].map((field) => (
+                    <div key={field}>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 capitalize">{field}</label>
+                      <input
+                        type="text"
+                        value={formData[field as keyof typeof formData]}
+                        onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                        className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Other Fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Barcode</label>
+                  <input
+                    type="text"
+                    value={formData.barcode}
+                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                    className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">HSN Code</label>
+                  <input
+                    type="text"
+                    value={formData.hsn_code}
+                    onChange={(e) => setFormData({ ...formData, hsn_code: e.target.value })}
+                    className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.batch_tracking}
+                    onChange={(e) => setFormData({ ...formData, batch_tracking: e.target.checked })}
+                  />
+                  <span className="text-xs text-gray-700 dark:text-gray-300">Batch Tracking</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.expiry_tracking}
+                    onChange={(e) => setFormData({ ...formData, expiry_tracking: e.target.checked })}
+                  />
+                  <span className="text-xs text-gray-700 dark:text-gray-300">Expiry Tracking</span>
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-2 py-1 text-xs border rounded dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                  rows={2}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={handleSave}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              >
+                {editingId ? 'Update' : 'Create'}
+              </button>
+              <button
+                onClick={handleClose}
+                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-slate-600 text-gray-900 dark:text-white rounded-lg text-sm"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="fixed bottom-6 right-6 space-y-3 z-40">
-        {toasts.map(t => (
-          <div key={t.id} className={`p-4 rounded-lg flex items-center gap-3 ${t.type === 'success' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
-            {t.type === 'success' ? <Check size={20} className="text-green-600" /> : <AlertCircle size={20} className="text-red-600" />}
-            <span>{t.message}</span>
+      {/* Delete Confirmation */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Delete Product?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Are you sure you want to delete {deleteConfirm.product_name}?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleDelete(deleteConfirm)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-slate-600 text-gray-900 dark:text-white rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        ))}
-      </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

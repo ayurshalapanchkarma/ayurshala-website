@@ -1,133 +1,371 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, RefreshCw, Plus, Edit, Trash2, Eye } from 'lucide-react'
-import { ManufacturerService } from '@/lib/inventory'
+import { Plus, Edit, Trash2, X } from 'lucide-react'
+
+// Simple toast implementation
+const toast = {
+  success: (message: string) => {
+    const el = document.createElement('div')
+    el.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 bg-green-600'
+    el.textContent = message
+    document.body.appendChild(el)
+    setTimeout(() => el.remove(), 3000)
+  },
+  error: (message: string) => {
+    const el = document.createElement('div')
+    el.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 bg-red-600'
+    el.textContent = message
+    document.body.appendChild(el)
+    setTimeout(() => el.remove(), 3000)
+  },
+}
 
 interface Manufacturer {
-  id: string
-  name: string
-  gstin?: string
+  uuid: string
+  manufacturer_name: string
+  contact_person?: string
+  mobile?: string
   email?: string
-  phone?: string
+  gst_number?: string
   city?: string
   state?: string
+  website?: string
+  is_active: boolean
+  is_deleted: boolean
+  created_at: string
+  updated_at: string
+}
+
+interface ListResponse {
+  data: Manufacturer[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
 }
 
 export default function ManufacturersPage() {
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
-  const pageSize = 15
+  const [totalPages, setTotalPages] = useState(1)
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<Manufacturer | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const pageSize = 10
 
-  async function load() {
+  const [formData, setFormData] = useState({
+    manufacturer_name: '',
+    contact_person: '',
+    mobile: '',
+    email: '',
+    gst_number: '',
+    city: '',
+    state: '',
+    website: '',
+  })
+
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    loadManufacturers()
+  }, [searchTerm, page])
+
+  async function loadManufacturers() {
     try {
       setLoading(true)
-      const data = await ManufacturerService.getManufacturers()
-      setManufacturers(data as any)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load')
+      const params = new URLSearchParams({
+        search: searchTerm,
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+      })
+
+      const response = await fetch(`/api/inventory/manufacturers?${params}`)
+      if (!response.ok) throw new Error('Failed to load manufacturers')
+
+      const data: ListResponse = await response.json()
+      setManufacturers(data.data)
+      setTotalPages(data.totalPages)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load manufacturers')
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { load() }, [])
-
-  const filtered = manufacturers.filter(m =>
-    m.name?.toLowerCase().includes(search.toLowerCase()) ||
-    m.gstin?.toLowerCase().includes(search.toLowerCase())
-  )
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-
-  async function deleteManufacturer(id: string) {
-    if (!confirm('Delete this manufacturer?')) return
+  async function handleSave() {
     try {
-      await ManufacturerService.deleteManufacturer(id)
-      load()
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to delete')
+      setErrors({})
+
+      const url = editingId
+        ? `/api/inventory/manufacturers/${editingId}`
+        : '/api/inventory/manufacturers'
+
+      const method = editingId ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        if (result.details) {
+          setErrors(result.details)
+        }
+        throw new Error(result.error || `Failed to ${editingId ? 'update' : 'create'} manufacturer`)
+      }
+
+      toast.success(`Manufacturer ${editingId ? 'updated' : 'created'} successfully`)
+      setShowForm(false)
+      setEditingId(null)
+      setFormData({
+        manufacturer_name: '',
+        contact_person: '',
+        mobile: '',
+        email: '',
+        gst_number: '',
+        city: '',
+        state: '',
+        website: '',
+      })
+      loadManufacturers()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save manufacturer')
     }
   }
 
+  async function handleDelete(mfr: Manufacturer) {
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/inventory/manufacturers/${mfr.uuid}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete')
+
+      toast.success('Manufacturer deleted successfully')
+      loadManufacturers()
+      setDeleteConfirm(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete manufacturer')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  function handleEdit(mfr: Manufacturer) {
+    setFormData({
+      manufacturer_name: mfr.manufacturer_name,
+      contact_person: mfr.contact_person || '',
+      mobile: mfr.mobile || '',
+      email: mfr.email || '',
+      gst_number: mfr.gst_number || '',
+      city: mfr.city || '',
+      state: mfr.state || '',
+      website: mfr.website || '',
+    })
+    setEditingId(mfr.uuid)
+    setShowForm(true)
+  }
+
+  function handleClose() {
+    setShowForm(false)
+    setEditingId(null)
+    setErrors({})
+    setFormData({
+      manufacturer_name: '',
+      contact_person: '',
+      mobile: '',
+      email: '',
+      gst_number: '',
+      city: '',
+      state: '',
+      website: '',
+    })
+  }
+
+  if (loading && manufacturers.length === 0) {
+    return <div className="p-8 text-center">Loading...</div>
+  }
+
   return (
-    <div className="p-8">
+    <div className="p-8 max-w-6xl mx-auto">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Manufacturers</h1>
-        <div className="flex gap-3">
-          <button onClick={load} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm">
-            <RefreshCw size={16} /> Refresh
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
-            <Plus size={16} /> Add Manufacturer
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            setShowForm(true)
+            setEditingId(null)
+            setErrors({})
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          <Plus size={20} /> Add Manufacturer
+        </button>
       </div>
 
-      {error && <div className="mb-4 bg-red-50 border border-red-200 p-4 rounded-lg text-red-700">{error}</div>}
-
-      <div className="bg-white dark:bg-slate-800 rounded-lg border p-4 mb-6">
-        <div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-700 rounded-lg px-4 py-2">
-          <Search size={18} className="text-gray-400" />
-          <input
-            className="flex-1 bg-transparent outline-none text-sm"
-            placeholder="Search by name or GSTIN..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1) }}
-          />
-        </div>
+      {/* Search */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search manufacturers..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value)
+            setPage(1)
+          }}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-slate-800 dark:text-white"
+        />
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-20 text-gray-500">Loading manufacturers...</div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border p-12 text-center">
-          <p className="text-gray-600 dark:text-gray-400">No manufacturers found</p>
+      {/* Table */}
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 dark:bg-slate-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Contact</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">City</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+            {manufacturers.map((mfr) => (
+              <tr key={mfr.uuid} className="hover:bg-gray-50 dark:hover:bg-slate-700">
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{mfr.manufacturer_name}</td>
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{mfr.contact_person}</td>
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{mfr.email}</td>
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{mfr.city}</td>
+                <td className="px-6 py-4 text-sm">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(mfr)}
+                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(mfr)}
+                      className="text-red-600 hover:text-red-800 dark:text-red-400"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-center gap-2">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="px-4 py-2">Page {page} of {totalPages}</span>
+          <button
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
-      ) : (
-        <>
-          <div className="bg-white dark:bg-slate-800 rounded-lg border overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left font-semibold">Name</th>
-                  <th className="px-6 py-3 text-left font-semibold">GSTIN</th>
-                  <th className="px-6 py-3 text-left font-semibold">Email</th>
-                  <th className="px-6 py-3 text-left font-semibold">Phone</th>
-                  <th className="px-6 py-3 text-left font-semibold">City, State</th>
-                  <th className="px-6 py-3 text-center font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                {paginated.map(m => (
-                  <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <td className="px-6 py-4 font-medium">{m.name}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400 font-mono text-xs">{m.gstin || '-'}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{m.email || '-'}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{m.phone || '-'}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400 text-sm">{m.city ? `${m.city}, ${m.state || ''}` : '-'}</td>
-                    <td className="px-6 py-4 text-center flex gap-2 justify-center">
-                      <button className="text-blue-600 hover:text-blue-700"><Eye size={16} /></button>
-                      <button className="text-amber-600 hover:text-amber-700"><Edit size={16} /></button>
-                      <button onClick={() => deleteManufacturer(m.id)} className="text-red-600 hover:text-red-700"><Trash2 size={16} /></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-gray-600">{filtered.length} manufacturers</p>
-            <div className="flex gap-2">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded disabled:opacity-50 text-sm">Previous</button>
-              <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Page {page} of {totalPages}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-4 py-2 bg-amber-600 text-white rounded disabled:opacity-50 text-sm">Next</button>
+      )}
+
+      {/* Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold dark:text-white">
+                {editingId ? 'Edit' : 'Add'} Manufacturer
+              </h2>
+              <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {['manufacturer_name', 'contact_person', 'mobile', 'email', 'gst_number', 'city', 'state', 'website'].map((field) => (
+                <div key={field}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 capitalize">
+                    {field.replace(/_/g, ' ')}
+                  </label>
+                  <input
+                    type={field === 'email' ? 'email' : field === 'mobile' ? 'tel' : 'text'}
+                    value={formData[field as keyof typeof formData]}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        [field]: e.target.value,
+                      })
+                    }
+                    className={`w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white dark:border-slate-600 ${
+                      errors[field] ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                  {errors[field] && <p className="text-sm text-red-600 mt-1">{errors[field]}</p>}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={handleSave}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                {editingId ? 'Update' : 'Create'}
+              </button>
+              <button
+                onClick={handleClose}
+                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-slate-600 text-gray-900 dark:text-white rounded-lg"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        </>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Delete Manufacturer?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Are you sure you want to delete {deleteConfirm.manufacturer_name}?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleDelete(deleteConfirm)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-slate-600 text-gray-900 dark:text-white rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

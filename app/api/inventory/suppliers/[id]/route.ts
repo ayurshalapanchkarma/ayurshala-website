@@ -6,10 +6,11 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
-    const supplier = await SupplierService.getSupplierById(params.id)
+    const supplier = await SupplierService.getSupplierById(id)
     return NextResponse.json(supplier)
   } catch (error: any) {
     console.error('Error fetching supplier:', error)
@@ -22,11 +23,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const input = await request.json()
-    const result = await SupplierService.updateSupplier(params.id, input)
+    const result = await SupplierService.updateSupplier(id, input)
     return NextResponse.json(result)
   } catch (error: any) {
     if (error instanceof ValidationError) {
@@ -45,10 +47,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
-    await SupplierService.deleteSupplier(params.id)
+    await SupplierService.deleteSupplier(id)
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Error deleting supplier:', error)

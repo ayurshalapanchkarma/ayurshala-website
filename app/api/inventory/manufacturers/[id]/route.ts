@@ -6,10 +6,11 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
-    const mfr = await ManufacturerService.getManufacturerById(params.id)
+    const mfr = await ManufacturerService.getManufacturerById(id)
     return NextResponse.json(mfr)
   } catch (error: any) {
     console.error('Error fetching manufacturer:', error)
@@ -22,11 +23,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const input = await request.json()
-    const result = await ManufacturerService.updateManufacturer(params.id, input)
+    const result = await ManufacturerService.updateManufacturer(id, input)
     return NextResponse.json(result)
   } catch (error: any) {
     if (error instanceof ValidationError) {
@@ -45,10 +47,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
-    await ManufacturerService.deleteManufacturer(params.id)
+    await ManufacturerService.deleteManufacturer(id)
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Error deleting manufacturer:', error)

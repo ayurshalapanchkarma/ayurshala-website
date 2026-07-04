@@ -6,10 +6,11 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
-    const product = await ProductService.getProductById(params.id)
+    const product = await ProductService.getProductById(id)
     return NextResponse.json(product)
   } catch (error: any) {
     console.error('Error fetching product:', error)
@@ -22,11 +23,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const input = await request.json()
-    const result = await ProductService.updateProduct(params.id, input)
+    const result = await ProductService.updateProduct(id, input)
     return NextResponse.json(result)
   } catch (error: any) {
     if (error instanceof ValidationError) {
@@ -45,10 +47,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
-    await ProductService.deleteProduct(params.id)
+    await ProductService.deleteProduct(id)
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Error deleting product:', error)

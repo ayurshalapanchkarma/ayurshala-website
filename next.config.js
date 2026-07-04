@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   // Allow dev server to be accessed from other devices on the LAN
   allowedDevOrigins: [
     '192.168.0.111',

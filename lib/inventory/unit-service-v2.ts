@@ -42,10 +42,20 @@ export interface ListResponse<T> {
   totalPages: number
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-)
+// Lazy initialize Supabase client
+let supabaseClient: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (!supabaseClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) {
+      throw new Error('Supabase configuration missing')
+    }
+    supabaseClient = createClient(url, key)
+  }
+  return supabaseClient
+}
 
 export class UnitService {
   static async getUnits(options: ListOptions = {}): Promise<ListResponse<Unit>> {
@@ -58,7 +68,7 @@ export class UnitService {
     } = options
 
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('inv_units')
         .select('*', { count: 'exact' })
         .eq('is_active', true)
@@ -91,7 +101,7 @@ export class UnitService {
 
   static async getUnitById(id: string): Promise<Unit> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_units')
         .select('*')
         .eq('uuid', id)
@@ -114,7 +124,7 @@ export class UnitService {
     }
 
     try {
-      const { data: existing } = await supabase
+      const { data: existing } = await getSupabase()
         .from('inv_units')
         .select('uuid')
         .eq('name', input.name)
@@ -124,7 +134,7 @@ export class UnitService {
         throw new ValidationError({ name: 'Unit name already exists' })
       }
 
-      const { data: existingShort } = await supabase
+      const { data: existingShort } = await getSupabase()
         .from('inv_units')
         .select('uuid')
         .eq('short_name', input.short_name)
@@ -134,7 +144,7 @@ export class UnitService {
         throw new ValidationError({ short_name: 'Short name already exists' })
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_units')
         .insert([
           {
@@ -172,7 +182,7 @@ export class UnitService {
 
     try {
       if (input.name && input.name !== existing.name) {
-        const { data: duplicate } = await supabase
+        const { data: duplicate } = await getSupabase()
           .from('inv_units')
           .select('uuid')
           .eq('name', input.name)
@@ -185,7 +195,7 @@ export class UnitService {
       }
 
       if (input.short_name && input.short_name !== existing.short_name) {
-        const { data: duplicate } = await supabase
+        const { data: duplicate } = await getSupabase()
           .from('inv_units')
           .select('uuid')
           .eq('short_name', input.short_name)
@@ -207,7 +217,7 @@ export class UnitService {
       if (input.decimal_allowed !== undefined) updateData.decimal_allowed = input.decimal_allowed
       if (input.is_active !== undefined) updateData.is_active = input.is_active
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_units')
         .update(updateData)
         .eq('uuid', id)
@@ -228,7 +238,7 @@ export class UnitService {
     try {
       const existing = await this.getUnitById(id)
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_units')
         .update({
           is_active: !existing.is_active,

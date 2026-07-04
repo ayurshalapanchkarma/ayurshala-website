@@ -93,15 +93,25 @@ export interface ListResponse<T> {
   totalPages: number
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-)
+// Lazy initialize Supabase client
+let supabaseClient: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (!supabaseClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) {
+      throw new Error('Supabase configuration missing')
+    }
+    supabaseClient = createClient(url, key)
+  }
+  return supabaseClient
+}
 
 export class SupplierService {
   private static async generateSupplierCode(): Promise<string> {
     try {
-      const { data, error } = await supabase.rpc('fn_next_sequence_value', {
+      const { data, error } = await getSupabase().rpc('fn_next_sequence_value', {
         p_key: 'seq_supplier_last_number',
       })
 
@@ -128,7 +138,7 @@ export class SupplierService {
     } = options
 
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('inv_suppliers')
         .select('*', { count: 'exact' })
 
@@ -166,7 +176,7 @@ export class SupplierService {
 
   static async getSupplierById(id: string): Promise<Supplier> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_suppliers')
         .select('*')
         .eq('uuid', id)
@@ -192,7 +202,7 @@ export class SupplierService {
     }
 
     try {
-      const { data: existing } = await supabase
+      const { data: existing } = await getSupabase()
         .from('inv_suppliers')
         .select('uuid')
         .eq('company_name', input.company_name)
@@ -207,7 +217,7 @@ export class SupplierService {
 
       const supplierCode = await this.generateSupplierCode()
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_suppliers')
         .insert([
           {
@@ -267,7 +277,7 @@ export class SupplierService {
 
     try {
       if (input.company_name && input.company_name !== existing.company_name) {
-        const { data: duplicate } = await supabase
+        const { data: duplicate } = await getSupabase()
           .from('inv_suppliers')
           .select('uuid')
           .eq('company_name', input.company_name)
@@ -315,7 +325,7 @@ export class SupplierService {
       if (input.credit_limit !== undefined) updateData.credit_limit = input.credit_limit
       if (input.is_active !== undefined) updateData.is_active = input.is_active
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_suppliers')
         .update(updateData)
         .eq('uuid', id)
@@ -334,7 +344,7 @@ export class SupplierService {
 
   static async deleteSupplier(id: string, userId?: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('inv_suppliers')
         .update({
           is_deleted: true,
@@ -355,7 +365,7 @@ export class SupplierService {
     userId?: string
   ): Promise<Supplier> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_suppliers')
         .update({
           is_deleted: false,
@@ -382,7 +392,7 @@ export class SupplierService {
     try {
       const existing = await this.getSupplierById(id)
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('inv_suppliers')
         .update({
           is_active: !existing.is_active,
