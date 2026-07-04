@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/next'
+import { NextRequest, NextResponse } from 'next/server'
 import { SupplierService } from '@/lib/inventory/supplier-service-v2'
 
 export const dynamic = 'force-dynamic'

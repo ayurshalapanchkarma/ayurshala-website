@@ -335,9 +335,4 @@ export class CategoryService {
   }
 }
 
-export class ValidationError extends Error {
-  constructor(public errors: Record<string, string>) {
-    super('Validation failed')
-    this.name = 'ValidationError'
-  }
-}
+
