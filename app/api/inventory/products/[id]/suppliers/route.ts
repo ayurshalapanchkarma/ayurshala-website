@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ProductService } from '@/lib/inventory/product.service'
+import { ProductService } from '@/lib/inventory/product-service-v2'
 import { handleApiError, successResponse, parseBody } from '@/lib/inventory/api-helper'
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
