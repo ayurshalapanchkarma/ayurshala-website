@@ -41,45 +41,31 @@ export async function POST(request: Request) {
     const body = await request.json()
     console.log('[Warehouse POST] Received payload:', JSON.stringify(body, null, 2))
     
-    const { warehouse_code, warehouse_name, location, address, city, state, pincode, contact_person, phone, email } = body
+    const { warehouse_name, address } = body
 
     // Validation
     if (!warehouse_name?.trim()) {
       return NextResponse.json({ error: 'Warehouse name is required', details: { warehouse_name: 'Required' } }, { status: 400 })
     }
 
-    if (!location?.trim()) {
-      return NextResponse.json({ error: 'Location is required', details: { location: 'Required' } }, { status: 400 })
-    }
+    // Check for duplicate name
+    const { data: existing } = await supabaseAdmin
+      .from('inv_warehouses')
+      .select('uuid')
+      .eq('warehouse_name', warehouse_name.trim())
+      .eq('is_active', true)
+      .single()
 
-    // Check for duplicate code if provided
-    if (warehouse_code) {
-      const { data: existing } = await supabaseAdmin
-        .from('inv_warehouses')
-        .select('uuid')
-        .eq('warehouse_code', warehouse_code)
-        .eq('is_deleted', false)
-        .single()
-
-      if (existing) {
-        return NextResponse.json(
-          { error: 'Warehouse code already exists', details: { warehouse_code: 'Already in use' } },
-          { status: 409 }
-        )
-      }
+    if (existing) {
+      return NextResponse.json(
+        { error: 'Warehouse name already exists', details: { warehouse_name: 'Already in use' } },
+        { status: 409 }
+      )
     }
 
     const insertPayload = {
-      warehouse_code: warehouse_code || `WH${Date.now()}`,
       warehouse_name: warehouse_name.trim(),
-      location: location.trim(),
       address: address?.trim() || null,
-      city: city?.trim() || null,
-      state: state?.trim() || null,
-      pincode: pincode?.trim() || null,
-      contact_person: contact_person?.trim() || null,
-      phone: phone?.trim() || null,
-      email: email?.trim() || null,
       is_active: true,
       is_deleted: false,
     }
