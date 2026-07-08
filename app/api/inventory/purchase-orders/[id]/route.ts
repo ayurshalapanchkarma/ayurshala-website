@@ -3,10 +3,11 @@ import { PurchaseOrderService } from '@/lib/inventory/purchase-order-service'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const purchaseOrder = await PurchaseOrderService.getPurchaseOrderById(params.id)
+    const { id } = await params
+    const purchaseOrder = await PurchaseOrderService.getPurchaseOrderById(id)
     return NextResponse.json(purchaseOrder)
   } catch (error) {
     console.error('GET /api/inventory/purchase-orders/[id] error:', error)
@@ -16,12 +17,13 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const userId = request.headers.get('x-user-id') || undefined
-    const purchaseOrder = await PurchaseOrderService.updatePurchaseOrder(params.id, body, userId)
+    const purchaseOrder = await PurchaseOrderService.updatePurchaseOrder(id, body, userId)
     return NextResponse.json(purchaseOrder)
   } catch (error: any) {
     console.error('PUT /api/inventory/purchase-orders/[id] error:', error)
@@ -34,12 +36,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const userId = request.headers.get('x-user-id') || undefined
     // Cancel the PO instead of deleting (only draft/pending can be cancelled)
-    await PurchaseOrderService.cancelPurchaseOrder(params.id, 'Deleted by user', userId)
+    await PurchaseOrderService.cancelPurchaseOrder(id, undefined, userId)
     return NextResponse.json({ message: 'Purchase order cancelled successfully' })
   } catch (error: any) {
     console.error('DELETE /api/inventory/purchase-orders/[id] error:', error)

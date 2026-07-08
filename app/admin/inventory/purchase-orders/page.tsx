@@ -88,6 +88,10 @@ export default function PurchaseOrdersPage() {
   const [status, setStatus] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [actionInProgress, setActionInProgress] = useState(false)
 
   // Modal form state
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -176,6 +180,64 @@ export default function PurchaseOrdersPage() {
     } catch (error) {
       console.error('Error:', error)
       toast.error('Failed to cancel purchase order')
+    }
+  }
+
+  async function handlePreview(order: PurchaseOrder) {
+    setSelectedOrder(order)
+    setShowPreviewModal(true)
+  }
+
+  async function handleEdit(order: PurchaseOrder) {
+    setSelectedOrder(order)
+    setShowEditModal(true)
+  }
+
+  async function handleSubmit(id: string) {
+    if (!confirm('Submit this PO for approval?')) return
+
+    setActionInProgress(true)
+    try {
+      const response = await fetch(`/api/inventory/purchase-orders/${id}/submit`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to submit')
+      }
+      
+      toast.success('Purchase order submitted for approval')
+      fetchOrders()
+    } catch (error: any) {
+      console.error('Error:', error)
+      toast.error(error.message || 'Failed to submit purchase order')
+    } finally {
+      setActionInProgress(false)
+    }
+  }
+
+  async function handleApprove(id: string) {
+    if (!confirm('Approve this PO?')) return
+
+    setActionInProgress(true)
+    try {
+      const response = await fetch(`/api/inventory/purchase-orders/${id}/approve`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to approve')
+      }
+      
+      toast.success('Purchase order approved')
+      fetchOrders()
+    } catch (error: any) {
+      console.error('Error:', error)
+      toast.error(error.message || 'Failed to approve purchase order')
+    } finally {
+      setActionInProgress(false)
     }
   }
 
@@ -588,25 +650,48 @@ export default function PurchaseOrdersPage() {
                           {order.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-right space-x-2">
+                      <td className="px-6 py-4 text-sm text-right space-x-2 flex justify-end items-center gap-1">
                         <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="text-blue-600 hover:text-blue-800"
+                          onClick={() => handlePreview(order)}
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                          title="Preview"
                         >
                           <Eye size={18} />
                         </button>
                         {order.status === 'draft' && (
                           <button
-                            onClick={() => setSelectedOrder(order)}
-                            className="text-green-600 hover:text-green-800"
+                            onClick={() => handleEdit(order)}
+                            className="text-green-600 hover:text-green-800 p-1"
+                            title="Edit"
                           >
                             <Edit2 size={18} />
                           </button>
                         )}
                         {order.status === 'draft' && (
                           <button
+                            onClick={() => handleSubmit(order.uuid)}
+                            disabled={actionInProgress}
+                            className="text-blue-600 hover:text-blue-800 p-1 disabled:opacity-50"
+                            title="Submit for Approval"
+                          >
+                            <CheckCircle size={18} />
+                          </button>
+                        )}
+                        {order.status === 'pending' && (
+                          <button
+                            onClick={() => handleApprove(order.uuid)}
+                            disabled={actionInProgress}
+                            className="text-green-600 hover:text-green-800 p-1 disabled:opacity-50"
+                            title="Approve"
+                          >
+                            <CheckCircle size={18} />
+                          </button>
+                        )}
+                        {order.status === 'draft' && (
+                          <button
                             onClick={() => handleDelete(order.uuid)}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-red-600 hover:text-red-800 p-1"
+                            title="Cancel"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -643,6 +728,126 @@ export default function PurchaseOrdersPage() {
           </div>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {showPreviewModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Purchase Order - {selectedOrder.po_number}</h2>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">PO Number</label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedOrder.po_number}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Supplier</label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedOrder.supplier?.company_name || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Order Date</label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{new Date(selectedOrder.order_date).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Expected Delivery</label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {selectedOrder.expected_delivery_date ? new Date(selectedOrder.expected_delivery_date).toLocaleDateString() : '-'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Status</label>
+                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-semibold ${statusColors[selectedOrder.status]}`}>
+                    {selectedOrder.status.replace('_', ' ')}
+                  </span>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Total Amount</label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">₹{selectedOrder.total_amount.toFixed(2)}</p>
+                </div>
+              </div>
+
+              {selectedOrder.remarks && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Remarks</label>
+                  <p className="text-sm text-gray-900 dark:text-white">{selectedOrder.remarks}</p>
+                </div>
+              )}
+
+              {selectedOrder.items && selectedOrder.items.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Items</h3>
+                  <div className="space-y-2">
+                    {selectedOrder.items.map((item, idx) => (
+                      <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{item.product?.product_name || '-'}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{item.product?.product_code}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{item.ordered_quantity} @ ₹{item.unit_rate.toFixed(2)}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Line: ₹{item.line_amount.toFixed(2)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Purchase Order - {selectedOrder.po_number}</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Only draft purchase orders can be edited. Edit functionality coming soon.
+              </p>
+            </div>
+
+            <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

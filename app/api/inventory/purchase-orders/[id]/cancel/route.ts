@@ -3,11 +3,12 @@ import { PurchaseOrderService } from '@/lib/inventory/purchase-order-service'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('x-user-id')
-    const purchaseOrder = await PurchaseOrderService.cancelPurchaseOrder(params.id, userId)
+    const { id } = await params
+    const userId = request.headers.get('x-user-id') || undefined
+    const purchaseOrder = await PurchaseOrderService.cancelPurchaseOrder(id, userId)
     return NextResponse.json(purchaseOrder)
   } catch (error: any) {
     console.error('POST /api/inventory/purchase-orders/[id]/cancel error:', error)
@@ -20,7 +21,7 @@ export async function POST(
     }
 
     return NextResponse.json(
-      { error: 'Failed to cancel purchase order' },
+      { error: error.message || 'Failed to cancel purchase order' },
       { status: 500 }
     )
   }
