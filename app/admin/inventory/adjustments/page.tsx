@@ -12,6 +12,7 @@ import {
   X,
   Loader,
   Trash2,
+  Edit,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -82,7 +83,10 @@ export default function StockAdjustmentsPage() {
   const [status, setStatus] = useState('')
   const [reason, setReason] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [selectedAdjustment, setSelectedAdjustment] = useState<StockAdjustment | null>(null)
 
   // Modal state
   const [products, setProducts] = useState<Product[]>([])
@@ -229,6 +233,124 @@ export default function StockAdjustmentsPage() {
       toast.error(error.message || 'Failed to create stock adjustment')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleViewAdjustment(adjUuid: string) {
+    try {
+      const response = await fetch(`/api/inventory/adjustments/${adjUuid}`)
+      if (!response.ok) throw new Error('Failed to fetch adjustment')
+      const data = await response.json()
+      setSelectedAdjustment(data.data)
+      setShowViewModal(true)
+    } catch (error: any) {
+      console.error('Error:', error)
+      toast.error(error.message || 'Failed to fetch adjustment')
+    }
+  }
+
+  async function handleEditAdjustment(adjUuid: string) {
+    try {
+      const response = await fetch(`/api/inventory/adjustments/${adjUuid}`)
+      if (!response.ok) throw new Error('Failed to fetch adjustment')
+      const data = await response.json()
+      const adj = data.data
+      
+      // Check if can edit (only draft adjustments)
+      if (adj.status !== 'draft') {
+        toast.error('Only draft adjustments can be edited')
+        return
+      }
+      
+      setSelectedAdjustment(adj)
+      setFormData({
+        adjustment_date: adj.adjustment_date,
+        reason: adj.reason,
+        notes: adj.notes || '',
+      })
+      setItems(adj.items || [])
+      setShowEditModal(true)
+    } catch (error: any) {
+      console.error('Error:', error)
+      toast.error(error.message || 'Failed to fetch adjustment')
+    }
+  }
+
+  async function handleUpdateAdjustment() {
+    if (!selectedAdjustment) return
+
+    // Validation
+    if (!formData.reason) {
+      toast.error('Please select a reason')
+      return
+    }
+    if (items.length === 0) {
+      toast.error('Please add at least one item')
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      const payload = {
+        adjustment_date: formData.adjustment_date,
+        reason: formData.reason,
+        notes: formData.notes || undefined,
+        items: items.map(item => ({
+          product_uuid: item.product_uuid,
+          batch_uuid: item.batch_uuid,
+          adjustment_type: item.adjustment_type,
+          quantity: item.quantity,
+          notes: item.notes || undefined,
+        })),
+      }
+
+      const response = await fetch(`/api/inventory/adjustments/${selectedAdjustment.uuid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update adjustment')
+      }
+
+      toast.success('Stock adjustment updated successfully')
+      setShowEditModal(false)
+      setSelectedAdjustment(null)
+      setFormData({
+        adjustment_date: new Date().toISOString().split('T')[0],
+        reason: 'PHYSICAL_COUNT',
+        notes: '',
+      })
+      setItems([])
+      fetchAdjustments()
+    } catch (error: any) {
+      console.error('Error:', error)
+      toast.error(error.message || 'Failed to update stock adjustment')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleDeleteAdjustment(adjUuid: string) {
+    if (!confirm('Are you sure you want to delete this adjustment?')) return
+
+    try {
+      const response = await fetch(`/api/inventory/adjustments/${adjUuid}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete adjustment')
+      }
+
+      toast.success('Stock adjustment deleted successfully')
+      fetchAdjustments()
+    } catch (error: any) {
+      console.error('Error:', error)
+      toast.error(error.message || 'Failed to delete stock adjustment')
     }
   }
 
@@ -481,7 +603,309 @@ export default function StockAdjustmentsPage() {
         </div>
       )}
 
-      {/* Filters */}
+      {/* View Modal */}
+      {showViewModal && selectedAdjustment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Adjustment Details</h2>
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Adjustment Number</label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">{selectedAdjustment.adjustment_number}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Status</label>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${statusColors[selectedAdjustment.status]}`}>
+                      {selectedAdjustment.status}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Date</label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                    {new Date(selectedAdjustment.adjustment_date).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Reason</label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                    {selectedAdjustment.reason.replace(/_/g, ' ')}
+                  </p>
+                </div>
+              </div>
+
+              {selectedAdjustment.notes && (
+                <div>
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Notes</label>
+                  <p className="text-sm text-gray-900 dark:text-white mt-1">{selectedAdjustment.notes}</p>
+                </div>
+              )}
+
+              {(selectedAdjustment as any).items && (selectedAdjustment as any).items.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Items</h3>
+                  <div className="space-y-2">
+                    {(selectedAdjustment as any).items.map((item: any, index: number) => (
+                      <div key={index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Product</label>
+                            <p className="text-gray-900 dark:text-white mt-1">{item.product?.product_name}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Type</label>
+                            <p className="text-gray-900 dark:text-white mt-1">{item.adjustment_type}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Quantity</label>
+                            <p className="text-gray-900 dark:text-white mt-1">{item.physical_qty}</p>
+                          </div>
+                          {item.reason_note && (
+                            <div>
+                              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Notes</label>
+                              <p className="text-gray-900 dark:text-white mt-1">{item.reason_note}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && selectedAdjustment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Stock Adjustment</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Basic Info */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-900 dark:text-white">Adjustment Details</h3>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Reason *
+                  </label>
+                  <select
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {reasonOptions.map((r) => (
+                      <option key={r} value={r}>
+                        {r.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Adjustment Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.adjustment_date}
+                    onChange={(e) => setFormData({ ...formData, adjustment_date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Notes
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              {/* Items Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Items *</h3>
+                  <button
+                    onClick={addItem}
+                    className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition"
+                  >
+                    <Plus size={16} className="inline mr-1" />
+                    Add Item
+                  </button>
+                </div>
+
+                {items.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                    No items added yet
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {items.map((item, index) => (
+                      <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Item {index + 1}
+                          </label>
+                          <button
+                            onClick={() => removeItem(index)}
+                            className="text-red-600 hover:text-red-800 transition"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Product *
+                            </label>
+                            <select
+                              value={item.product_uuid}
+                              onChange={(e) => updateItem(index, 'product_uuid', e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">Select product</option>
+                              {products.map((p) => (
+                                <option key={p.uuid} value={p.uuid}>
+                                  {p.product_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {item.product_uuid && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Batch *
+                              </label>
+                              <select
+                                value={item.batch_uuid || ''}
+                                onChange={(e) => updateItem(index, 'batch_uuid', e.target.value)}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="">Select batch</option>
+                                {(batches[item.product_uuid] || []).map((b) => (
+                                  <option key={b.uuid} value={b.uuid}>
+                                    {b.batch_code} (Available: {b.available_quantity})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Type *
+                              </label>
+                              <select
+                                value={item.adjustment_type}
+                                onChange={(e) => updateItem(index, 'adjustment_type', e.target.value as any)}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="INCREASE">Increase</option>
+                                <option value="DECREASE">Decrease</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Quantity *
+                              </label>
+                              <input
+                                type="number"
+                                value={item.quantity}
+                                onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Qty to adjust"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Notes
+                            </label>
+                            <textarea
+                              value={item.notes || ''}
+                              onChange={(e) => updateItem(index, 'notes', e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              rows={2}
+                              placeholder="Additional notes for this item"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateAdjustment}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+              >
+                {submitting && <Loader size={18} className="animate-spin" />}
+                {submitting ? 'Updating...' : 'Update Adjustment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
@@ -587,9 +1011,33 @@ export default function StockAdjustmentsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-right">
-                        <button className="text-blue-600 hover:text-blue-800">
-                          <Eye size={18} />
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleViewAdjustment(adj.uuid)}
+                            className="text-blue-600 hover:text-blue-800 transition"
+                            title="View details"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          {adj.status === 'draft' && (
+                            <>
+                              <button
+                                onClick={() => handleEditAdjustment(adj.uuid)}
+                                className="text-amber-600 hover:text-amber-800 transition"
+                                title="Edit adjustment"
+                              >
+                                <Edit size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAdjustment(adj.uuid)}
+                                className="text-red-600 hover:text-red-800 transition"
+                                title="Delete adjustment"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )

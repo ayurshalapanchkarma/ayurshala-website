@@ -577,6 +577,130 @@ export class StockService {
     }
   }
 
+  static async updateAdjustment(id: string, input: {
+    adjustment_date?: string
+    reason: AdjustmentReason
+    notes?: string
+    items: any[]
+  }, userId?: string): Promise<StockAdjustment> {
+    console.log('========== StockService.updateAdjustment START ==========')
+    console.log('Input:', JSON.stringify(input, null, 2))
+
+    const errors: Record<string, string> = {}
+    if (!input.reason) errors.reason = 'Reason is required'
+    if (!input.items || input.items.length === 0) errors.items = 'At least one item is required'
+
+    if (Object.keys(errors).length > 0) {
+      console.error('Validation errors:', errors)
+      throw new ValidationError(errors)
+    }
+
+    try {
+      // Update header
+      console.log('Updating adjustment header...')
+      const { error: adjErr } = await getSupabase()
+        .from('inv_stock_adjustments')
+        .update({
+          adjustment_date: input.adjustment_date,
+          reason: input.reason,
+          notes: input.notes ?? null,
+          updated_by: userId ?? null,
+        })
+        .eq('uuid', id)
+
+      if (adjErr) {
+        console.error('Update header error:', adjErr)
+        throw adjErr
+      }
+
+      // Delete old items
+      console.log('Deleting old items...')
+      const { error: delErr } = await getSupabase()
+        .from('inv_stock_adjustment_items')
+        .delete()
+        .eq('adjustment_uuid', id)
+
+      if (delErr) {
+        console.error('Delete items error:', delErr)
+        throw delErr
+      }
+
+      // Insert new items
+      console.log('Transforming new items...')
+      const items = input.items.map((item: any) => {
+        const quantity = item.quantity || item.quantity_adjusted || 0
+        return {
+          adjustment_uuid: id,
+          product_uuid: item.product_uuid,
+          batch_uuid: item.batch_uuid,
+          adjustment_type: item.adjustment_type || 'INCREASE',
+          system_qty: 0,
+          physical_qty: quantity,
+          difference: quantity,
+          reason_note: item.notes || item.reason_notes || null,
+        }
+      })
+
+      console.log('Inserting new items...')
+      const { error: itemErr } = await getSupabase()
+        .from('inv_stock_adjustment_items')
+        .insert(items)
+
+      if (itemErr) {
+        console.error('Insert items error:', itemErr)
+        throw itemErr
+      }
+
+      console.log('Fetching updated adjustment...')
+      const result = await this.getAdjustmentById(id)
+      console.log('========== StockService.updateAdjustment END (SUCCESS) ==========')
+      return result
+    } catch (error) {
+      console.error('========== StockService.updateAdjustment ERROR ==========')
+      console.error('Error:', error)
+      if (error instanceof ValidationError) throw error
+      throw error
+    }
+  }
+
+  static async deleteAdjustment(id: string): Promise<void> {
+    console.log('========== StockService.deleteAdjustment START ==========')
+    console.log('Adjustment ID:', id)
+
+    try {
+      // Delete items first (cascade might handle this, but be explicit)
+      console.log('Deleting adjustment items...')
+      const { error: itemErr } = await getSupabase()
+        .from('inv_stock_adjustment_items')
+        .delete()
+        .eq('adjustment_uuid', id)
+
+      if (itemErr) {
+        console.error('Delete items error:', itemErr)
+        throw itemErr
+      }
+
+      // Delete header
+      console.log('Deleting adjustment header...')
+      const { error: adjErr } = await getSupabase()
+        .from('inv_stock_adjustments')
+        .delete()
+        .eq('uuid', id)
+
+      if (adjErr) {
+        console.error('Delete adjustment error:', adjErr)
+        throw adjErr
+      }
+
+      console.log('Adjustment deleted successfully')
+      console.log('========== StockService.deleteAdjustment END (SUCCESS) ==========')
+    } catch (error) {
+      console.error('========== StockService.deleteAdjustment ERROR ==========')
+      console.error('Error:', error)
+      throw error
+    }
+  }
+
   static async getStockMovements(options: {
     product_uuid?: string
     batch_uuid?: string
