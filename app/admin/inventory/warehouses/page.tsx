@@ -141,16 +141,17 @@ export default function WarehousesPage() {
     }
 
     // STEP 1: Log the warehouse object exactly as received
-    console.log('===== WAREHOUSE DELETE DEBUG =====')
+    const timestamp = new Date().toISOString()
+    console.log('%c===== WAREHOUSE DELETE DEBUG [' + timestamp + '] =====', 'background: yellow; color: black; font-weight: bold')
     console.log('Warehouse object:', warehouse)
-    console.log('warehouse.id =', warehouse.id)
+    console.log('warehouse.id =', (warehouse as any).id)
     console.log('warehouse.uuid =', warehouse.uuid)
     console.log('Object.keys:', Object.keys(warehouse))
     
     // Use uuid since that's what the database actually has
     const deleteUrl = `/api/inventory/warehouses/${warehouse.uuid}`
     console.log('DELETE URL:', deleteUrl)
-    console.log('===== END WAREHOUSE DELETE DEBUG =====')
+    console.log('%c===== END WAREHOUSE DELETE DEBUG =====', 'background: yellow; color: black; font-weight: bold')
 
     setIsDeleting(true)
     try {
