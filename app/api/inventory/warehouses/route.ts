@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const offset = (page - 1) * pageSize
 
     let query = supabaseAdmin
-      .from('warehouses')
+      .from('inv_warehouses')
       .select('*', { count: 'exact' })
       .eq('is_deleted', false)
       .order('created_at', { ascending: false })
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     // Check for duplicate code if provided
     if (warehouse_code) {
       const { data: existing } = await supabaseAdmin
-        .from('warehouses')
+        .from('inv_warehouses')
         .select('uuid')
         .eq('warehouse_code', warehouse_code)
         .eq('is_deleted', false)
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     
     console.log('[Warehouse POST] Insert payload:', JSON.stringify(insertPayload, null, 2))
 
-    const { data, error } = await supabaseAdmin.from('warehouses').insert(insertPayload).select()
+    const { data, error } = await supabaseAdmin.from('inv_warehouses').insert(insertPayload).select()
 
     if (error) {
       console.error('[Warehouse POST] Supabase insert error:', {
