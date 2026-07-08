@@ -1,201 +1,470 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Search, RefreshCw, Download, BookOpen } from 'lucide-react'
-import { ProductService } from '@/lib/inventory'
+import { useState, useEffect } from 'react'
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Loader,
+  AlertCircle,
+} from 'lucide-react'
+import { toast } from 'sonner'
 
-interface LedgerEntry {
-  id: string
-  product_id: string
-  transaction_date?: string
-  movement_type?: string
-  transaction_type?: string
-  reference_number?: string
-  qty_in?: number
-  quantity_in?: number
-  qty_out?: number
-  quantity_out?: number
-  balance?: number
-  created_at: string
+interface LedgerItem {
+  date: string
+  voucher_type?: string
+  reference?: string
+  transaction_type: string
+  batch_number?: string
+  opening_qty: number
+  qty_in: number
+  qty_out: number
+  closing_qty: number
+  unit_cost: number
+  running_value: number
+  user: string
+}
+
+interface LedgerResponse {
+  product_code: string
+  product_name: string
+  unit_name: string
+  from_date: string
+  to_date: string
+  opening_stock: number
+  stock_in: number
+  stock_out: number
+  closing_stock: number
+  current_value: number
+  ledger: LedgerItem[]
+}
+
+interface Product {
+  uuid: string
+  product_code: string
+  product_name: string
+}
+
+interface Batch {
+  uuid: string
+  batch_code: string
+  batch_number: string
 }
 
 export default function StockLedgerPage() {
-  const [products, setProducts] = useState<any[]>([])
   const [selectedProduct, setSelectedProduct] = useState('')
-  const [ledger, setLedger] = useState<LedgerEntry[]>([])
+  const [selectedBatch, setSelectedBatch] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [products, setProducts] = useState<Product[]>([])
+  const [batches, setBatches] = useState<Batch[]>([])
+  const [ledgerData, setLedgerData] = useState<LedgerResponse | null>(null)
   const [loading, setLoading] = useState(false)
-  const [loadingProducts, setLoadingProducts] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
   const [page, setPage] = useState(1)
-  const pageSize = 25
+  const [pageSize] = useState(50)
+  const [exporting, setExporting] = useState(false)
+  const [totalPages, setTotalPages] = useState(1)
 
   useEffect(() => {
-    ProductService.getProducts().then(p => setProducts(p)).catch(() => {}).finally(() => setLoadingProducts(false))
+    fetchProducts()
   }, [])
 
-  const load = useCallback(async () => {
-    if (!selectedProduct) return
+  async function fetchProducts() {
+    try {
+      const response = await fetch('/api/inventory/products?pageSize=100')
+      if (!response.ok) throw new Error('Failed to fetch products')
+      const data = await response.json()
+      setProducts(data.data || [])
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to load products')
+    }
+  }
+
+  async function fetchBatches(productUuid: string) {
+    try {
+      const response = await fetch(`/api/inventory/products/${productUuid}/batches`)
+      if (!response.ok) throw new Error('Failed to fetch batches')
+      const data = await response.json()
+      setBatches(data.data || [])
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to load batches')
+    }
+  }
+
+  async function generateLedger() {
+    if (!selectedProduct) {
+      toast.error('Please select a product')
+      return
+    }
+
     try {
       setLoading(true)
-      setError(null)
-      const params = new URLSearchParams({ product_id: selectedProduct, limit: '200' })
-      const res = await fetch(`/api/inventory/stock/ledger?${params}`)
-      if (!res.ok) throw new Error('Failed to load ledger')
-      const data = await res.json()
-      setLedger(data.data || data || [])
       setPage(1)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load')
+
+      const params = new URLSearchParams({
+        product_uuid: selectedProduct,
+        batch_uuid: selectedBatch,
+        dateFrom,
+        dateTo,
+        page: '1',
+        pageSize: String(pageSize),
+      })
+
+      const response = await fetch(`/api/inventory/stock-ledger?${params}`)
+      if (!response.ok) throw new Error('Failed to fetch ledger')
+
+      const data = await response.json()
+      setLedgerData(data.data)
+      setTotalPages(data.totalPages)
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to generate ledger')
     } finally {
       setLoading(false)
     }
-  }, [selectedProduct])
+  }
 
-  useEffect(() => { load() }, [load])
+  async function handleProductChange(productUuid: string) {
+    setSelectedProduct(productUuid)
+    setSelectedBatch('')
+    setBatches([])
+    setLedgerData(null)
 
-  const filtered = ledger.filter(e => {
-    const matchSearch = !search || e.reference_number?.toLowerCase().includes(search.toLowerCase()) ||
-      (e.movement_type || e.transaction_type || '').toLowerCase().includes(search.toLowerCase())
-    const matchStart = !startDate || e.created_at >= startDate
-    const matchEnd = !endDate || e.created_at <= endDate + 'T23:59:59'
-    return matchSearch && matchStart && matchEnd
-  })
+    if (productUuid) {
+      await fetchBatches(productUuid)
+    }
+  }
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
+  async function exportLedger(format: 'csv' | 'excel' = 'csv') {
+    if (!ledgerData) {
+      toast.error('No ledger data to export')
+      return
+    }
 
-  function exportCSV() {
-    const rows = [['Date', 'Type', 'Reference', 'In', 'Out', 'Balance']]
-    filtered.forEach(e => rows.push([
-      new Date(e.created_at).toLocaleDateString(),
-      e.movement_type || e.transaction_type || '-',
-      e.reference_number || '-',
-      String(e.qty_in ?? e.quantity_in ?? 0),
-      String(e.qty_out ?? e.quantity_out ?? 0),
-      String(e.balance ?? '-')
-    ]))
-    const csv = rows.map(r => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `stock-ledger-${selectedProduct}.csv`; a.click()
-    URL.revokeObjectURL(url)
+    try {
+      setExporting(true)
+
+      if (format === 'csv') {
+        const headers = [
+          'Date',
+          'Voucher',
+          'Reference',
+          'Transaction Type',
+          'Batch',
+          'Opening Qty',
+          'Qty In',
+          'Qty Out',
+          'Closing Qty',
+          'Unit Cost',
+          'Running Value',
+          'User',
+        ]
+
+        const rows = ledgerData.ledger.map((item) => [
+          item.date,
+          item.voucher_type || '',
+          item.reference || '',
+          item.transaction_type,
+          item.batch_number || '',
+          item.opening_qty,
+          item.qty_in,
+          item.qty_out,
+          item.closing_qty,
+          item.unit_cost,
+          item.running_value,
+          item.user,
+        ])
+
+        const csv = [headers, ...rows]
+          .map((row) => row.map((cell) => `"${cell}"`).join(','))
+          .join('\n')
+
+        const blob = new Blob([csv], { type: 'text/csv' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `ledger-${ledgerData.product_code}-${new Date().toISOString().split('T')[0]}.csv`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+
+        toast.success('Exported as CSV')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to export')
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Stock Ledger</h1>
-        <div className="flex gap-3">
-          {selectedProduct && (
-            <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm">
-              <Download size={16} /> Export CSV
-            </button>
-          )}
-          {selectedProduct && (
-            <button onClick={load} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm">
-              <RefreshCw size={16} /> Refresh
-            </button>
-          )}
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Ledger</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Product-wise running ledger with opening and closing balances
+        </p>
       </div>
-
-      {error && <div className="mb-4 bg-red-50 border border-red-200 p-4 rounded-lg text-red-700">{error}</div>}
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg border p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Product *
+            </label>
             <select
               value={selectedProduct}
-              onChange={e => setSelectedProduct(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+              onChange={(e) => handleProductChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">-- Select Product --</option>
-              {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
+              <option value="">Select product</option>
+              {products.map((p) => (
+                <option key={p.uuid} value={p.uuid}>
+                  {p.product_name}
+                </option>
+              ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Date</label>
-            <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setPage(1) }}
-              className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To Date</label>
-            <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setPage(1) }}
-              className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
-            <div className="flex items-center gap-2 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700">
-              <Search size={16} className="text-gray-400" />
-              <input className="flex-1 bg-transparent outline-none text-sm" placeholder="Type or reference..."
-                value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
+
+          {batches.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Batch
+              </label>
+              <select
+                value={selectedBatch}
+                onChange={(e) => setSelectedBatch(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">All Batches</option>
+                {batches.map((b) => (
+                  <option key={b.uuid} value={b.uuid}>
+                    {b.batch_number}
+                  </option>
+                ))}
+              </select>
             </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              From Date
+            </label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              To Date
+            </label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+
+          <div className="flex items-end">
+            <button
+              onClick={generateLedger}
+              disabled={!selectedProduct || loading}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+            >
+              {loading && <Loader size={18} className="animate-spin" />}
+              {loading ? 'Loading...' : 'Generate'}
+            </button>
           </div>
         </div>
       </div>
 
-      {!selectedProduct ? (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border p-12 text-center">
-          <BookOpen size={40} className="mx-auto text-gray-400 mb-3" />
-          <p className="text-gray-600 dark:text-gray-400">Select a product to view its stock ledger</p>
-        </div>
-      ) : loading ? (
-        <div className="flex justify-center py-20 text-gray-500">Loading ledger entries...</div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border p-12 text-center">
-          <p className="text-gray-600 dark:text-gray-400">No ledger entries found</p>
-        </div>
-      ) : (
+      {/* Summary */}
+      {ledgerData && (
         <>
-          <div className="bg-white dark:bg-slate-800 rounded-lg border overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Date</th>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Type</th>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Reference</th>
-                  <th className="px-6 py-3 text-right font-semibold text-green-700">In</th>
-                  <th className="px-6 py-3 text-right font-semibold text-red-700">Out</th>
-                  <th className="px-6 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Balance</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                {paginated.map(entry => {
-                  const qtyIn = entry.qty_in ?? entry.quantity_in ?? 0
-                  const qtyOut = entry.qty_out ?? entry.quantity_out ?? 0
-                  return (
-                    <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                      <td className="px-6 py-3 text-gray-600 dark:text-gray-400 text-xs">{new Date(entry.created_at).toLocaleString()}</td>
-                      <td className="px-6 py-3">
-                        <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded text-xs">
-                          {entry.movement_type || entry.transaction_type || '-'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3 text-gray-600 dark:text-gray-400 font-mono text-xs">{entry.reference_number || '-'}</td>
-                      <td className="px-6 py-3 text-right font-semibold text-green-600">{qtyIn > 0 ? `+${qtyIn}` : '-'}</td>
-                      <td className="px-6 py-3 text-right font-semibold text-red-600">{qtyOut > 0 ? `-${qtyOut}` : '-'}</td>
-                      <td className="px-6 py-3 text-right font-semibold text-slate-900 dark:text-white">{entry.balance ?? '-'}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-gray-600">{filtered.length} total entries</p>
-            <div className="flex gap-2">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded disabled:opacity-50 text-sm">Previous</button>
-              <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Page {page} of {totalPages}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-4 py-2 bg-amber-600 text-white rounded disabled:opacity-50 text-sm">Next</button>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Product</p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                  {ledgerData.product_name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {ledgerData.product_code}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Opening Stock</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {ledgerData.opening_stock.toFixed(2)}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{ledgerData.unit_name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Stock In</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                  {ledgerData.stock_in.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Stock Out</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
+                  {ledgerData.stock_out.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Closing Stock</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {ledgerData.closing_stock.toFixed(2)}
+                </p>
+              </div>
             </div>
           </div>
+
+          {/* Export Button */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => exportLedger('csv')}
+              disabled={exporting}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+            >
+              {exporting && <Loader size={18} className="animate-spin" />}
+              <Download size={18} />
+              Export CSV
+            </button>
+          </div>
+
+          {/* Ledger Table */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                      Voucher
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                      Transaction
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                      Batch
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                      Opening Qty
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                      Qty In
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                      Qty Out
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                      Closing Qty
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                      User
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {ledgerData.ledger.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
+                        <div className="flex items-center justify-center gap-2">
+                          <AlertCircle size={20} />
+                          No ledger entries found
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    ledgerData.ledger.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {item.date}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {item.voucher_type || '-'}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {item.transaction_type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {item.batch_number || '-'}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-right text-gray-900 dark:text-white font-medium">
+                          {item.opening_qty.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-right text-green-600 dark:text-green-400 font-medium">
+                          {item.qty_in > 0 ? item.qty_in.toFixed(2) : '-'}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-right text-red-600 dark:text-red-400 font-medium">
+                          {item.qty_out > 0 ? item.qty_out.toFixed(2) : '-'}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-right text-gray-900 dark:text-white font-medium">
+                          {item.closing_qty.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {item.user}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 px-4 py-4 flex items-center justify-between">
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  Page {page} of {totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPage(Math.max(1, page - 1))}
+                    disabled={page === 1}
+                    className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={() => setPage(Math.min(totalPages, page + 1))}
+                    disabled={page === totalPages}
+                    className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </>
+      )}
+
+      {/* Empty State */}
+      {!ledgerData && !loading && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+          <AlertCircle className="mx-auto mb-4 text-gray-400" size={48} />
+          <p className="text-gray-600 dark:text-gray-400">
+            Select a product and click "Generate" to view the stock ledger
+          </p>
+        </div>
       )}
     </div>
   )
