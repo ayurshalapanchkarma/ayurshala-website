@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface PurchaseOrder {
   uuid: string
   po_number: string
@@ -423,9 +422,7 @@ export default function PurchaseOrdersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <InventoryBackButton />
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Purchase Orders</h1>
+      <div className="flex items-center justify-between">        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Purchase Orders</h1>
         <button
           onClick={() => setShowCreateModal(true)}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"

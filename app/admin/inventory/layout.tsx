@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AdminGuard } from '@/components/AdminGuard'
-import { ChevronDown, Menu, X, Package, Settings, FileText, AlertCircle, TrendingUp, ShoppingCart, Truck, BarChart3, Home, Search, Plus, Bell, User, ChevronLeft, MapPin } from 'lucide-react'
+import InventoryHeader from '@/components/inventory/InventoryHeader'
+import { ChevronDown, Menu, X, Package, Settings, FileText, AlertCircle, TrendingUp, ShoppingCart, Truck, BarChart3, Home, ChevronLeft } from 'lucide-react'
 
 interface NavSection {
   label: string
@@ -90,15 +91,6 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
 
   const isActive = (href: string) => pathname === href
 
-  const getBreadcrumb = () => {
-    const segments = pathname.split('/').filter(Boolean)
-    if (segments.length <= 2) return null
-    
-    const lastSegment = segments[segments.length - 1]
-    const formatted = lastSegment.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-    return formatted
-  }
-
   return (
     <AdminGuard>
       <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
@@ -156,31 +148,8 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
 
         {/* Main content */}
         <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
-          {/* Top bar */}
-          <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              <Link href="/admin" className="flex items-center gap-1 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
-                <ChevronLeft className="w-4 h-4" />
-                Back
-              </Link>
-              {getBreadcrumb() && <span className="text-sm text-gray-600 dark:text-gray-400">{getBreadcrumb()}</span>}
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative hidden sm:block w-48">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input placeholder="Search..." className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" />
-              </div>
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition">
-                <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition relative">
-                <Bell className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition">
-                <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-              </button>
-            </div>
-          </div>
+          {/* Global Inventory Header */}
+          <InventoryHeader />
 
           {/* Content area */}
           <div className="flex-1 overflow-auto">

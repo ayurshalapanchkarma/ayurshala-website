@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { MasterListPage } from '@/components/inventory/MasterListPage'
 
-import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 // Simple toast implementation
 const toast = {
   success: (message: string) => {

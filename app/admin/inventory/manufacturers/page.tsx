@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, X } from 'lucide-react'
 
-import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 // Simple toast implementation
 const toast = {
   success: (message: string) => {
@@ -197,9 +196,7 @@ export default function ManufacturersPage() {
   return (
     <div className="p-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <InventoryBackButton />
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Manufacturers</h1>
+      <div className="flex items-center justify-between mb-8">        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Manufacturers</h1>
         <button
           onClick={() => {
             setShowForm(true)

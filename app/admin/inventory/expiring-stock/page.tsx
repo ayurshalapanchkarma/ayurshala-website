@@ -21,7 +21,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import ProductPreviewModal from '@/components/inventory/ProductPreviewModal'
 import EditProductModal from '@/components/inventory/EditProductModal'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
-import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 import { useProductActions } from '@/lib/hooks/useProductActions'
 
 interface ExpiringBatchItem {
@@ -265,9 +264,7 @@ export default function ExpiringStockPage() {
     <div className="p-4 md:p-8 space-y-6 bg-gray-50 dark:bg-slate-950 min-h-screen">
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <InventoryBackButton />
-          <div>
+        <div className="flex items-center gap-4">          <div>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">Expiring Stock</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitor inventory batches nearing or past their expiry date</p>
           </div>

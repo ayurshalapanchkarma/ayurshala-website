@@ -18,7 +18,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import ProductPreviewModal from '@/components/inventory/ProductPreviewModal'
 import EditProductModal from '@/components/inventory/EditProductModal'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
-import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 import { useProductActions } from '@/lib/hooks/useProductActions'
 
 interface LowStockItem {
@@ -243,9 +242,7 @@ export default function LowStockPage() {
     <div className="p-4 md:p-8 space-y-6 bg-gray-50 dark:bg-slate-950 min-h-screen">
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <InventoryBackButton />
-          <div>
+        <div className="flex items-center gap-4">          <div>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">Low Stock Alerts</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time monitoring of products below configured stock levels</p>
           </div>

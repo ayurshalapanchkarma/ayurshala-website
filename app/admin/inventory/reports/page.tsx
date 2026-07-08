@@ -11,7 +11,6 @@ import {
   Archive,
   Receipt,
 } from 'lucide-react'
-import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 
 const reports = [
   {
@@ -84,9 +83,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <InventoryBackButton />
-        <div>
+      <div className="flex items-center gap-4">        <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reports</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             Generate and export comprehensive inventory reports

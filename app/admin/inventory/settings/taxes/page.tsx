@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, X, Percent } from 'lucide-react'
 import { toast } from 'sonner'
 
-import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface TaxMaster {
   uuid: string
   tax_name: string
@@ -191,9 +190,7 @@ export default function TaxMasterPage() {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <InventoryBackButton />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <div>          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Percent className="w-8 h-8 text-orange-600" />
             Tax Master
           </h1>

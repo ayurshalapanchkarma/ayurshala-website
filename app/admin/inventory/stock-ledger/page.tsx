@@ -11,7 +11,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface LedgerItem {
   date: string
   voucher_type?: string
@@ -206,9 +205,7 @@ export default function StockLedgerPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <InventoryBackButton />
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Ledger</h1>
+      <div>        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Ledger</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           Product-wise running ledger with opening and closing balances
         </p>

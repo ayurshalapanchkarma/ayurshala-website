@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { ArrowLeft, Loader, Save } from 'lucide-react'
 import { ProductService, CategoryService } from '@/lib/inventory'
 
-import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface Product {
   id: string
   name: string
@@ -98,10 +97,7 @@ export default function EditProductPage() {
     <div className="p-8">
       <Link href="/admin/inventory/products" className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-8">
         <ArrowLeft size={20} /> Back to Products
-      </Link>
-
-      <InventoryBackButton />
-      <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-8">Edit Product</h1>
+      </Link>      <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-8">Edit Product</h1>
 
       <form onSubmit={handleSave} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-8 max-w-2xl">
         <div className="space-y-6">
