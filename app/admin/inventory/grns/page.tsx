@@ -12,9 +12,9 @@ import {
   CheckCircle,
   Clock,
   X,
-  Loader,
-} from 'lucide-react'
+  Loader, Receipt} from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface GRN {
   uuid: string
@@ -258,6 +258,13 @@ export default function GRNPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryPageHeader
+        icon={Receipt}
+        iconColor="text-teal-600 dark:text-teal-400"
+        bgColor="bg-teal-100 dark:bg-teal-950/40"
+        title="GRN"
+        subtitle="Goods Receipt Notes"
+      />
       {/* Header */}
       <div className="flex items-center justify-between">        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Goods Receipt Notes</h1>
         <button

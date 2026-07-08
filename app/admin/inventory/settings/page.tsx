@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { RefreshCw, Save, Plus, Settings as SettingsIcon, Percent, ChevronRight } from 'lucide-react'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface Setting {
   key: string
@@ -50,6 +51,13 @@ export default function SettingsPage() {
 
   return (
     <div className="p-8 space-y-8">
+      <InventoryPageHeader
+        icon={Settings}
+        iconColor="text-gray-600 dark:text-gray-400"
+        bgColor="bg-gray-100 dark:bg-gray-950/40"
+        title="Settings"
+        subtitle="Inventory settings"
+      />
       <div>        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Inventory Settings</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your inventory configuration</p>
       </div>

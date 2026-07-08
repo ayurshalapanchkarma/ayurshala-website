@@ -12,13 +12,13 @@ import {
   Eye,
   Edit,
   Trash2,
-  ChevronDown,
-} from 'lucide-react'
+  ChevronDown, TriangleAlert} from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts'
 import ProductPreviewModal from '@/components/inventory/ProductPreviewModal'
 import EditProductModal from '@/components/inventory/EditProductModal'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 import { useProductActions } from '@/lib/hooks/useProductActions'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface LowStockItem {
   productUuid: string
@@ -240,6 +240,13 @@ export default function LowStockPage() {
 
   return (
     <div className="p-4 md:p-8 space-y-6 bg-gray-50 dark:bg-slate-950 min-h-screen">
+      <InventoryPageHeader
+        icon={TriangleAlert}
+        iconColor="text-red-600 dark:text-red-400"
+        bgColor="bg-red-100 dark:bg-red-950/40"
+        title="Low Stock"
+        subtitle="Products below minimum stock"
+      />
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">          <div>

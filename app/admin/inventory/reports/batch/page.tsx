@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Search, Download, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
+import { Search, Download, ChevronLeft, ChevronRight, AlertTriangle, PackageSearch} from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface BatchItem { uuid: string; product_code: string; product_name: string; batch_number: string; quantity: number; mfg_date: string; exp_date: string }
 interface ListResponse { data: BatchItem[]; total: number; page: number; pageSize: number; totalPages: number }
@@ -32,6 +33,13 @@ export default function BatchReportPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryPageHeader
+        icon={PackageSearch}
+        iconColor="text-pink-600 dark:text-pink-400"
+        bgColor="bg-pink-100 dark:bg-pink-950/40"
+        title="Batch Report"
+        subtitle="Batch management report"
+      />
       <div className="flex items-center justify-between">
         <div><h1 className="text-3xl font-bold text-gray-900 dark:text-white">Batch Report</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">View all product batches and expiry details</p></div>

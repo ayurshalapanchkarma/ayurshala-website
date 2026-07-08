@@ -12,9 +12,9 @@ import {
   X,
   Loader,
   Trash2,
-  Edit,
-} from 'lucide-react'
+  Edit, SlidersHorizontal} from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface StockAdjustment {
   uuid: string
@@ -405,6 +405,13 @@ export default function StockAdjustmentsPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryPageHeader
+        icon={SlidersHorizontal}
+        iconColor="text-red-600 dark:text-red-400"
+        bgColor="bg-red-100 dark:bg-red-950/40"
+        title="Stock Adjustments"
+        subtitle="Adjust stock levels"
+      />
       {/* Header */}
       <div className="flex items-center justify-between">        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Adjustments</h1>
         <button

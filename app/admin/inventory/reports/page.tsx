@@ -11,6 +11,7 @@ import {
   Archive,
   Receipt,
 } from 'lucide-react'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 const reports = [
   {
@@ -82,6 +83,13 @@ const reports = [
 export default function ReportsPage() {
   return (
     <div className="space-y-8">
+      <InventoryPageHeader
+        icon={BarChart3}
+        iconColor="text-purple-600 dark:text-purple-400"
+        bgColor="bg-purple-100 dark:bg-purple-950/40"
+        title="Reports"
+        subtitle="Inventory reports"
+      />
       {/* Header */}
       <div className="flex items-center gap-4">        <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reports</h1>

@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Search, Download, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
+import { Search, Download, ChevronLeft, ChevronRight, AlertTriangle, Clock} from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface ExpiryItem {
   uuid: string
@@ -48,6 +49,13 @@ export default function ExpiryReportPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryPageHeader
+        icon={Clock}
+        iconColor="text-orange-600 dark:text-orange-400"
+        bgColor="bg-orange-100 dark:bg-orange-950/40"
+        title="Expiry Report"
+        subtitle="Expiry tracking"
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Expiry Report</h1>

@@ -9,9 +9,9 @@ import {
   Eye,
   Download,
   Loader,
-  FileText,
-} from 'lucide-react'
+  FileText, ArrowLeftRight} from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface Transaction {
   uuid: string
@@ -219,6 +219,13 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryPageHeader
+        icon={ArrowLeftRight}
+        iconColor="text-blue-500 dark:text-blue-400"
+        bgColor="bg-blue-100 dark:bg-blue-950/40"
+        title="Transactions"
+        subtitle="All stock movements"
+      />
       {/* Header */}
       <div className="flex items-center justify-between">        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Inventory Transactions

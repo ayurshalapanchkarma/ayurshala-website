@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { BarChart3, Package, AlertTriangle, TrendingUp, DollarSign, Clock } from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface DashboardData {
   stock: {
@@ -103,6 +104,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      <InventoryPageHeader
+        icon={BarChart3}
+        iconColor="text-purple-600 dark:text-purple-400"
+        bgColor="bg-purple-100 dark:bg-purple-950/40"
+        title="Dashboard"
+        subtitle="Inventory analytics"
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Inventory Dashboard</h1>

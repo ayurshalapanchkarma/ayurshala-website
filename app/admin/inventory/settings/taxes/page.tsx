@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, X, Percent } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Percent, ReceiptText} from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface TaxMaster {
   uuid: string
@@ -188,6 +189,13 @@ export default function TaxMasterPage() {
 
   return (
     <div className="space-y-6 p-6">
+      <InventoryPageHeader
+        icon={ReceiptText}
+        iconColor="text-indigo-600 dark:text-indigo-400"
+        bgColor="bg-indigo-100 dark:bg-indigo-950/40"
+        title="Tax Master"
+        subtitle="Tax configuration"
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">

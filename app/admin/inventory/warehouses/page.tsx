@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, X, MapPin, Box } from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface Warehouse {
   uuid: string
@@ -177,6 +178,13 @@ export default function WarehousesPage() {
 
   return (
     <div className="space-y-6 p-6">
+      <InventoryPageHeader
+        icon={MapPin}
+        iconColor="text-orange-600 dark:text-orange-400"
+        bgColor="bg-orange-100 dark:bg-orange-950/40"
+        title="Warehouses"
+        subtitle="Manage warehouses"
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">

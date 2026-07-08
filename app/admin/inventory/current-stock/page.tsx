@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, RefreshCw, Download, Package } from 'lucide-react'
+import { Search, RefreshCw, Download, Package, Boxes} from 'lucide-react'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface StockItem {
   productId: string
@@ -61,6 +62,13 @@ export default function CurrentStockPage() {
 
   return (
     <div className="p-8">
+      <InventoryPageHeader
+        icon={Boxes}
+        iconColor="text-green-600 dark:text-green-400"
+        bgColor="bg-green-100 dark:bg-green-950/40"
+        title="Current Stock"
+        subtitle="Real-time stock levels"
+      />
       <div className="flex items-center justify-between mb-8">        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Current Stock</h1>
         <div className="flex gap-3">
           <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 text-sm">

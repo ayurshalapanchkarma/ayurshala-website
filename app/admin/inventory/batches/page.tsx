@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, PackageSearch} from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface ProductBatch {
   uuid: string
@@ -75,6 +76,13 @@ export default function BatchManagementPage() {
 
   return (
     <div className="space-y-6">      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Batch Management</h1>
+      <InventoryPageHeader
+        icon={PackageSearch}
+        iconColor="text-pink-600 dark:text-pink-400"
+        bgColor="bg-pink-100 dark:bg-pink-950/40"
+        title="Batch Management"
+        subtitle="Manage product batches"
+      />
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">

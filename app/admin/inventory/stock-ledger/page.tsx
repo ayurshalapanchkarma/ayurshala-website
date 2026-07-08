@@ -7,9 +7,9 @@ import {
   ChevronRight,
   Download,
   Loader,
-  AlertCircle,
-} from 'lucide-react'
+  AlertCircle, BookOpen} from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface LedgerItem {
   date: string
@@ -204,6 +204,13 @@ export default function StockLedgerPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryPageHeader
+        icon={BookOpen}
+        iconColor="text-cyan-600 dark:text-cyan-400"
+        bgColor="bg-cyan-100 dark:bg-cyan-950/40"
+        title="Stock Ledger"
+        subtitle="Stock transaction history"
+      />
       {/* Header */}
       <div>        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Ledger</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">

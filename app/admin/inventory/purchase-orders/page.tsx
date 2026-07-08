@@ -13,9 +13,9 @@ import {
   Clock,
   AlertCircle,
   X,
-  Loader,
-} from 'lucide-react'
+  Loader, ClipboardList} from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface PurchaseOrder {
   uuid: string
@@ -421,6 +421,13 @@ export default function PurchaseOrdersPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryPageHeader
+        icon={ClipboardList}
+        iconColor="text-amber-600 dark:text-amber-400"
+        bgColor="bg-amber-100 dark:bg-amber-950/40"
+        title="Purchase Orders"
+        subtitle="Manage purchase orders"
+      />
       {/* Header */}
       <div className="flex items-center justify-between">        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Purchase Orders</h1>
         <button
