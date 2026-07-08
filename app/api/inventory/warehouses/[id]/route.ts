@@ -95,40 +95,54 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('========== DELETE ENDPOINT TRACE START ==========')
-    console.log('params object:', params)
-    console.log('params.id:', params.id)
-    console.log('params.id type:', typeof params.id)
-    console.log('params.id length:', params.id?.length)
-    console.log('params.id === "undefined":', params.id === 'undefined')
-    console.log('!params.id:', !params.id)
-    
-    if (!params.id || params.id === 'undefined' || params.id.trim() === '') {
-      console.error('INVALID ID - returning 400')
-      console.log('========== DELETE ENDPOINT TRACE END (INVALID) ==========')
+    // STEP 2: Log exactly what we received from Next.js
+    console.log('===== DELETE API ENDPOINT =====')
+    console.log('params =', params)
+    console.log('params.id =', params.id)
+    console.log('typeof params.id =', typeof params.id)
+    console.log('params.id length =', params.id?.length)
+    console.log('params.id === "undefined" =', params.id === 'undefined')
+    console.log('params.id === undefined =', params.id === undefined)
+    console.log('!params.id =', !params.id)
+
+    // Check what we actually have
+    if (!params.id) {
+      console.error('ERROR: params.id is falsy')
+      console.log('===== DELETE API ENDPOINT END (NO ID) =====')
       return NextResponse.json({ error: 'Invalid warehouse ID' }, { status: 400 })
     }
 
-    console.log('ID is valid, proceeding with delete...')
-    console.log('Supabase query: .from("inv_warehouses").update({is_deleted: true}).eq("uuid", "' + params.id + '")')
+    if (params.id === 'undefined') {
+      console.error('ERROR: params.id is string "undefined"')
+      console.log('===== DELETE API ENDPOINT END (STRING UNDEFINED) =====')
+      return NextResponse.json({ error: 'Invalid warehouse ID' }, { status: 400 })
+    }
 
-    // Soft delete
-    const { error } = await supabaseAdmin
+    console.log('ID is valid, proceeding with Supabase delete...')
+    console.log('Query: .from("inv_warehouses").update({is_deleted:true}).eq("uuid", "' + params.id + '")')
+
+    // Soft delete using uuid (the actual primary key)
+    const { data, error } = await supabaseAdmin
       .from('inv_warehouses')
       .update({ is_deleted: true, updated_at: new Date().toISOString() })
       .eq('uuid', params.id)
+      .select()
+
+    console.log('Supabase response:', { data, error })
 
     if (error) {
       console.error('Supabase error:', error)
       throw error
     }
 
-    console.log('Delete successful')
-    console.log('========== DELETE ENDPOINT TRACE END (SUCCESS) ==========')
+    console.log('Delete successful, updated rows:', data?.length)
+    console.log('===== DELETE API ENDPOINT END (SUCCESS) =====')
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('[Warehouse DELETE] Full error:', error)
-    console.log('========== DELETE ENDPOINT TRACE END (ERROR) ==========')
+    console.error('===== DELETE API ENDPOINT ERROR =====')
+    console.error('error =', error)
+    console.error('error.message =', error?.message)
+    console.log('===== DELETE API ENDPOINT END (ERROR) =====')
     return NextResponse.json({ error: error?.message || 'Failed to delete warehouse' }, { status: 500 })
   }
 }

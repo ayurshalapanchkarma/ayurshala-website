@@ -140,27 +140,26 @@ export default function WarehousesPage() {
       return
     }
 
-    // Log EVERYTHING
-    console.log('========== DELETE TRACE START ==========')
-    console.log('warehouse object:', JSON.stringify(warehouse, null, 2))
-    console.log('warehouse.id:', (warehouse as any).id)
-    console.log('warehouse.uuid:', warehouse.uuid)
-    console.log('Object.keys(warehouse):', Object.keys(warehouse))
+    // STEP 1: Log the warehouse object exactly as received
+    console.log('===== WAREHOUSE DELETE DEBUG =====')
+    console.log('Warehouse object:', warehouse)
+    console.log('warehouse.id =', warehouse.id)
+    console.log('warehouse.uuid =', warehouse.uuid)
+    console.log('Object.keys:', Object.keys(warehouse))
     
-    const warehouseId = (warehouse as any).id || warehouse.uuid
-    console.log('warehouseId selected:', warehouseId)
-    console.log('warehouseId type:', typeof warehouseId)
-    console.log('DELETE URL:', `/api/inventory/warehouses/${warehouseId}`)
-    console.log('========== DELETE TRACE END ==========')
+    // Use uuid since that's what the database actually has
+    const deleteUrl = `/api/inventory/warehouses/${warehouse.uuid}`
+    console.log('DELETE URL:', deleteUrl)
+    console.log('===== END WAREHOUSE DELETE DEBUG =====')
 
     setIsDeleting(true)
     try {
-      const response = await fetch(`/api/inventory/warehouses/${warehouseId}`, {
+      const response = await fetch(deleteUrl, {
         method: 'DELETE',
       })
 
       const result = await response.json()
-      console.log('[Delete] Response:', result)
+      console.log('[Delete] API Response:', result)
 
       if (!response.ok) throw new Error(result.error || 'Failed to delete')
 
