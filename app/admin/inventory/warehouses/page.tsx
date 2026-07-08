@@ -140,8 +140,18 @@ export default function WarehousesPage() {
       return
     }
 
-    console.log('[Delete] Deleting warehouse:', warehouse)
+    // Log EVERYTHING
+    console.log('========== DELETE TRACE START ==========')
+    console.log('warehouse object:', JSON.stringify(warehouse, null, 2))
+    console.log('warehouse.id:', (warehouse as any).id)
+    console.log('warehouse.uuid:', warehouse.uuid)
+    console.log('Object.keys(warehouse):', Object.keys(warehouse))
+    
     const warehouseId = (warehouse as any).id || warehouse.uuid
+    console.log('warehouseId selected:', warehouseId)
+    console.log('warehouseId type:', typeof warehouseId)
+    console.log('DELETE URL:', `/api/inventory/warehouses/${warehouseId}`)
+    console.log('========== DELETE TRACE END ==========')
 
     setIsDeleting(true)
     try {
@@ -158,6 +168,7 @@ export default function WarehousesPage() {
       setDeleteConfirm(null)
       loadWarehouses()
     } catch (err) {
+      console.error('[Delete] Error:', err)
       toast.error(err instanceof Error ? err.message : 'Failed to delete warehouse')
     } finally {
       setIsDeleting(false)

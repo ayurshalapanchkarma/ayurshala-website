@@ -95,14 +95,22 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[Warehouse DELETE] params:', params)
-    console.log('[Warehouse DELETE] id value:', params.id)
-    console.log('[Warehouse DELETE] id type:', typeof params.id)
+    console.log('========== DELETE ENDPOINT TRACE START ==========')
+    console.log('params object:', params)
+    console.log('params.id:', params.id)
+    console.log('params.id type:', typeof params.id)
+    console.log('params.id length:', params.id?.length)
+    console.log('params.id === "undefined":', params.id === 'undefined')
+    console.log('!params.id:', !params.id)
     
-    if (!params.id || params.id === 'undefined') {
-      console.error('[Warehouse DELETE] Invalid UUID:', params.id)
+    if (!params.id || params.id === 'undefined' || params.id.trim() === '') {
+      console.error('INVALID ID - returning 400')
+      console.log('========== DELETE ENDPOINT TRACE END (INVALID) ==========')
       return NextResponse.json({ error: 'Invalid warehouse ID' }, { status: 400 })
     }
+
+    console.log('ID is valid, proceeding with delete...')
+    console.log('Supabase query: .from("inv_warehouses").update({is_deleted: true}).eq("uuid", "' + params.id + '")')
 
     // Soft delete
     const { error } = await supabaseAdmin
@@ -111,14 +119,16 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       .eq('uuid', params.id)
 
     if (error) {
-      console.error('[Warehouse DELETE] Supabase error:', error)
+      console.error('Supabase error:', error)
       throw error
     }
 
-    console.log('[Warehouse DELETE] Deleted successfully:', params.id)
+    console.log('Delete successful')
+    console.log('========== DELETE ENDPOINT TRACE END (SUCCESS) ==========')
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('[Warehouse DELETE] Full error:', error)
+    console.log('========== DELETE ENDPOINT TRACE END (ERROR) ==========')
     return NextResponse.json({ error: error?.message || 'Failed to delete warehouse' }, { status: 500 })
   }
 }
