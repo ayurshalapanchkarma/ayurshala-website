@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    console.log('[Warehouse GET] Fetching warehouse:', params.id)
+    const { id } = await params
+    console.log('[Warehouse GET] Fetching warehouse:', id)
     
     const { data, error } = await supabaseAdmin
       .from('inv_warehouses')
       .select('*')
-      .eq('uuid', params.id)
+      .eq('uuid', id)
       .eq('is_deleted', false)
       .single()
 
@@ -28,12 +29,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const body = await request.json()
     const { warehouse_name, address } = body
 
-    console.log('[Warehouse PUT] Updating warehouse:', params.id, body)
+    console.log('[Warehouse PUT] Updating warehouse:', id, body)
 
     // Validation
     if (!warehouse_name?.trim()) {
@@ -44,7 +46,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const { data: existing } = await supabaseAdmin
       .from('inv_warehouses')
       .select('uuid')
-      .eq('uuid', params.id)
+      .eq('uuid', id)
       .eq('is_deleted', false)
       .single()
 
@@ -57,7 +59,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       .from('inv_warehouses')
       .select('uuid')
       .eq('warehouse_name', warehouse_name.trim())
-      .neq('uuid', params.id)
+      .neq('uuid', id)
       .eq('is_deleted', false)
       .single()
 
@@ -77,7 +79,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const { data, error } = await supabaseAdmin
       .from('inv_warehouses')
       .update(updatePayload)
-      .eq('uuid', params.id)
+      .eq('uuid', id)
       .select()
 
     if (error) {
@@ -93,22 +95,19 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     // STEP 2: Log exactly what we received from Next.js
     console.log('===== DELETE API ENDPOINT =====')
-    console.log('Full params:', JSON.stringify(params))
-    console.log('params.id:', params.id)
-    console.log('typeof params.id:', typeof params.id)
-
-    // DO NOT VALIDATE YET - just log and proceed
-    console.log('Proceeding to delete with id:', params.id)
+    console.log('id:', id)
+    console.log('typeof id:', typeof id)
 
     // Soft delete using uuid (the actual primary key)
     const { data, error } = await supabaseAdmin
       .from('inv_warehouses')
       .update({ is_deleted: true, updated_at: new Date().toISOString() })
-      .eq('uuid', params.id)
+      .eq('uuid', id)
       .select()
 
     console.log('Supabase delete result:', { 
