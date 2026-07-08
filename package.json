@@ -5,7 +5,20 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:inventory": "playwright test",
+    "test:inventory:ui": "playwright test --ui",
+    "test:inventory:headed": "playwright test --headed",
+    "test:inventory:ci": "playwright test --workers=1",
+    "test:inventory:debug": "playwright test --debug",
+    "test:inventory:codegen": "playwright codegen http://localhost:3000/admin/inventory",
+    "test:inventory:report": "playwright show-report",
+    "test:masters": "playwright test 01-masters",
+    "test:purchase-orders": "playwright test 02-purchase-orders",
+    "test:grn": "playwright test 03-grn",
+    "test:reports": "playwright test 04-stock-reports",
+    "test:api": "playwright test 05-api-validation",
+    "test:comprehensive": "playwright test 06-comprehensive-validation"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
@@ -30,6 +43,7 @@
     "sonner": "^2.0.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
