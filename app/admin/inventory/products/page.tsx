@@ -225,14 +225,14 @@ export default function ProductsPage() {
         manufacturer_uuid: formData.manufacturer_uuid || undefined,
         unit_uuid: formData.unit_uuid,
         default_supplier_uuid: formData.default_supplier_uuid || undefined,
-        purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : undefined,
-        selling_price: formData.selling_price ? parseFloat(formData.selling_price) : undefined,
-        mrp: formData.mrp ? parseFloat(formData.mrp) : undefined,
-        gst_percentage: formData.gst_rate ? parseFloat(formData.gst_rate) : undefined,  // Maps gst_rate → gst_percentage
+        purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : 0,  // Default to 0 instead of undefined
+        selling_price: formData.selling_price ? parseFloat(formData.selling_price) : 0,   // Default to 0 instead of undefined
+        mrp: formData.mrp ? parseFloat(formData.mrp) : 0,                                  // Default to 0 instead of undefined
+        gst_percentage: formData.gst_rate ? parseFloat(formData.gst_rate) : 0,             // Default to 0 instead of undefined
         hsn_code: formData.hsn_code || undefined,
-        minimum_stock: formData.min_stock ? parseInt(formData.min_stock) : undefined,  // Maps min_stock → minimum_stock
-        reorder_level: formData.reorder_level ? parseInt(formData.reorder_level) : undefined,
-        maximum_stock: formData.max_stock ? parseInt(formData.max_stock) : undefined,  // Maps max_stock → maximum_stock
+        minimum_stock: formData.min_stock ? parseInt(formData.min_stock) : 0,             // Default to 0 instead of undefined
+        reorder_level: formData.reorder_level ? parseInt(formData.reorder_level) : 0,    // Default to 0 instead of undefined
+        maximum_stock: formData.max_stock ? parseInt(formData.max_stock) : undefined,
         batch_tracking: formData.batch_tracking,
         expiry_tracking: formData.expiry_tracking,
         storage_location: formData.warehouse || undefined,
