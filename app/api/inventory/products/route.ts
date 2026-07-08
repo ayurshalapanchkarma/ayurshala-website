@@ -37,12 +37,7 @@ export async function POST(request: NextRequest) {
     const result = await ProductService.createProduct(input)
     return NextResponse.json(result, { status: 201 })
   } catch (error: any) {
-    console.error('[Product POST] Error caught:', {
-      type: error.constructor.name,
-      message: error.message,
-      errors: error.errors,
-      stack: error.stack
-    })
+    console.error('[Product POST] Full error object:', error)
     
     if (error instanceof ValidationError) {
       console.error('[Product POST] Validation errors:', error.errors)
@@ -55,13 +50,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    console.error('Error creating product:', error)
+    
+    // For other errors, return the full error message
+    const errorMessage = error?.message || String(error) || 'Failed to create product'
+    console.error('[Product POST] Returning error:', errorMessage)
     return NextResponse.json(
       { 
-        error: error.message || 'Failed to create product', 
-        details: error.message,
-        code: error.code,
-        hint: error.hint
+        error: errorMessage,
+        details: errorMessage,
+        code: error?.code,
+        hint: error?.hint
       },
       { status: 500 }
     )

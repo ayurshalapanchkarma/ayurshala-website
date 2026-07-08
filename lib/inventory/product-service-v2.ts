@@ -318,8 +318,12 @@ export class ProductService {
       return data as Product
     } catch (error) {
       if (error instanceof ValidationError) throw error
-      console.error('Error creating product:', error)
-      throw new Error('Failed to create product')
+      console.error('[ProductService] Caught error in createProduct:', {
+        type: error?.constructor?.name,
+        message: String(error),
+        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
+      })
+      throw error
     }
   }
 
