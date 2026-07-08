@@ -97,20 +97,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   try {
     console.log('[Warehouse DELETE] Deleting warehouse:', params.id)
     
-    // Check warehouse exists
-    const { data: existing } = await supabaseAdmin
-      .from('inv_warehouses')
-      .select('uuid')
-      .eq('uuid', params.id)
-      .eq('is_deleted', false)
-      .single()
-
-    if (!existing) {
-      console.warn('[Warehouse DELETE] Warehouse not found:', params.id)
-      return NextResponse.json({ error: 'Warehouse not found' }, { status: 404 })
-    }
-
-    // Soft delete
+    // Soft delete - don't check existence first
     const { error } = await supabaseAdmin
       .from('inv_warehouses')
       .update({ is_deleted: true, updated_at: new Date().toISOString() })
