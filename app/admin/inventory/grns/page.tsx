@@ -169,8 +169,23 @@ export default function GRNPage() {
 
     try {
       setSubmitting(true)
+      
+      // Get supplier_uuid from selected PO
+      let supplierUuid: string | undefined = undefined
+      if (formData.purchase_order_uuid) {
+        const selectedPO = purchaseOrders.find(po => po.uuid === formData.purchase_order_uuid)
+        supplierUuid = selectedPO?.supplier_uuid
+      }
+
+      if (!supplierUuid) {
+        toast.error('Cannot determine supplier. Please select a valid purchase order.')
+        setSubmitting(false)
+        return
+      }
+
       const payload = {
         purchase_order_uuid: formData.purchase_order_uuid || undefined,
+        supplier_uuid: supplierUuid,
         received_date: formData.received_date,
         items: items,
       }
