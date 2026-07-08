@@ -11,12 +11,11 @@ export async function GET(request: Request) {
 
     let query = supabaseAdmin
       .from('inv_warehouses')
-      .select('*', { count: 'exact' })
+      .select('uuid, warehouse_name, address, is_active, is_default, created_at, updated_at, created_by, updated_by, is_deleted', { count: 'exact' })
       .eq('is_deleted', false)
       .order('created_at', { ascending: false })
 
     if (search) {
-      // Only search on columns that exist: warehouse_name, address
       query = query.or(`warehouse_name.ilike.%${search}%,address.ilike.%${search}%`)
     }
 
