@@ -6,6 +6,18 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
+    // Debug: Check env vars
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    if (!url || !key) {
+      console.error('Missing env vars:', { hasUrl: !!url, hasKey: !!key })
+      return NextResponse.json(
+        { error: 'Configuration error', details: 'Supabase credentials missing' },
+        { status: 500 }
+      )
+    }
+
     const searchParams = request.nextUrl.searchParams
     const options = {
       search: searchParams.get('search') || '',
@@ -20,9 +32,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('Error fetching categories:', errorMessage)
+    const stack = error instanceof Error ? error.stack : ''
+    console.error('Error fetching categories:', errorMessage, stack)
     return NextResponse.json(
-      { error: 'Failed to fetch categories', details: errorMessage },
+      { error: 'Failed to fetch categories', details: errorMessage, stack },
       { status: 500 }
     )
   }
