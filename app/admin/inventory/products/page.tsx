@@ -216,16 +216,30 @@ export default function ProductsPage() {
 
       const method = editingId ? 'PUT' : 'POST'
 
-      // Convert string numbers to actual numbers
+      // Convert string numbers to actual numbers and map field names to backend schema
       const submitData = {
-        ...formData,
+        product_name: formData.product_name,
+        generic_name: formData.generic_name || undefined,
+        barcode: formData.barcode || undefined,
+        category_uuid: formData.category_uuid,
+        manufacturer_uuid: formData.manufacturer_uuid || undefined,
+        unit_uuid: formData.unit_uuid,
+        default_supplier_uuid: formData.default_supplier_uuid || undefined,
         purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : undefined,
         selling_price: formData.selling_price ? parseFloat(formData.selling_price) : undefined,
         mrp: formData.mrp ? parseFloat(formData.mrp) : undefined,
-        gst_rate: formData.gst_rate ? parseFloat(formData.gst_rate) : undefined,
-        min_stock: formData.min_stock ? parseInt(formData.min_stock) : undefined,
+        gst_percentage: formData.gst_rate ? parseFloat(formData.gst_rate) : undefined,  // Maps gst_rate → gst_percentage
+        hsn_code: formData.hsn_code || undefined,
+        minimum_stock: formData.min_stock ? parseInt(formData.min_stock) : undefined,  // Maps min_stock → minimum_stock
         reorder_level: formData.reorder_level ? parseInt(formData.reorder_level) : undefined,
-        max_stock: formData.max_stock ? parseInt(formData.max_stock) : undefined,
+        maximum_stock: formData.max_stock ? parseInt(formData.max_stock) : undefined,  // Maps max_stock → maximum_stock
+        batch_tracking: formData.batch_tracking,
+        expiry_tracking: formData.expiry_tracking,
+        storage_location: formData.warehouse || undefined,
+        rack_number: formData.rack || undefined,
+        shelf_number: formData.shelf || undefined,
+        bin_number: formData.bin || undefined,
+        description: formData.description || undefined,
       }
 
       const response = await fetch(url, {
@@ -239,6 +253,9 @@ export default function ProductsPage() {
       if (!response.ok) {
         if (result.details) {
           setErrors(result.details)
+          // Show first validation error in toast
+          const firstError = Object.values(result.details)[0] as string
+          throw new Error(firstError || result.error)
         }
         throw new Error(result.error || `Failed to ${editingId ? 'update' : 'create'} product`)
       }
