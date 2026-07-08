@@ -62,6 +62,7 @@ export default function WarehousesPage() {
       if (!response.ok) throw new Error('Failed to load warehouses')
 
       const data: ListResponse = await response.json()
+      console.log('[Warehouses] Loaded:', data.data)
       setWarehouses(data.data)
       setTotalPages(data.totalPages)
     } catch (err) {
@@ -132,19 +133,24 @@ export default function WarehousesPage() {
       return
     }
 
+    console.log('[Delete] Deleting warehouse:', warehouse.uuid, warehouse)
+
     setIsDeleting(true)
     try {
       const response = await fetch(`/api/inventory/warehouses/${warehouse.uuid}`, {
         method: 'DELETE',
       })
 
-      if (!response.ok) throw new Error('Failed to delete')
+      const result = await response.json()
+      console.log('[Delete] Response:', result)
+
+      if (!response.ok) throw new Error(result.error || 'Failed to delete')
 
       toast.success('Warehouse deleted successfully')
       setDeleteConfirm(null)
       loadWarehouses()
     } catch (err) {
-      toast.error('Failed to delete warehouse')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete warehouse')
     } finally {
       setIsDeleting(false)
     }
