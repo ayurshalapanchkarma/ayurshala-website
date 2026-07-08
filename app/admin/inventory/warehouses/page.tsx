@@ -140,11 +140,12 @@ export default function WarehousesPage() {
       return
     }
 
-    console.log('[Delete] Deleting warehouse:', warehouse.uuid, warehouse)
+    console.log('[Delete] Deleting warehouse:', warehouse)
+    const warehouseId = (warehouse as any).id || warehouse.uuid
 
     setIsDeleting(true)
     try {
-      const response = await fetch(`/api/inventory/warehouses/${warehouse.uuid}`, {
+      const response = await fetch(`/api/inventory/warehouses/${warehouseId}`, {
         method: 'DELETE',
       })
 
@@ -218,7 +219,7 @@ export default function WarehousesPage() {
               </thead>
               <tbody className="divide-y">
                 {warehouses.map((warehouse) => (
-                  <tr key={warehouse.uuid} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                  <tr key={(warehouse as any).id || warehouse.uuid} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                     <td className="px-6 py-4 text-sm font-medium">{warehouse.warehouse_name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {warehouse.address || '-'}
