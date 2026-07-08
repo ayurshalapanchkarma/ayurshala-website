@@ -1,10 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Download, ChevronLeft, ChevronRight, DollarSign } from 'lucide-react'
+import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
-import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
-
 
 interface ValuationItem {
   uuid: string
@@ -42,7 +40,8 @@ export default function InventoryValuationPage() {
       const params = new URLSearchParams({
         page: String(page),
         pageSize: String(pageSize),
-        search})
+        search,
+      })
 
       const response = await fetch(`/api/inventory/reports/inventory-valuation?${params}`)
       if (!response.ok) throw new Error('Failed to fetch')
@@ -85,14 +84,6 @@ export default function InventoryValuationPage() {
 
   return (
     <div className="space-y-6">
-      <InventoryPageHeader
-        icon={DollarSign}
-        iconColor="text-emerald-600 dark:text-emerald-400"
-        bgColor="bg-emerald-100 dark:bg-emerald-950/40"
-        title="Inventory Valuation"
-        subtitle="Valuation report"
-      />
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Inventory Valuation</h1>

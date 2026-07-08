@@ -1,9 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Package, Layers, Users, TrendingUp, AlertTriangle, Clock, ShoppingCart, Truck, Plus, Upload, Download, LayoutDashboard} from 'lucide-react'
+import { Package, Layers, Users, TrendingUp, AlertTriangle, Clock, ShoppingCart, Truck, Plus, Upload, Download } from 'lucide-react'
 import { InventoryPageWrapper } from '@/components/InventoryPageWrapper'
-import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 export default function InventoryOverview() {
   return (
@@ -36,14 +35,6 @@ export default function InventoryOverview() {
               }
               return (
                 <div key={i} className={`${colorMap[kpi.color]} rounded-lg p-4 border`}>
-
-      <InventoryPageHeader
-        icon={LayoutDashboard}
-        iconColor="text-blue-600 dark:text-blue-400"
-        bgColor="bg-blue-100 dark:bg-blue-950/40"
-        title="Inventory"
-        subtitle="Dashboard overview"
-      />
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium opacity-75">{kpi.label}</p>

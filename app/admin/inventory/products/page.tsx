@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, X, Package } from 'lucide-react'
-import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { Plus, Edit, Trash2, X } from 'lucide-react'
 
 // Simple toast implementation
 const toast = {
@@ -374,15 +373,7 @@ export default function ProductsPage() {
   }
 
   if (loading && products.length === 0) {
-    return <div className="p-8 text-center">
-      <InventoryPageHeader
-        icon={Package}
-        iconColor="text-sky-600 dark:text-sky-400"
-        bgColor="bg-sky-100 dark:bg-sky-950/40"
-        title="Products"
-        subtitle="Manage inventory products"
-      />
-Loading...</div>
+    return <div className="p-8 text-center">Loading...</div>
   }
 
   return (

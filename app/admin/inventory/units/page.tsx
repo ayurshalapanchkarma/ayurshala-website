@@ -1,9 +1,7 @@
 'use client'
 
-import { Ruler } from 'lucide-react'
 import { useState } from 'react'
 import { MasterListPage } from '@/components/inventory/MasterListPage'
-import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 // Simple toast implementation
 const toast = {
@@ -78,14 +76,6 @@ export default function UnitsPage() {
 
   return (
     <>
-
-      <InventoryPageHeader
-        icon={Ruler}
-        iconColor="text-indigo-600 dark:text-indigo-400"
-        bgColor="bg-indigo-100 dark:bg-indigo-950/40"
-        title="Units"
-        subtitle="Manage measurement units"
-      />
       <MasterListPage
         title="Units"
         apiBase="/api/inventory/units"

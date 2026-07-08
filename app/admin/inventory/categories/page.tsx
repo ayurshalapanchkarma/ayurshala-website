@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Loader, RotateCcw, Tags } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Loader, RotateCcw } from 'lucide-react'
 import Link from 'next/link'
-import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 // Simple toast implementation
 const toast = {
@@ -174,15 +173,7 @@ export default function CategoriesPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
-        
-      <InventoryPageHeader
-        icon={Tags}
-        iconColor="text-violet-600 dark:text-violet-400"
-        bgColor="bg-violet-100 dark:bg-violet-950/40"
-        title="Categories"
-        subtitle="Manage product categories"
-      />
-<div className="text-center">
+        <div className="text-center">
           <Loader className="animate-spin mx-auto mb-4" size={40} />
           <p className="text-gray-600 dark:text-gray-400">Loading categories...</p>
         </div>

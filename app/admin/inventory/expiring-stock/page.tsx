@@ -22,7 +22,6 @@ import ProductPreviewModal from '@/components/inventory/ProductPreviewModal'
 import EditProductModal from '@/components/inventory/EditProductModal'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 import { useProductActions } from '@/lib/hooks/useProductActions'
-import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface ExpiringBatchItem {
   batchUuid: string
@@ -263,14 +262,6 @@ export default function ExpiringStockPage() {
 
   return (
     <div className="p-4 md:p-8 space-y-6 bg-gray-50 dark:bg-slate-950 min-h-screen">
-
-      <InventoryPageHeader
-        icon={Clock}
-        iconColor="text-yellow-600 dark:text-yellow-400"
-        bgColor="bg-yellow-100 dark:bg-yellow-950/40"
-        title="Expiring Stock"
-        subtitle="Products near expiry"
-      />
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">          <div>

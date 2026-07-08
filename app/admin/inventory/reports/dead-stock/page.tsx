@@ -1,9 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Search, ChevronLeft, ChevronRight, Ban } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
-import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
-
 
 interface DeadStockItem {
   uuid: string
@@ -50,14 +48,6 @@ export default function DeadStockReportPage() {
 
   return (
     <div className="space-y-6">
-      <InventoryPageHeader
-        icon={Ban}
-        iconColor="text-slate-600 dark:text-slate-400"
-        bgColor="bg-slate-100 dark:bg-slate-950/40"
-        title="Dead Stock Report"
-        subtitle="Inactive items"
-      />
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dead Stock Report</h1>

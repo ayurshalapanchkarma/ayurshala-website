@@ -1,10 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Download, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
+import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
-import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
-
 
 interface PurchaseRecord {
   uuid: string
@@ -43,7 +41,8 @@ export default function PurchaseRegisterPage() {
       const params = new URLSearchParams({
         page: String(page),
         pageSize: String(pageSize),
-        search})
+        search,
+      })
 
       const response = await fetch(`/api/inventory/reports/purchase-register?${params}`)
       if (!response.ok) throw new Error('Failed to fetch')
@@ -93,14 +92,6 @@ export default function PurchaseRegisterPage() {
 
   return (
     <div className="space-y-6">
-      <InventoryPageHeader
-        icon={ShoppingCart}
-        iconColor="text-amber-600 dark:text-amber-400"
-        bgColor="bg-amber-100 dark:bg-amber-950/40"
-        title="Purchase Register"
-        subtitle="Purchase history"
-      />
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Purchase Register</h1>
