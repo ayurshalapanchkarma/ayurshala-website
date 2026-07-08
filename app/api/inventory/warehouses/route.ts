@@ -16,7 +16,8 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (search) {
-      query = query.or(`warehouse_name.ilike.%${search}%,warehouse_code.ilike.%${search}%,location.ilike.%${search}%`)
+      // Only search on columns that exist: warehouse_name, address
+      query = query.or(`warehouse_name.ilike.%${search}%,address.ilike.%${search}%`)
     }
 
     const { data, error, count } = await query.range(offset, offset + pageSize - 1)

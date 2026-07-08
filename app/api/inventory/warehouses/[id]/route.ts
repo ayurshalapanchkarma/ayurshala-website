@@ -3,15 +3,23 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
+    console.log('[Warehouse GET] Fetching warehouse:', params.id)
+    
     const { data, error } = await supabaseAdmin
-      .from('warehouses')
+      .from('inv_warehouses')
       .select('*')
       .eq('uuid', params.id)
       .eq('is_deleted', false)
       .single()
 
-    if (error) throw error
-    if (!data) return NextResponse.json({ error: 'Warehouse not found' }, { status: 404 })
+    if (error) {
+      console.error('[Warehouse GET] Error:', error)
+      throw error
+    }
+    if (!data) {
+      console.warn('[Warehouse GET] Warehouse not found:', params.id)
+      return NextResponse.json({ error: 'Warehouse not found' }, { status: 404 })
+    }
 
     return NextResponse.json(data)
   } catch (error) {
@@ -23,20 +31,18 @@ export async function GET(request: Request, { params }: { params: { id: string }
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const body = await request.json()
-    const { warehouse_code, warehouse_name, location, address, city, state, pincode, contact_person, phone, email } = body
+    const { warehouse_name, address } = body
+
+    console.log('[Warehouse PUT] Updating warehouse:', params.id, body)
 
     // Validation
     if (!warehouse_name?.trim()) {
       return NextResponse.json({ error: 'Warehouse name is required', details: { warehouse_name: 'Required' } }, { status: 400 })
     }
 
-    if (!location?.trim()) {
-      return NextResponse.json({ error: 'Location is required', details: { location: 'Required' } }, { status: 400 })
-    }
-
     // Check warehouse exists
     const { data: existing } = await supabaseAdmin
-      .from('warehouses')
+      .from('inv_warehouses')
       .select('uuid')
       .eq('uuid', params.id)
       .eq('is_deleted', false)
@@ -46,76 +52,79 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Warehouse not found' }, { status: 404 })
     }
 
-    // Check for duplicate code on other warehouses
-    if (warehouse_code) {
-      const { data: codeExists } = await supabaseAdmin
-        .from('warehouses')
-        .select('uuid')
-        .eq('warehouse_code', warehouse_code)
-        .neq('uuid', params.id)
-        .eq('is_deleted', false)
-        .single()
+    // Check for duplicate name on other warehouses
+    const { data: nameExists } = await supabaseAdmin
+      .from('inv_warehouses')
+      .select('uuid')
+      .eq('warehouse_name', warehouse_name.trim())
+      .neq('uuid', params.id)
+      .eq('is_deleted', false)
+      .single()
 
-      if (codeExists) {
-        return NextResponse.json(
-          { error: 'Warehouse code already exists', details: { warehouse_code: 'Already in use' } },
-          { status: 409 }
-        )
-      }
+    if (nameExists) {
+      return NextResponse.json(
+        { error: 'Warehouse name already exists', details: { warehouse_name: 'Already in use' } },
+        { status: 409 }
+      )
+    }
+
+    const updatePayload = {
+      warehouse_name: warehouse_name.trim(),
+      address: address?.trim() || null,
+      updated_at: new Date().toISOString(),
     }
 
     const { data, error } = await supabaseAdmin
-      .from('warehouses')
-      .update({
-        warehouse_code,
-        warehouse_name: warehouse_name.trim(),
-        location: location.trim(),
-        address: address?.trim() || null,
-        city: city?.trim() || null,
-        state: state?.trim() || null,
-        pincode: pincode?.trim() || null,
-        contact_person: contact_person?.trim() || null,
-        phone: phone?.trim() || null,
-        email: email?.trim() || null,
-        updated_at: new Date().toISOString(),
-      })
+      .from('inv_warehouses')
+      .update(updatePayload)
       .eq('uuid', params.id)
       .select()
 
-    if (error) throw error
+    if (error) {
+      console.error('[Warehouse PUT] Error:', error)
+      throw error
+    }
 
+    console.log('[Warehouse PUT] Updated successfully:', data?.[0]?.uuid)
     return NextResponse.json(data?.[0])
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating warehouse:', error)
-    return NextResponse.json({ error: 'Failed to update warehouse' }, { status: 500 })
+    return NextResponse.json({ error: error?.message || 'Failed to update warehouse' }, { status: 500 })
   }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
+    console.log('[Warehouse DELETE] Deleting warehouse:', params.id)
+    
     // Check warehouse exists
     const { data: existing } = await supabaseAdmin
-      .from('warehouses')
+      .from('inv_warehouses')
       .select('uuid')
       .eq('uuid', params.id)
       .eq('is_deleted', false)
       .single()
 
     if (!existing) {
+      console.warn('[Warehouse DELETE] Warehouse not found:', params.id)
       return NextResponse.json({ error: 'Warehouse not found' }, { status: 404 })
     }
 
     // Soft delete
     const { error } = await supabaseAdmin
-      .from('warehouses')
+      .from('inv_warehouses')
       .update({ is_deleted: true, updated_at: new Date().toISOString() })
       .eq('uuid', params.id)
 
-    if (error) throw error
+    if (error) {
+      console.error('[Warehouse DELETE] Error:', error)
+      throw error
+    }
 
+    console.log('[Warehouse DELETE] Deleted successfully:', params.id)
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting warehouse:', error)
-    return NextResponse.json({ error: 'Failed to delete warehouse' }, { status: 500 })
+    return NextResponse.json({ error: error?.message || 'Failed to delete warehouse' }, { status: 500 })
   }
 }

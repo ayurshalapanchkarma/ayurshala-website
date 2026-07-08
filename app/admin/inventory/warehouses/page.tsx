@@ -6,19 +6,15 @@ import { toast } from 'sonner'
 
 interface Warehouse {
   uuid: string
-  warehouse_code: string
   warehouse_name: string
-  location: string
   address?: string
-  city?: string
-  state?: string
-  pincode?: string
-  contact_person?: string
-  phone?: string
-  email?: string
+  is_default: boolean
   is_active: boolean
   created_at: string
   updated_at: string
+  created_by?: string
+  updated_by?: string
+  is_deleted: boolean
 }
 
 interface ListResponse {
@@ -30,16 +26,8 @@ interface ListResponse {
 }
 
 const defaultFormData = {
-  warehouse_code: '',
   warehouse_name: '',
-  location: '',
   address: '',
-  city: '',
-  state: '',
-  pincode: '',
-  contact_person: '',
-  phone: '',
-  email: '',
 }
 
 export default function WarehousesPage() {
@@ -87,16 +75,8 @@ export default function WarehousesPage() {
   function openForm(warehouse?: Warehouse) {
     if (warehouse) {
       setFormData({
-        warehouse_code: warehouse.warehouse_code,
         warehouse_name: warehouse.warehouse_name,
-        location: warehouse.location,
         address: warehouse.address || '',
-        city: warehouse.city || '',
-        state: warehouse.state || '',
-        pincode: warehouse.pincode || '',
-        contact_person: warehouse.contact_person || '',
-        phone: warehouse.phone || '',
-        email: warehouse.email || '',
       })
       setEditingId(warehouse.uuid)
     } else {
@@ -112,11 +92,6 @@ export default function WarehousesPage() {
 
     if (!formData.warehouse_name.trim()) {
       setErrors({ warehouse_name: 'Warehouse name is required' })
-      return
-    }
-
-    if (!formData.location.trim()) {
-      setErrors({ location: 'Location is required' })
       return
     }
 
