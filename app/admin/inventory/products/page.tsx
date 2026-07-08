@@ -289,7 +289,9 @@ export default function ProductsPage() {
       })
       loadProducts()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save product')
+      const errorMsg = err instanceof Error ? err.message : String(err)
+      console.error('[Product Save Error]', { error: err, message: errorMsg })
+      toast.error(errorMsg || 'Failed to save product')
     }
   }
 
