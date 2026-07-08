@@ -34,3 +34,4 @@ yarn-debug.log*
 yarn-error.log*
 public/gallery/*.mp4
 .vercel
+.env.production
