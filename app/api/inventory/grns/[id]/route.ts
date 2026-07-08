@@ -3,10 +3,11 @@ import { GRNService } from '@/lib/inventory/grn-service'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const grn = await GRNService.getGRNById(params.id)
+    const { id } = await params
+    const grn = await GRNService.getGRNById(id)
     return NextResponse.json(grn)
   } catch (error) {
     console.error('GET /api/inventory/grns/[id] error:', error)
@@ -16,12 +17,13 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const userId = request.headers.get('x-user-id') || undefined
-    const grn = await GRNService.updateGRN(params.id, body, userId)
+    const grn = await GRNService.updateGRN(id, body, userId)
     return NextResponse.json(grn)
   } catch (error: any) {
     console.error('PUT /api/inventory/grns/[id] error:', error)
@@ -34,11 +36,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const userId = request.headers.get('x-user-id') || undefined
-    await GRNService.cancelGRN(params.id, userId)
+    await GRNService.cancelGRN(id, userId)
     return NextResponse.json({ message: 'GRN cancelled successfully' })
   } catch (error: any) {
     console.error('DELETE /api/inventory/grns/[id] error:', error)

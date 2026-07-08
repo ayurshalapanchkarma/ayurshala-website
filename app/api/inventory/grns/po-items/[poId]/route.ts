@@ -7,10 +7,11 @@ import { GRNService } from '@/lib/inventory/grn-service'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { poId: string } }
+  { params }: { params: Promise<{ poId: string }> }
 ) {
   try {
-    const items = await GRNService.getPOItemsForGRN(params.poId)
+    const { poId } = await params
+    const items = await GRNService.getPOItemsForGRN(poId)
     return NextResponse.json(items)
   } catch (error) {
     console.error('GET /api/inventory/grns/po-items/[poId] error:', error)

@@ -8,11 +8,12 @@ import { StockService } from '@/lib/inventory/stock-service'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const userId = request.headers.get('x-user-id') || undefined
-    const adjustment = await StockService.postAdjustment(params.id, userId)
+    const adjustment = await StockService.postAdjustment(id, userId)
     return NextResponse.json(adjustment)
   } catch (error: any) {
     console.error('POST /api/inventory/adjustments/[id]/post error:', error)

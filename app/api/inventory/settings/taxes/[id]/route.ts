@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const { data, error } = await supabaseAdmin
       .from('tax_masters')
       .select('*')
-      .eq('uuid', params.id)
+      .eq('uuid', id)
       .eq('is_deleted', false)
       .single()
 
@@ -20,8 +21,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const body = await request.json()
     const { tax_name, tax_code, tax_rate, tax_type, description } = body
 
@@ -53,7 +55,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const { data: existing } = await supabaseAdmin
       .from('tax_masters')
       .select('uuid')
-      .eq('uuid', params.id)
+      .eq('uuid', id)
       .eq('is_deleted', false)
       .single()
 
@@ -67,7 +69,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         .from('tax_masters')
         .select('uuid')
         .eq('tax_code', tax_code)
-        .neq('uuid', params.id)
+        .neq('uuid', id)
         .eq('is_deleted', false)
         .single()
 
@@ -89,7 +91,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         description: description?.trim() || null,
         updated_at: new Date().toISOString(),
       })
-      .eq('uuid', params.id)
+      .eq('uuid', id)
       .select()
 
     if (error) throw error
@@ -101,13 +103,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     // Check tax exists
     const { data: existing } = await supabaseAdmin
       .from('tax_masters')
       .select('uuid')
-      .eq('uuid', params.id)
+      .eq('uuid', id)
       .eq('is_deleted', false)
       .single()
 
@@ -119,7 +122,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     const { error } = await supabaseAdmin
       .from('tax_masters')
       .update({ is_deleted: true, updated_at: new Date().toISOString() })
-      .eq('uuid', params.id)
+      .eq('uuid', id)
 
     if (error) throw error
 

@@ -3,11 +3,12 @@ import { GRNService } from '@/lib/inventory/grn-service'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const userId = request.headers.get('x-user-id') || undefined
-    const grn = await GRNService.postGRN(params.id, userId)
+    const grn = await GRNService.postGRN(id, userId)
     return NextResponse.json(grn)
   } catch (error: any) {
     console.error('POST /api/inventory/grns/[id]/post error:', error)
