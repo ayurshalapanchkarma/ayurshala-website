@@ -1,7 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, ChevronLeft, ChevronRight, Eye, CheckCircle, Clock } from 'lucide-react'
+import {
+  Plus,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  CheckCircle,
+  Clock,
+  X,
+  Loader,
+  Trash2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 interface StockAdjustment {
@@ -21,6 +32,19 @@ interface ListResponse {
   totalPages: number
 }
 
+interface Product {
+  uuid: string
+  product_code: string
+  product_name: string
+  generic_name?: string
+}
+
+interface AdjustmentItem {
+  product_uuid: string
+  quantity_adjusted: number
+  reason_notes?: string
+}
+
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
   approved: 'bg-green-100 text-green-800',
@@ -33,6 +57,14 @@ const statusIcons = {
   cancelled: Clock,
 }
 
+const reasonOptions = [
+  'PHYSICAL_COUNT',
+  'DAMAGE',
+  'EXPIRED',
+  'LOST',
+  'CORRECTION',
+]
+
 export default function StockAdjustmentsPage() {
   const [adjustments, setAdjustments] = useState<StockAdjustment[]>([])
   const [loading, setLoading] = useState(true)
@@ -42,12 +74,28 @@ export default function StockAdjustmentsPage() {
   const [status, setStatus] = useState('')
   const [reason, setReason] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  // Modal state
+  const [products, setProducts] = useState<Product[]>([])
+  const [formData, setFormData] = useState({
+    adjustment_date: new Date().toISOString().split('T')[0],
+    reason: 'PHYSICAL_COUNT' as const,
+    notes: '',
+  })
+  const [items, setItems] = useState<AdjustmentItem[]>([])
 
   const pageSize = 50
 
   useEffect(() => {
     fetchAdjustments()
   }, [page, search, status, reason])
+
+  useEffect(() => {
+    if (showCreateModal) {
+      fetchProducts()
+    }
+  }, [showCreateModal])
 
   async function fetchAdjustments() {
     try {
@@ -74,6 +122,87 @@ export default function StockAdjustmentsPage() {
     }
   }
 
+  async function fetchProducts() {
+    try {
+      const response = await fetch('/api/inventory/products?pageSize=100')
+      if (!response.ok) throw new Error('Failed to fetch products')
+      const data = await response.json()
+      setProducts(data.data || [])
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to fetch products')
+    }
+  }
+
+  async function handleCreateAdjustment() {
+    // Validation
+    if (!formData.reason) {
+      toast.error('Please select a reason')
+      return
+    }
+    if (items.length === 0) {
+      toast.error('Please add at least one item')
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      const payload = {
+        adjustment_date: formData.adjustment_date,
+        reason: formData.reason,
+        notes: formData.notes || undefined,
+        items: items,
+      }
+
+      const response = await fetch('/api/inventory/adjustments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create adjustment')
+      }
+
+      toast.success('Stock adjustment created successfully')
+      setShowCreateModal(false)
+      setFormData({
+        adjustment_date: new Date().toISOString().split('T')[0],
+        reason: 'PHYSICAL_COUNT',
+        notes: '',
+      })
+      setItems([])
+      fetchAdjustments()
+    } catch (error: any) {
+      console.error('Error:', error)
+      toast.error(error.message || 'Failed to create stock adjustment')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  function addItem() {
+    setItems([
+      ...items,
+      {
+        product_uuid: '',
+        quantity_adjusted: 0,
+        reason_notes: '',
+      },
+    ])
+  }
+
+  function removeItem(index: number) {
+    setItems(items.filter((_, i) => i !== index))
+  }
+
+  function updateItem(index: number, field: string, value: any) {
+    const newItems = [...items]
+    newItems[index] = { ...newItems[index], [field]: value }
+    setItems(newItems)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -81,12 +210,181 @@ export default function StockAdjustmentsPage() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Adjustments</h1>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           <Plus size={20} />
           New Adjustment
         </button>
       </div>
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">New Stock Adjustment</h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Basic Info */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-900 dark:text-white">Adjustment Details</h3>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Reason *
+                  </label>
+                  <select
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {reasonOptions.map((r) => (
+                      <option key={r} value={r}>
+                        {r.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Adjustment Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.adjustment_date}
+                    onChange={(e) => setFormData({ ...formData, adjustment_date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Notes
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              {/* Items Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Items *</h3>
+                  <button
+                    onClick={addItem}
+                    className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition"
+                  >
+                    <Plus size={16} className="inline mr-1" />
+                    Add Item
+                  </button>
+                </div>
+
+                {items.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                    No items added yet
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {items.map((item, index) => (
+                      <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Item {index + 1}
+                          </label>
+                          <button
+                            onClick={() => removeItem(index)}
+                            className="text-red-600 hover:text-red-800 transition"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Product *
+                            </label>
+                            <select
+                              value={item.product_uuid}
+                              onChange={(e) => updateItem(index, 'product_uuid', e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">Select product</option>
+                              {products.map((p) => (
+                                <option key={p.uuid} value={p.uuid}>
+                                  {p.product_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Quantity Adjusted *
+                            </label>
+                            <input
+                              type="number"
+                              value={item.quantity_adjusted}
+                              onChange={(e) => updateItem(index, 'quantity_adjusted', parseInt(e.target.value) || 0)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Can be positive or negative"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Notes
+                            </label>
+                            <textarea
+                              value={item.reason_notes || ''}
+                              onChange={(e) => updateItem(index, 'reason_notes', e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              rows={2}
+                              placeholder="Additional notes for this item"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateAdjustment}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+              >
+                {submitting && <Loader size={18} className="animate-spin" />}
+                {submitting ? 'Creating...' : 'Create Adjustment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
