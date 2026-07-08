@@ -19,9 +19,10 @@ export async function GET(request: NextRequest) {
     const result = await CategoryService.getCategories(options)
     return NextResponse.json(result)
   } catch (error) {
-    console.error('Error fetching categories:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Error fetching categories:', errorMessage)
     return NextResponse.json(
-      { error: 'Failed to fetch categories' },
+      { error: 'Failed to fetch categories', details: errorMessage },
       { status: 500 }
     )
   }
