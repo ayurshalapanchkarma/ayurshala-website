@@ -95,23 +95,30 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    console.log('[Warehouse DELETE] Deleting warehouse:', params.id)
+    console.log('[Warehouse DELETE] params:', params)
+    console.log('[Warehouse DELETE] id value:', params.id)
+    console.log('[Warehouse DELETE] id type:', typeof params.id)
     
-    // Soft delete - don't check existence first
+    if (!params.id || params.id === 'undefined') {
+      console.error('[Warehouse DELETE] Invalid UUID:', params.id)
+      return NextResponse.json({ error: 'Invalid warehouse ID' }, { status: 400 })
+    }
+
+    // Soft delete
     const { error } = await supabaseAdmin
       .from('inv_warehouses')
       .update({ is_deleted: true, updated_at: new Date().toISOString() })
       .eq('uuid', params.id)
 
     if (error) {
-      console.error('[Warehouse DELETE] Error:', error)
+      console.error('[Warehouse DELETE] Supabase error:', error)
       throw error
     }
 
     console.log('[Warehouse DELETE] Deleted successfully:', params.id)
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('Error deleting warehouse:', error)
+    console.error('[Warehouse DELETE] Full error:', error)
     return NextResponse.json({ error: error?.message || 'Failed to delete warehouse' }, { status: 500 })
   }
 }
