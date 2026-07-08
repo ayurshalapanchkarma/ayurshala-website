@@ -6,6 +6,13 @@ The Add Product modal shows empty dropdowns for Categories, Manufacturers, Units
 ## Root Cause
 The schema has been created (`inv_categories`, `inv_units`, `inv_manufacturers`, `inv_suppliers` tables exist), but the seed data has not been populated.
 
+## Important: Safe Migration Script
+This migration script is **safe to run multiple times** and **preserves existing data**:
+- Uses `ON CONFLICT ... DO NOTHING` to skip duplicates
+- Does NOT delete existing records (safe for foreign key constraints)
+- Only inserts missing master data records
+- Safe to run even if products already exist in the database
+
 ## Solution
 Run the seed migration script in Supabase SQL Editor.
 
