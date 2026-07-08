@@ -29,7 +29,7 @@ const navSections: NavSection[] = [
     icon: <ShoppingCart className="w-4 h-4" />,
     items: [
       { label: 'Purchase Orders', href: '/admin/inventory/purchase-orders' },
-      { label: 'GRN', href: '/admin/inventory/grn' },
+      { label: 'GRN', href: '/admin/inventory/grns' },
       { label: 'Batches', href: '/admin/inventory/batches' },
     ]
   },

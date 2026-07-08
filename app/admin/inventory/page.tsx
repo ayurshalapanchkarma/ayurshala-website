@@ -55,7 +55,7 @@ export default function InventoryOverview() {
             {[
               { label: 'Create Product', href: '/admin/inventory/products/create', icon: Plus },
               { label: 'Create PO', href: '/admin/inventory/purchase-orders', icon: ShoppingCart },
-              { label: 'Receive GRN', href: '/admin/inventory/grn', icon: Truck },
+              { label: 'Receive GRN', href: '/admin/inventory/grns', icon: Truck },
               { label: 'Adjust Stock', href: '/admin/inventory/adjustments', icon: TrendingUp },
               { label: 'Import', href: '#', icon: Upload },
               { label: 'Export', href: '#', icon: Download },
