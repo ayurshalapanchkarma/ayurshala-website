@@ -170,10 +170,11 @@ export async function DELETE(
       )
     }
 
-    // Soft delete by marking as_deleted
+    // Soft delete by marking is_active = false (view filters on is_active)
     const { error: deleteError } = await supabaseAdmin
       .from('inv_products')
       .update({
+        is_active: false,
         is_deleted: true,
         updated_at: new Date().toISOString(),
       })

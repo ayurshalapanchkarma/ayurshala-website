@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts'
 import ProductPreviewModal from '@/components/inventory/ProductPreviewModal'
+import EditProductModal from '@/components/inventory/EditProductModal'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 import { useProductActions } from '@/lib/hooks/useProductActions'
 
@@ -75,6 +76,10 @@ export default function LowStockPage() {
   // Preview Modal
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewProductId, setPreviewProductId] = useState<string | null>(null)
+
+  // Edit Modal
+  const [editOpen, setEditOpen] = useState(false)
+  const [editProductId, setEditProductId] = useState<string | null>(null)
 
   // Delete Dialog
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -164,9 +169,9 @@ export default function LowStockPage() {
   }
 
   const handleEditClick = (productUuid: string) => {
-    console.log(`[LowStockPage] Edit product: ${productUuid}`)
-    // TODO: Open edit modal or navigate to edit page
-    alert(`Edit functionality coming soon for product: ${productUuid}`)
+    console.log(`[LowStockPage] Opening edit modal for product: ${productUuid}`)
+    setEditProductId(productUuid)
+    setEditOpen(true)
   }
 
   const handleDeleteClick = (productUuid: string, productName: string) => {
@@ -554,8 +559,23 @@ export default function LowStockPage() {
           setPreviewProductId(null)
         }}
         onEdit={(productId) => {
-          console.log('[LowStockPage] Edit product:', productId)
-          // TODO: Implement edit modal
+          console.log('[LowStockPage] Edit product from preview:', productId)
+          setPreviewOpen(false)
+          setEditProductId(productId)
+          setEditOpen(true)
+        }}
+      />
+
+      <EditProductModal
+        productUuid={editProductId}
+        isOpen={editOpen}
+        onClose={() => {
+          setEditOpen(false)
+          setEditProductId(null)
+        }}
+        onSuccess={() => {
+          console.log('[LowStockPage] Product updated, reloading list')
+          loadRef.current()
         }}
       />
 
