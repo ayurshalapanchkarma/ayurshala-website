@@ -251,6 +251,13 @@ export default function StockAdjustmentsPage() {
 
   async function handleEditAdjustment(adjUuid: string) {
     try {
+      // Fetch products first
+      const productsResponse = await fetch('/api/inventory/products?pageSize=100')
+      if (productsResponse.ok) {
+        const productsData = await productsResponse.json()
+        setProducts(productsData.data || [])
+      }
+
       const response = await fetch(`/api/inventory/adjustments/${adjUuid}`)
       if (!response.ok) throw new Error('Failed to fetch adjustment')
       const data = await response.json()
@@ -268,7 +275,19 @@ export default function StockAdjustmentsPage() {
         reason: adj.reason,
         notes: adj.notes || '',
       })
-      setItems(adj.items || [])
+      
+      // Fetch batches for each item product
+      if (adj.items && adj.items.length > 0) {
+        for (const item of adj.items) {
+          if (item.product_uuid) {
+            await fetchBatchesForProduct(item.product_uuid)
+          }
+        }
+        setItems(adj.items)
+      } else {
+        setItems([])
+      }
+      
       setShowEditModal(true)
     } catch (error: any) {
       console.error('Error:', error)
