@@ -163,6 +163,12 @@ export default function LowStockPage() {
     setPreviewOpen(true)
   }
 
+  const handleEditClick = (productUuid: string) => {
+    console.log(`[LowStockPage] Edit product: ${productUuid}`)
+    // TODO: Open edit modal or navigate to edit page
+    alert(`Edit functionality coming soon for product: ${productUuid}`)
+  }
+
   const handleDeleteClick = (productUuid: string, productName: string) => {
     console.log(`[LowStockPage] Opening delete dialog for product: ${productUuid}`)
     setDeleteProductId(productUuid)
@@ -457,21 +463,30 @@ export default function LowStockPage() {
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => handlePreviewClick(item.productUuid)}
+                            onClick={() => {
+                              console.log(`[LowStockPage] Preview button clicked for: ${item.productUuid}`)
+                              handlePreviewClick(item.productUuid)
+                            }}
                             className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400 transition"
                             title="Preview Product"
                           >
                             <Eye size={16} />
                           </button>
                           <button
-                            onClick={() => console.log('Edit clicked')}
+                            onClick={() => {
+                              console.log(`[LowStockPage] Edit button clicked for: ${item.productUuid}`)
+                              handleEditClick(item.productUuid)
+                            }}
                             className="p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded text-green-600 dark:text-green-400 transition"
                             title="Edit Product"
                           >
                             <Edit size={16} />
                           </button>
                           <button
-                            onClick={() => handleDeleteClick(item.productUuid, item.productName)}
+                            onClick={() => {
+                              console.log(`[LowStockPage] Delete button clicked for: ${item.productUuid}`)
+                              handleDeleteClick(item.productUuid, item.productName)
+                            }}
                             className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600 dark:text-red-400 transition"
                             title="Delete Product"
                           >
