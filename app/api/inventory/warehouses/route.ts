@@ -24,6 +24,8 @@ export async function GET(request: Request) {
 
     if (error) throw error
 
+    console.log('[Warehouse GET] Returned first row:', JSON.stringify(data?.[0], null, 2))
+
     return NextResponse.json({
       data: data || [],
       total: count || 0,
