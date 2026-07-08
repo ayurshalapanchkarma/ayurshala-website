@@ -479,18 +479,26 @@ export class StockService {
       console.log('Adjustment created:', adjUuid)
 
       // Transform items to match schema
+      // Schema expects: system_qty, physical_qty, difference, reason_note, adjustment_type
       console.log('Transforming items...')
       console.log('First item sample:', input.items[0])
       
       const items = input.items.map((item: any) => {
         console.log('Processing item:', item)
+        
+        // Get current stock for this batch to calculate system_qty
+        // For now, use 0 as system_qty (should be populated during approval)
+        const quantity = item.quantity || item.quantity_adjusted || 0
+        
         return {
           adjustment_uuid: adjUuid,
           product_uuid: item.product_uuid,
           batch_uuid: item.batch_uuid,
           adjustment_type: item.adjustment_type || 'INCREASE',
-          quantity: item.quantity || item.quantity_adjusted || 0,
-          notes: item.notes || item.reason_notes || null,
+          system_qty: 0,  // Will be calculated on approval
+          physical_qty: quantity,  // The new/adjusted quantity
+          difference: quantity,    // Will be recalculated on approval
+          reason_note: item.notes || item.reason_notes || null,
         }
       })
 
