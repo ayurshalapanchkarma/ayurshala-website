@@ -19,11 +19,26 @@ export default function DeleteConfirmationDialog({
   onCancel,
   error,
 }: DeleteConfirmationDialogProps) {
-  if (!isOpen) return null
+  console.log(`[DeleteConfirmationDialog] Rendering with isOpen=${isOpen}`)
+  if (!isOpen) {
+    console.log(`[DeleteConfirmationDialog] Dialog not open, returning null`)
+    return null
+  }
 
+  console.log(`[DeleteConfirmationDialog] Showing dialog for product: ${productName}`)
+  
+  // Render directly to ensure visibility
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-sm w-full">
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 dark:bg-black/70 z-[100]"
+        onClick={onCancel}
+      />
+      
+      {/* Modal */}
+      <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
+        <div className="pointer-events-auto bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-sm w-full">
         {/* Icon & Header */}
         <div className="p-6 text-center border-b border-gray-200 dark:border-slate-700">
           <div className="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
@@ -71,7 +86,8 @@ export default function DeleteConfirmationDialog({
             Delete
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

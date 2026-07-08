@@ -171,10 +171,13 @@ export default function LowStockPage() {
 
   const handleDeleteClick = (productUuid: string, productName: string) => {
     console.log(`[LowStockPage] Opening delete dialog for product: ${productUuid}`)
+    console.log(`[LowStockPage] Setting deleteOpen to true`)
+    console.log(`[LowStockPage] Product name: ${productName}`)
     setDeleteProductId(productUuid)
     setDeleteProductName(productName)
     setDeleteError(null)
     setDeleteOpen(true)
+    console.log(`[LowStockPage] Delete dialog state set`)
   }
 
   const handleConfirmDelete = async () => {
