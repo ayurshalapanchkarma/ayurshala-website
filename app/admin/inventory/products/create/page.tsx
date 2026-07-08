@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Loader, Save } from 'lucide-react'
+import { ArrowLeft, Loader, Save, Plus } from 'lucide-react'
 import { ProductService, CategoryService } from '@/lib/inventory'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+
 
 interface CreateProductForm {
   name: string
@@ -38,8 +40,7 @@ export default function CreateProductPage() {
     max_stock: 0,
     hsn_code: '',
     tax_rate: 0,
-    reorder_qty: 0,
-  })
+    reorder_qty: 0})
 
   useEffect(() => {
     loadCategories()
@@ -79,6 +80,14 @@ export default function CreateProductPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
+      <InventoryPageHeader
+        icon={Plus}
+        iconColor="text-sky-600 dark:text-sky-400"
+        bgColor="bg-sky-100 dark:bg-sky-950/40"
+        title="Create Product"
+        subtitle="Add new product"
+      />
+
         <Loader className="animate-spin" size={40} />
       </div>
     )
@@ -86,6 +95,14 @@ export default function CreateProductPage() {
 
   return (
     <div className="p-8">
+      <InventoryPageHeader
+        icon={<Plus />}
+        iconColor="text-sky-600 dark:text-sky-400"
+        bgColor="bg-sky-100 dark:bg-sky-950/40"
+        title="Create Product"
+        subtitle="Add new product"
+      />
+
       <Link href="/admin/inventory/products" className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-8">
         <ArrowLeft size={20} /> Back to Products
       </Link>      <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-8">Create Product</h1>

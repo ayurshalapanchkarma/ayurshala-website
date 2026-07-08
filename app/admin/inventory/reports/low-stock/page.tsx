@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { Search, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+
 
 interface LowStockItem {
   uuid: string
@@ -48,6 +50,14 @@ export default function LowStockReportPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryPageHeader
+        icon={AlertTriangle}
+        iconColor="text-red-600 dark:text-red-400"
+        bgColor="bg-red-100 dark:bg-red-950/40"
+        title="Low Stock Report"
+        subtitle="Low stock analysis"
+      />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Low Stock Report</h1>

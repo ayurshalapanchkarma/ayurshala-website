@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, X, MapPin, Box } from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface Warehouse {
   uuid: string
@@ -210,7 +211,15 @@ export default function WarehousesPage() {
       {/* Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading...</div>
+          <div className="p-8 text-center text-gray-500">
+      <InventoryPageHeader
+        icon={MapPin}
+        iconColor="text-orange-600 dark:text-orange-400"
+        bgColor="bg-orange-100 dark:bg-orange-950/40"
+        title="Warehouses"
+        subtitle="Manage warehouses"
+      />
+Loading...</div>
         ) : warehouses.length === 0 ? (
           <div className="p-12 text-center">
             <Box className="w-12 h-12 text-gray-400 mx-auto mb-4" />

@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Loader, Save } from 'lucide-react'
+import { ArrowLeft, Loader, Save, PackageOpen } from 'lucide-react'
 import { ProductService, CategoryService } from '@/lib/inventory'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+
 
 interface Product {
   id: string
@@ -75,6 +77,14 @@ export default function EditProductPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
+      <InventoryPageHeader
+        icon={PackageOpen}
+        iconColor="text-sky-600 dark:text-sky-400"
+        bgColor="bg-sky-100 dark:bg-sky-950/40"
+        title="Edit Product"
+        subtitle="Update product details"
+      />
+
         <Loader className="animate-spin" size={40} />
       </div>
     )
@@ -95,6 +105,14 @@ export default function EditProductPage() {
 
   return (
     <div className="p-8">
+      <InventoryPageHeader
+        icon={<PackageOpen />}
+        iconColor="text-sky-600 dark:text-sky-400"
+        bgColor="bg-sky-100 dark:bg-sky-950/40"
+        title="Edit Product"
+        subtitle="Update product details"
+      />
+
       <Link href="/admin/inventory/products" className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-8">
         <ArrowLeft size={20} /> Back to Products
       </Link>      <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-8">Edit Product</h1>

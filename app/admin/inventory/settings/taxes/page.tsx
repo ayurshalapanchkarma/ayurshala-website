@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, X, Percent } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Percent, ReceiptText } from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+
 
 interface TaxMaster {
   uuid: string
@@ -29,8 +31,7 @@ const defaultFormData = {
   tax_code: '',
   tax_rate: '',
   tax_type: 'GST' as const,
-  description: '',
-}
+  description: ''}
 
 const TAX_TYPES = [
   { value: 'GST', label: 'GST (Goods & Services Tax)' },
@@ -64,8 +65,7 @@ export default function TaxMasterPage() {
       const params = new URLSearchParams({
         search,
         page: page.toString(),
-        pageSize: pageSize.toString(),
-      })
+        pageSize: pageSize.toString()})
 
       const response = await fetch(`/api/inventory/settings/taxes?${params}`)
       if (!response.ok) {
@@ -96,8 +96,7 @@ export default function TaxMasterPage() {
         tax_code: tax.tax_code || '',
         tax_rate: String(tax.tax_rate),
         tax_type: tax.tax_type,
-        description: tax.description || '',
-      })
+        description: tax.description || ''})
       setEditingId(tax.uuid)
     } else {
       setFormData(defaultFormData)
@@ -129,8 +128,7 @@ export default function TaxMasterPage() {
     try {
       const submitData = {
         ...formData,
-        tax_rate: taxRate,
-      }
+        tax_rate: taxRate}
 
       const url = editingId
         ? `/api/inventory/settings/taxes/${editingId}`
@@ -141,8 +139,7 @@ export default function TaxMasterPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
-      })
+        body: JSON.stringify(submitData)})
 
       const result = await response.json()
 
@@ -171,8 +168,7 @@ export default function TaxMasterPage() {
     setIsDeleting(true)
     try {
       const response = await fetch(`/api/inventory/settings/taxes/${tax.uuid}`, {
-        method: 'DELETE',
-      })
+        method: 'DELETE'})
 
       if (!response.ok) throw new Error('Failed to delete')
 
@@ -188,6 +184,14 @@ export default function TaxMasterPage() {
 
   return (
     <div className="space-y-6 p-6">
+      <InventoryPageHeader
+        icon={ReceiptText}
+        iconColor="text-indigo-600 dark:text-indigo-400"
+        bgColor="bg-indigo-100 dark:bg-indigo-950/40"
+        title="Tax Master"
+        subtitle="Tax configuration"
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -352,8 +356,7 @@ export default function TaxMasterPage() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        tax_type: e.target.value as typeof formData.tax_type,
-                      })
+                        tax_type: e.target.value as typeof formData.tax_type})
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
                   >

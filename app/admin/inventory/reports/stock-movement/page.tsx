@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Download, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react'
 import { toast } from 'sonner'
+import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+
 
 interface Movement {
   uuid: string
@@ -44,8 +46,7 @@ export default function StockMovementReportPage() {
         page: String(page),
         pageSize: String(pageSize),
         search,
-        movementType,
-      })
+        movementType})
 
       const response = await fetch(`/api/inventory/reports/stock-movement?${params}`)
       if (!response.ok) throw new Error('Failed to fetch')
@@ -93,6 +94,14 @@ export default function StockMovementReportPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryPageHeader
+        icon={TrendingUp}
+        iconColor="text-blue-600 dark:text-blue-400"
+        bgColor="bg-blue-100 dark:bg-blue-950/40"
+        title="Stock Movement"
+        subtitle="Movement analytics"
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
