@@ -123,6 +123,9 @@ export class StockService {
     const { search = '', category_uuid = '', low_stock_only = false, page = 1, pageSize = 50 } = options
 
     try {
+      console.log('========== StockService.getCurrentStock START ==========')
+      console.log('Options:', { search, category_uuid, low_stock_only, page, pageSize })
+      
       let query = getSupabase()
         .from('inv_products')
         .select(`
@@ -146,55 +149,97 @@ export class StockService {
       const from = (page - 1) * pageSize
       query = query.range(from, from + pageSize - 1)
 
+      console.log('Query created, executing...')
       const { data, error, count } = await query
-      if (error) throw error
+      
+      if (error) {
+        console.error('Query error:', error)
+        throw error
+      }
 
+      console.log('Products found:', data?.length)
+      console.log('Total count:', count)
+
+      if (!data || data.length === 0) {
+        console.log('No products found, returning empty result')
+        return {
+          data: [],
+          total: 0,
+          page,
+          pageSize,
+          totalPages: 0,
+        }
+      }
+
+      console.log('Fetching stock quantities for each product...')
       const stockRows = await Promise.all(
         (data as any[]).map(async (product) => {
-          const { data: stockQty } = await getSupabase()
-            .rpc('fn_get_product_stock', { p_product_uuid: product.uuid })
+          try {
+            console.log(`Getting stock for product: ${product.product_code} (${product.uuid})`)
+            
+            const { data: stockQty, error: stockError } = await getSupabase()
+              .rpc('fn_get_product_stock', { p_product_uuid: product.uuid })
 
-          const { count: batchCount } = await getSupabase()
-            .from('inv_product_batches')
-            .select('uuid', { count: 'exact', head: true })
-            .eq('product_uuid', product.uuid)
-            .eq('status', 'good')
-            .eq('is_active', true)
-            .gt('available_quantity', 0)
+            if (stockError) {
+              console.error(`Stock RPC error for ${product.uuid}:`, stockError)
+              return null
+            }
 
-          const currentStock = stockQty ?? 0
-          const isLowStock = currentStock <= (product.reorder_level ?? 0)
+            const { count: batchCount } = await getSupabase()
+              .from('inv_product_batches')
+              .select('uuid', { count: 'exact', head: true })
+              .eq('product_uuid', product.uuid)
+              .eq('status', 'good')
+              .eq('is_active', true)
+              .gt('available_quantity', 0)
 
-          return {
-            product_uuid: product.uuid,
-            product_code: product.product_code,
-            product_name: product.product_name,
-            generic_name: product.generic_name,
-            category: product.category?.name,
-            unit_name: product.unit?.name,
-            unit_short: product.unit?.short_name,
-            current_stock: currentStock,
-            reorder_level: product.reorder_level ?? 0,
-            min_stock: product.min_stock ?? 0,
-            is_low_stock: isLowStock,
-            batches_count: batchCount ?? 0,
-          } as CurrentStock
+            const currentStock = stockQty ?? 0
+            const isLowStock = currentStock <= (product.reorder_level ?? 0)
+
+            return {
+              product_uuid: product.uuid,
+              product_code: product.product_code,
+              product_name: product.product_name,
+              generic_name: product.generic_name,
+              category: product.category?.name,
+              unit_name: product.unit?.name,
+              unit_short: product.unit?.short_name,
+              current_stock: currentStock,
+              reorder_level: product.reorder_level ?? 0,
+              min_stock: product.min_stock ?? 0,
+              is_low_stock: isLowStock,
+              batches_count: batchCount ?? 0,
+            } as CurrentStock
+          } catch (itemError) {
+            console.error(`Error processing product ${product.uuid}:`, itemError)
+            return null
+          }
         })
       )
 
-      const filtered = low_stock_only ? stockRows.filter(r => r.is_low_stock) : stockRows
+      const validRows = stockRows.filter(r => r !== null) as CurrentStock[]
+      console.log('Valid rows after processing:', validRows.length)
+      
+      const filtered = low_stock_only ? validRows.filter(r => r.is_low_stock) : validRows
+      console.log('Rows after low_stock filter:', filtered.length)
 
-      return {
+      const result = {
         data: filtered,
         total: count ?? 0,
         page,
         pageSize,
         totalPages: Math.ceil((count ?? 0) / pageSize),
       }
+
+      console.log('========== StockService.getCurrentStock END (SUCCESS) ==========')
+      console.log('Result:', { rows: result.data.length, total: result.total, totalPages: result.totalPages })
+      
+      return result
     } catch (error) {
+      console.error('========== StockService.getCurrentStock ERROR ==========')
+      console.error('Error:', error)
       if (error instanceof ValidationError) throw error
-      console.error('Error fetching current stock:', error)
-      throw new Error('Failed to fetch current stock')
+      throw new Error(`Failed to fetch current stock: ${(error as any)?.message || 'Unknown error'}`)
     }
   }
 
