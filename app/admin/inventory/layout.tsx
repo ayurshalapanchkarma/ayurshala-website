@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AdminGuard } from '@/components/AdminGuard'
-import { ChevronDown, Menu, X, Package, Settings, FileText, AlertCircle, TrendingUp, ShoppingCart, Truck, BarChart3, Home, Search, Plus, Bell, User, ChevronLeft } from 'lucide-react'
+import { ChevronDown, Menu, X, Package, Settings, FileText, AlertCircle, TrendingUp, ShoppingCart, Truck, BarChart3, Home, Search, Plus, Bell, User, ChevronLeft, MapPin } from 'lucide-react'
 
 interface NavSection {
   label: string
@@ -22,6 +22,7 @@ const navSections: NavSection[] = [
       { label: 'Units', href: '/admin/inventory/units' },
       { label: 'Manufacturers', href: '/admin/inventory/manufacturers' },
       { label: 'Suppliers', href: '/admin/inventory/suppliers' },
+      { label: 'Warehouses', href: '/admin/inventory/warehouses' },
     ]
   },
   {
