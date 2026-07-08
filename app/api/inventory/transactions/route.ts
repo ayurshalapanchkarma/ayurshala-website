@@ -80,9 +80,9 @@ export async function GET(request: NextRequest) {
         reference_type,
         reference_uuid,
         remarks,
-        product:inv_products(product_code, product_name, unit:inv_units(name)),
-        batch:inv_product_batches(batch_number),
-        created_by:auth.users(email)
+        product_uuid,
+        batch_uuid,
+        created_by
       `)
 
     // Apply filters
@@ -140,37 +140,79 @@ export async function GET(request: NextRequest) {
 
     console.log('Records fetched:', data?.length)
 
+    // Fetch product and batch info in bulk
+    const productUuids = new Set<string>()
+    const batchUuids = new Set<string>()
+
+    data?.forEach((tx: any) => {
+      if (tx.product_uuid) productUuids.add(tx.product_uuid)
+      if (tx.batch_uuid) batchUuids.add(tx.batch_uuid)
+    })
+
+    const productMap = new Map<string, any>()
+    const batchMap = new Map<string, any>()
+
+    if (productUuids.size > 0) {
+      const { data: products } = await getSupabase()
+        .from('inv_products')
+        .select('uuid, product_code, product_name, unit:inv_units(name)')
+        .in('uuid', Array.from(productUuids))
+
+      products?.forEach((p: any) => {
+        productMap.set(p.uuid, p)
+      })
+    }
+
+    if (batchUuids.size > 0) {
+      const { data: batches } = await getSupabase()
+        .from('inv_product_batches')
+        .select('uuid, batch_number')
+        .in('uuid', Array.from(batchUuids))
+
+      batches?.forEach((b: any) => {
+        batchMap.set(b.uuid, b)
+      })
+    }
+
     // Handle search in application (if needed for multi-field search)
     let results = (data || []) as any[]
 
     if (search) {
       const searchLower = search.toLowerCase()
-      results = results.filter(
-        (tx) =>
-          tx.product?.product_code?.toLowerCase().includes(searchLower) ||
-          tx.product?.product_name?.toLowerCase().includes(searchLower) ||
-          tx.batch?.batch_number?.toLowerCase().includes(searchLower) ||
+      results = results.filter((tx: any) => {
+        const prod = productMap.get(tx.product_uuid)
+        const batch = batchMap.get(tx.batch_uuid)
+        return (
+          prod?.product_code?.toLowerCase().includes(searchLower) ||
+          prod?.product_name?.toLowerCase().includes(searchLower) ||
+          batch?.batch_number?.toLowerCase().includes(searchLower) ||
           tx.remarks?.toLowerCase().includes(searchLower)
-      )
+        )
+      })
     }
 
     // Transform to response format
-    const transactions: StockTransaction[] = results.map((tx: any) => ({
-      uuid: tx.uuid,
-      created_at: tx.created_at,
-      movement_type: tx.movement_type,
-      quantity: tx.quantity,
-      before_stock: tx.before_stock,
-      after_stock: tx.after_stock,
-      reference_type: tx.reference_type,
-      reference_uuid: tx.reference_uuid,
-      remarks: tx.remarks,
-      product_code: tx.product?.product_code || '',
-      product_name: tx.product?.product_name || '',
-      batch_number: tx.batch?.batch_number,
-      unit_name: tx.product?.unit?.name || '',
-      created_by_name: tx.created_by?.email || 'System',
-    }))
+    const transactions: StockTransaction[] = results.map((tx: any) => {
+      const prod = productMap.get(tx.product_uuid)
+      const batch = batchMap.get(tx.batch_uuid)
+
+      return {
+        uuid: tx.uuid,
+        created_at: tx.created_at,
+        movement_type: tx.movement_type,
+        quantity: tx.quantity,
+        before_stock: tx.before_stock,
+        after_stock: tx.after_stock,
+        reference_type: tx.reference_type,
+        reference_uuid: tx.reference_uuid,
+        remarks: tx.remarks,
+        product_code: prod?.product_code || '',
+        product_name: prod?.product_name || '',
+        batch_number: batch?.batch_number,
+        unit_name: prod?.unit?.name || '',
+        created_by_name: 'System',
+      }
+    })
 
     console.log('========== GET /api/inventory/transactions END (SUCCESS) ==========')
 

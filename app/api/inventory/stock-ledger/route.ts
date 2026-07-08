@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch all movements for this product (for opening balance calculation)
     console.log('Fetching all movements for product...')
-    let allMovementsQuery = getSupabase()
+    const { data: allMovements, error: moveErr } = await getSupabase()
       .from('inv_stock_movements')
       .select(`
         uuid,
@@ -96,16 +96,11 @@ export async function GET(request: NextRequest) {
         after_stock,
         reference_type,
         reference_uuid,
-        batch:inv_product_batches(batch_number),
-        created_by:auth.users(email)
+        batch_uuid,
+        created_by
       `)
       .eq('product_uuid', product_uuid)
-
-    if (batch_uuid) {
-      allMovementsQuery = allMovementsQuery.eq('batch_uuid', batch_uuid)
-    }
-
-    const { data: allMovements, error: moveErr } = await allMovementsQuery.order('created_at', { ascending: true })
+      .order('created_at', { ascending: true })
 
     if (moveErr) {
       console.error('Movement fetch error:', moveErr)
@@ -114,14 +109,39 @@ export async function GET(request: NextRequest) {
 
     console.log('All movements:', allMovements?.length)
 
+    // Fetch batch numbers for all movements with batch_uuid
+    const batchUuids = new Set<string>()
+    allMovements?.forEach((m: any) => {
+      if (m.batch_uuid) batchUuids.add(m.batch_uuid)
+    })
+
+    const batchMap = new Map<string, string>()
+    if (batchUuids.size > 0) {
+      console.log('Fetching batch details...')
+      const { data: batches } = await getSupabase()
+        .from('inv_product_batches')
+        .select('uuid, batch_number')
+        .in('uuid', Array.from(batchUuids))
+
+      batches?.forEach((b: any) => {
+        batchMap.set(b.uuid, b.batch_number)
+      })
+    }
+
     // Determine opening balance (first movement's before_stock if exists, else 0)
     let openingStock = 0
     if (allMovements && allMovements.length > 0) {
       openingStock = (allMovements[0] as any).before_stock || 0
     }
 
+    // Filter by batch_uuid if provided
+    let movementsToProcess = allMovements || []
+    if (batch_uuid) {
+      movementsToProcess = movementsToProcess.filter((m: any) => m.batch_uuid === batch_uuid)
+    }
+
     // Filter movements by date range for display
-    let filteredMovements = allMovements || []
+    let filteredMovements = movementsToProcess
 
     if (dateFrom) {
       filteredMovements = filteredMovements.filter(
@@ -164,14 +184,14 @@ export async function GET(request: NextRequest) {
         voucher_type: movement.reference_type,
         reference: movement.reference_uuid,
         transaction_type: movement.movement_type,
-        batch_number: movement.batch?.batch_number,
+        batch_number: movement.batch_uuid ? batchMap.get(movement.batch_uuid) : undefined,
         opening_qty: index === 0 ? openingStock : runningBalance,
         qty_in: qtyIn,
         qty_out: qtyOut,
         closing_qty: movement.after_stock,
         unit_cost: unitCost,
         running_value: movement.after_stock * unitCost,
-        user: movement.created_by?.email || 'System',
+        user: 'System',
       }
 
       runningBalance = movement.after_stock
