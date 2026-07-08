@@ -105,6 +105,16 @@ export default function PurchaseOrdersPage() {
   const [items, setItems] = useState<POItem[]>([])
   const [submitting, setSubmitting] = useState(false)
 
+  // Edit form state
+  const [editFormData, setEditFormData] = useState({
+    supplier_uuid: '',
+    order_date: '',
+    expected_delivery_date: '',
+    remarks: '',
+  })
+  const [editItems, setEditItems] = useState<POItem[]>([])
+  const [editSubmitting, setEditSubmitting] = useState(false)
+
   const pageSize = 20
 
   useEffect(() => {
@@ -117,6 +127,15 @@ export default function PurchaseOrdersPage() {
       fetchProducts()
     }
   }, [showCreateModal])
+
+  useEffect(() => {
+    if (showEditModal && selectedOrder) {
+      // Load the full PO data including items
+      loadPOForEdit(selectedOrder.uuid)
+      fetchSuppliers()
+      fetchProducts()
+    }
+  }, [showEditModal])
 
   async function fetchOrders() {
     try {
@@ -239,6 +258,92 @@ export default function PurchaseOrdersPage() {
     } finally {
       setActionInProgress(false)
     }
+  }
+
+  async function loadPOForEdit(poUuid: string) {
+    try {
+      const response = await fetch(`/api/inventory/purchase-orders/${poUuid}`)
+      if (!response.ok) throw new Error('Failed to fetch PO')
+      const po = await response.json()
+      
+      setEditFormData({
+        supplier_uuid: po.supplier_uuid,
+        order_date: po.order_date,
+        expected_delivery_date: po.expected_delivery_date || '',
+        remarks: po.remarks || '',
+      })
+      setEditItems(po.items || [])
+    } catch (error) {
+      console.error('Error loading PO:', error)
+      toast.error('Failed to load PO for editing')
+    }
+  }
+
+  async function handleSaveEdit() {
+    if (!editFormData.supplier_uuid) {
+      toast.error('Please select a supplier')
+      return
+    }
+    if (editItems.length === 0) {
+      toast.error('Please add at least one item')
+      return
+    }
+
+    if (!selectedOrder) return
+
+    try {
+      setEditSubmitting(true)
+      const payload = {
+        supplier_uuid: editFormData.supplier_uuid,
+        order_date: editFormData.order_date,
+        expected_delivery_date: editFormData.expected_delivery_date || undefined,
+        remarks: editFormData.remarks || undefined,
+        items: editItems,
+      }
+
+      const response = await fetch(`/api/inventory/purchase-orders/${selectedOrder.uuid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update purchase order')
+      }
+
+      toast.success('Purchase order updated successfully')
+      setShowEditModal(false)
+      fetchOrders()
+    } catch (error: any) {
+      console.error('Error:', error)
+      toast.error(error.message || 'Failed to update purchase order')
+    } finally {
+      setEditSubmitting(false)
+    }
+  }
+
+  function addEditItem() {
+    setEditItems([
+      ...editItems,
+      {
+        product_uuid: '',
+        ordered_quantity: 1,
+        unit_rate: 0,
+        discount_percent: 0,
+        gst_percentage: 0,
+      },
+    ])
+  }
+
+  function removeEditItem(index: number) {
+    setEditItems(editItems.filter((_, i) => i !== index))
+  }
+
+  function updateEditItem(index: number, field: string, value: any) {
+    const newItems = [...editItems]
+    newItems[index] = { ...newItems[index], [field]: value }
+    setEditItems(newItems)
   }
 
   async function handleCreatePO() {
@@ -818,7 +923,226 @@ export default function PurchaseOrdersPage() {
       )}
 
       {/* Edit Modal */}
-      {showEditModal && selectedOrder && (
+      {showEditModal && selectedOrder && selectedOrder.status === 'draft' && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Purchase Order - {selectedOrder.po_number}</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-900 dark:text-white">Purchase Order Details</h3>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Supplier *
+                  </label>
+                  <select
+                    value={editFormData.supplier_uuid}
+                    onChange={(e) => setEditFormData({ ...editFormData, supplier_uuid: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a supplier</option>
+                    {suppliers.map((s) => (
+                      <option key={s.uuid} value={s.uuid}>
+                        {s.company_name} ({s.supplier_code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Order Date
+                    </label>
+                    <input
+                      type="date"
+                      value={editFormData.order_date}
+                      onChange={(e) => setEditFormData({ ...editFormData, order_date: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Expected Delivery Date
+                    </label>
+                    <input
+                      type="date"
+                      value={editFormData.expected_delivery_date}
+                      onChange={(e) => setEditFormData({ ...editFormData, expected_delivery_date: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Remarks
+                  </label>
+                  <textarea
+                    value={editFormData.remarks}
+                    onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Items *</h3>
+                  <button
+                    onClick={addEditItem}
+                    className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition"
+                  >
+                    <Plus size={16} className="inline mr-1" />
+                    Add Item
+                  </button>
+                </div>
+
+                {editItems.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                    No items added yet
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {editItems.map((item, index) => (
+                      <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Item {index + 1}
+                          </label>
+                          <button
+                            onClick={() => removeEditItem(index)}
+                            className="text-red-600 hover:text-red-800 transition"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Product *
+                            </label>
+                            <select
+                              value={item.product_uuid}
+                              onChange={(e) => updateEditItem(index, 'product_uuid', e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">Select product</option>
+                              {products.map((p) => (
+                                <option key={p.uuid} value={p.uuid}>
+                                  {p.product_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Quantity *
+                            </label>
+                            <input
+                              type="number"
+                              value={item.ordered_quantity}
+                              onChange={(e) => updateEditItem(index, 'ordered_quantity', parseInt(e.target.value) || 0)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              min="1"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Unit Rate *
+                            </label>
+                            <input
+                              type="number"
+                              value={item.unit_rate}
+                              onChange={(e) => updateEditItem(index, 'unit_rate', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              step="0.01"
+                              min="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Discount %
+                            </label>
+                            <input
+                              type="number"
+                              value={item.discount_percent || 0}
+                              onChange={(e) => updateEditItem(index, 'discount_percent', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              step="0.01"
+                              min="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              GST %
+                            </label>
+                            <input
+                              type="number"
+                              value={item.gst_percentage || 0}
+                              onChange={(e) => updateEditItem(index, 'gst_percentage', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              step="0.01"
+                              min="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Line Amount
+                            </label>
+                            <input
+                              type="text"
+                              value={`₹${(
+                                item.ordered_quantity *
+                                item.unit_rate *
+                                (1 - (item.discount_percent || 0) / 100) *
+                                (1 + (item.gst_percentage || 0) / 100)
+                              ).toFixed(2)}`}
+                              disabled
+                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white bg-gray-100 dark:bg-gray-600"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={editSubmitting}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+              >
+                {editSubmitting && <Loader size={18} className="animate-spin" />}
+                {editSubmitting ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal - Non-Draft Message */}
+      {showEditModal && selectedOrder && selectedOrder.status !== 'draft' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
@@ -833,7 +1157,7 @@ export default function PurchaseOrdersPage() {
 
             <div className="p-6 space-y-6">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Only draft purchase orders can be edited. Edit functionality coming soon.
+                Only draft purchase orders can be edited. Current status: <span className="font-semibold">{selectedOrder.status}</span>
               </p>
             </div>
 
