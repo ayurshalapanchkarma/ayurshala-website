@@ -39,6 +39,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    console.log('[Warehouse POST] Received payload:', JSON.stringify(body, null, 2))
+    
     const { warehouse_code, warehouse_name, location, address, city, state, pincode, contact_person, phone, email } = body
 
     // Validation
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const { data, error } = await supabaseAdmin.from('warehouses').insert({
+    const insertPayload = {
       warehouse_code: warehouse_code || `WH${Date.now()}`,
       warehouse_name: warehouse_name.trim(),
       location: location.trim(),
@@ -80,13 +82,43 @@ export async function POST(request: Request) {
       email: email?.trim() || null,
       is_active: true,
       is_deleted: false,
-    }).select()
+    }
+    
+    console.log('[Warehouse POST] Insert payload:', JSON.stringify(insertPayload, null, 2))
 
-    if (error) throw error
+    const { data, error } = await supabaseAdmin.from('warehouses').insert(insertPayload).select()
 
+    if (error) {
+      console.error('[Warehouse POST] Supabase insert error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        status: error.status
+      })
+      throw error
+    }
+
+    console.log('[Warehouse POST] Created successfully:', data?.[0]?.uuid)
     return NextResponse.json(data?.[0], { status: 201 })
-  } catch (error) {
-    console.error('Error creating warehouse:', error)
-    return NextResponse.json({ error: 'Failed to create warehouse' }, { status: 500 })
+  } catch (error: any) {
+    console.error('[Warehouse POST] Full error object:', {
+      message: error?.message,
+      code: error?.code,
+      details: error?.details,
+      hint: error?.hint,
+      status: error?.status,
+      stack: error?.stack
+    })
+    
+    return NextResponse.json(
+      { 
+        error: error?.message || 'Failed to create warehouse',
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      }, 
+      { status: 500 }
+    )
   }
 }
