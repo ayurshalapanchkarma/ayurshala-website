@@ -95,6 +95,9 @@ function getSupabase() {
 export class ReportService {
   static async getCurrentStockReport(filters: ReportFilters = {}): Promise<CurrentStockReportItem[]> {
     try {
+      console.log('========== ReportService.getCurrentStockReport START ==========')
+      console.log('Filters:', filters)
+      
       let query = getSupabase()
         .from('inv_products')
         .select(`
@@ -109,12 +112,24 @@ export class ReportService {
         query = query.eq('category_uuid', filters.category_uuid)
       }
 
+      console.log('Fetching active products...')
       const { data: products, error } = await query.order('product_name')
-      if (error) throw error
+      if (error) {
+        console.error('Product query error:', error)
+        throw error
+      }
+
+      console.log('Products found:', products?.length)
+
+      if (!products || products.length === 0) {
+        console.log('No active products found, returning empty report')
+        return []
+      }
 
       // Fetch all batches in one query (bulk instead of per-product)
       const productUuids = (products as any[]).map(p => p.uuid)
       
+      console.log('Fetching batches for', productUuids.length, 'products...')
       const { data: allBatches, error: batchErr } = await getSupabase()
         .from('inv_product_batches')
         .select('product_uuid, purchase_price, available_quantity')
@@ -123,7 +138,12 @@ export class ReportService {
         .eq('is_active', true)
         .gt('available_quantity', 0)
 
-      if (batchErr) throw batchErr
+      if (batchErr) {
+        console.error('Batch query error:', batchErr)
+        throw batchErr
+      }
+
+      console.log('Batches found:', allBatches?.length)
 
       // Group batches by product for efficient lookup
       const batchesByProduct = new Map<string, any[]>()
@@ -135,6 +155,7 @@ export class ReportService {
       })
 
       // Fetch all stock movements for these products to get current stock
+      console.log('Fetching stock movements...')
       const { data: movements, error: moveErr } = await getSupabase()
         .from('inv_stock_movements')
         .select('product_uuid, after_stock')
@@ -142,7 +163,12 @@ export class ReportService {
         .eq('is_active', true)
         .order('created_at', { ascending: false })
 
-      if (moveErr) throw moveErr
+      if (moveErr) {
+        console.error('Stock movement query error:', moveErr)
+        throw moveErr
+      }
+
+      console.log('Stock movements found:', movements?.length)
 
       // Get latest stock per product
       const stockByProduct = new Map<string, number>()
@@ -151,6 +177,8 @@ export class ReportService {
           stockByProduct.set(m.product_uuid, m.after_stock || 0)
         }
       })
+
+      console.log('Products with stock data:', stockByProduct.size)
 
       const report = (products as any[]).map((product) => {
         const currentStock = stockByProduct.get(product.uuid) ?? 0
@@ -183,10 +211,14 @@ export class ReportService {
         } as CurrentStockReportItem
       })
 
+      console.log('Report generated with', report.length, 'items')
+      console.log('========== ReportService.getCurrentStockReport END (SUCCESS) ==========')
+      
       return report
     } catch (error) {
-      console.error('Error generating current stock report:', error)
-      throw new Error('Failed to generate current stock report')
+      console.error('========== ReportService.getCurrentStockReport ERROR ==========')
+      console.error('Error:', error)
+      throw error
     }
   }
 
