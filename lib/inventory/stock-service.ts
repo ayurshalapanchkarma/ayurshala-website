@@ -428,26 +428,34 @@ export class StockService {
     adjustment_date?: string
     reason: AdjustmentReason
     notes?: string
-    items: {
-      product_uuid: string
-      batch_uuid: string
-      adjustment_type: 'INCREASE' | 'DECREASE'
-      quantity: number
-      notes?: string
-    }[]
+    items: any[]
   }, userId?: string): Promise<StockAdjustment> {
+    console.log('========== StockService.createAdjustment START ==========')
+    console.log('Input:', JSON.stringify(input, null, 2))
+    
     const errors: Record<string, string> = {}
     if (!input.reason) errors.reason = 'Reason is required'
     if (!input.items || input.items.length === 0) errors.items = 'At least one item is required'
-    if (Object.keys(errors).length > 0) throw new ValidationError(errors)
+    
+    if (Object.keys(errors).length > 0) {
+      console.error('Validation errors:', errors)
+      throw new ValidationError(errors)
+    }
 
     try {
+      console.log('Generating adjustment number...')
       // Generate adjustment number
       const { data: adjNum, error: seqErr } = await getSupabase()
         .rpc('fn_generate_adjustment_number')
-      if (seqErr) throw new Error('Failed to generate adjustment number')
+      if (seqErr) {
+        console.error('RPC error:', seqErr)
+        throw new Error('Failed to generate adjustment number')
+      }
+
+      console.log('Adjustment number:', adjNum)
 
       // Insert header
+      console.log('Inserting adjustment header...')
       const { data: adj, error: adjErr } = await getSupabase()
         .from('inv_stock_adjustments')
         .insert({
@@ -462,30 +470,53 @@ export class StockService {
         .select()
         .single()
 
-      if (adjErr) throw adjErr
+      if (adjErr) {
+        console.error('Insert adjustment error:', adjErr)
+        throw adjErr
+      }
 
       const adjUuid = (adj as any).uuid
+      console.log('Adjustment created:', adjUuid)
 
-      // Insert items
-      const items = input.items.map(item => ({
-        adjustment_uuid: adjUuid,
-        product_uuid: item.product_uuid,
-        batch_uuid: item.batch_uuid,
-        adjustment_type: item.adjustment_type,
-        quantity: item.quantity,
-        notes: item.notes ?? null,
-      }))
+      // Transform items to match schema
+      console.log('Transforming items...')
+      console.log('First item sample:', input.items[0])
+      
+      const items = input.items.map((item: any) => {
+        console.log('Processing item:', item)
+        return {
+          adjustment_uuid: adjUuid,
+          product_uuid: item.product_uuid,
+          batch_uuid: item.batch_uuid,
+          adjustment_type: item.adjustment_type || 'INCREASE',
+          quantity: item.quantity || item.quantity_adjusted || 0,
+          notes: item.notes || item.reason_notes || null,
+        }
+      })
 
+      console.log('Transformed items:', JSON.stringify(items, null, 2))
+
+      console.log('Inserting adjustment items...')
       const { error: itemErr } = await getSupabase()
         .from('inv_stock_adjustment_items')
         .insert(items)
-      if (itemErr) throw itemErr
+      
+      if (itemErr) {
+        console.error('Insert items error:', itemErr)
+        throw itemErr
+      }
 
-      return this.getAdjustmentById(adjUuid)
+      console.log('Items inserted successfully')
+      console.log('Fetching created adjustment...')
+      
+      const result = await this.getAdjustmentById(adjUuid)
+      console.log('========== StockService.createAdjustment END (SUCCESS) ==========')
+      return result
     } catch (error) {
+      console.error('========== StockService.createAdjustment ERROR ==========')
+      console.error('Error:', error)
       if (error instanceof ValidationError) throw error
-      console.error('Error creating adjustment:', error)
-      throw new Error('Failed to create stock adjustment')
+      throw error
     }
   }
 
