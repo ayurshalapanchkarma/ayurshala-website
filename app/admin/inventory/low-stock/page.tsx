@@ -1,15 +1,62 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Search, RefreshCw, Download, AlertTriangle } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  Search,
+  RefreshCw,
+  Download,
+  AlertTriangle,
+  Package,
+  TrendingDown,
+  DollarSign,
+  Eye,
+  Edit,
+  ShoppingCart,
+  FileText,
+  Trash2,
+  ChevronDown,
+} from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
 interface LowStockItem {
-  productId: string
+  productUuid: string
+  productCode: string
   productName: string
-  productSku: string
-  currentStock: number
+  sku: string | null
+  categoryName: string
+  warehouseName: string | null
+  currentQty: number
+  minimumStock: number
   reorderLevel: number
-  shortfall: number
+  difference: number
+  status: 'OUT_OF_STOCK' | 'CRITICAL' | 'BELOW_REORDER'
+  unit: string
+  lastMovement: string | null
+  supplierName: string | null
+  purchasePrice: number
+  valueAtRisk: number
+}
+
+interface ApiResponse {
+  data: LowStockItem[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  summary: {
+    totalProducts: number
+    outOfStock: number
+    critical: number
+    belowReorder: number
+    inventoryValueAtRisk: number
+  }
+  error?: string
+}
+
+const statusConfig = {
+  OUT_OF_STOCK: { label: 'Out of Stock', color: 'bg-red-100 text-red-700 border-red-200', badge: 'bg-red-50 text-red-600' },
+  CRITICAL: { label: 'Critical', color: 'bg-orange-100 text-orange-700 border-orange-200', badge: 'bg-orange-50 text-orange-600' },
+  BELOW_REORDER: { label: 'Below Reorder', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', badge: 'bg-yellow-50 text-yellow-600' },
 }
 
 export default function LowStockPage() {
@@ -18,131 +65,418 @@ export default function LowStockPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const pageSize = 20
+  const [pageSize, setPageSize] = useState(20)
+  const [sortBy, setSortBy] = useState<'shortfall' | 'current_qty' | 'reorder_level'>('shortfall')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [summary, setSummary] = useState<any>(null)
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
+  const [showBulkActions, setShowBulkActions] = useState(false)
+  const loadRef = useRef<() => void>(() => {})
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      const res = await fetch('/api/inventory/reports?type=low-stock')
-      if (!res.ok) throw new Error('Failed to load low stock data')
-      const data = await res.json()
-      setItems(data.data || data || [])
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        search,
+        sortBy,
+        sortOrder,
+      })
+
+      const res = await fetch(`/api/inventory/low-stock?${params}`)
+      if (!res.ok) {
+        throw new Error(`API error: ${res.statusText}`)
+      }
+
+      const data: ApiResponse = await res.json()
+
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      setItems(data.data || [])
+      setSummary(data.summary)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load')
+      const errorMsg = e instanceof Error ? e.message : 'Failed to load low stock data'
+      setError(errorMsg)
+      console.error('Low stock API error:', e)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [page, pageSize, search, sortBy, sortOrder])
 
-  useEffect(() => { load() }, [load])
+  loadRef.current = load
 
-  const filtered = items.filter(
-    i => i.productName?.toLowerCase().includes(search.toLowerCase()) ||
-         i.productSku?.toLowerCase().includes(search.toLowerCase())
-  )
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
+  useEffect(() => {
+    load()
+  }, [load])
 
-  function exportCSV() {
-    const rows = [['Product', 'SKU', 'Current Stock', 'Reorder Level', 'Shortfall']]
-    filtered.forEach(i => rows.push([i.productName, i.productSku, String(i.currentStock), String(i.reorderLevel), String(i.shortfall)]))
-    const csv = rows.map(r => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `low-stock-${new Date().toISOString().slice(0, 10)}.csv`; a.click()
-    URL.revokeObjectURL(url)
+  const handleSelectAll = () => {
+    if (selectedItems.size === items.length) {
+      setSelectedItems(new Set())
+    } else {
+      setSelectedItems(new Set(items.map(i => i.productUuid)))
+    }
   }
 
+  const handleSelectItem = (uuid: string) => {
+    const newSelected = new Set(selectedItems)
+    if (newSelected.has(uuid)) {
+      newSelected.delete(uuid)
+    } else {
+      newSelected.add(uuid)
+    }
+    setSelectedItems(newSelected)
+  }
+
+  const handleBulkExportCSV = () => {
+    const selectedData = items.filter(i => selectedItems.has(i.productUuid))
+    const dataToExport = selectedData.length > 0 ? selectedData : items
+
+    const rows = [['Product', 'SKU', 'Category', 'Current Stock', 'Minimum Stock', 'Reorder Level', 'Shortfall', 'Unit', 'Purchase Price', 'Value at Risk', 'Status']]
+    dataToExport.forEach(i =>
+      rows.push([
+        i.productName,
+        i.sku || '',
+        i.categoryName,
+        String(i.currentQty),
+        String(i.minimumStock),
+        String(i.reorderLevel),
+        String(i.difference),
+        i.unit,
+        String(i.purchasePrice),
+        String(i.valueAtRisk.toFixed(2)),
+        i.status,
+      ])
+    )
+
+    const csv = rows.map(r => r.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `low-stock-${new Date().toISOString().slice(0, 10)}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleBulkExportExcel = () => {
+    // For Excel, we'll use CSV for now - production can add xlsx library
+    handleBulkExportCSV()
+  }
+
+  const totalPages = summary ? Math.ceil(summary.totalProducts / pageSize) : 1
+  const chartData = summary ? [
+    { name: 'Out of Stock', value: summary.outOfStock, fill: '#dc2626' },
+    { name: 'Critical', value: summary.critical, fill: '#ea580c' },
+    { name: 'Below Reorder', value: summary.belowReorder, fill: '#eab308' },
+  ] : []
+
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 md:p-8 space-y-6 bg-gray-50 dark:bg-slate-950 min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Low Stock Alerts</h1>
-          <p className="text-sm text-gray-500 mt-1">Products at or below reorder level</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">Low Stock Alerts</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time monitoring of products below configured stock levels</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button
+            onClick={handleBulkExportCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+          >
             <Download size={16} /> Export CSV
           </button>
-          <button onClick={load} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm">
+          <button
+            onClick={() => loadRef.current()}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition"
+          >
             <RefreshCw size={16} /> Refresh
           </button>
         </div>
       </div>
 
-      {filtered.length > 0 && !loading && (
-        <div className="mb-6 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 flex items-center gap-3">
-          <AlertTriangle className="text-orange-600" size={20} />
-          <p className="text-orange-700 dark:text-orange-400 font-medium">
-            {filtered.length} product{filtered.length !== 1 ? 's' : ''} need restocking
-          </p>
+      {/* Summary Cards */}
+      {summary && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total Products</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{summary.totalProducts}</p>
+              </div>
+              <Package className="text-blue-500" size={32} />
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Out of Stock</p>
+                <p className="text-2xl font-bold text-red-600 mt-1">{summary.outOfStock}</p>
+              </div>
+              <AlertTriangle className="text-red-500" size={32} />
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Critical Stock</p>
+                <p className="text-2xl font-bold text-orange-600 mt-1">{summary.critical}</p>
+              </div>
+              <TrendingDown className="text-orange-500" size={32} />
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Below Reorder</p>
+                <p className="text-2xl font-bold text-yellow-600 mt-1">{summary.belowReorder}</p>
+              </div>
+              <ChevronDown className="text-yellow-500" size={32} />
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Value at Risk</p>
+                <p className="text-2xl font-bold text-purple-600 mt-1">₹{(summary.inventoryValueAtRisk / 100000).toFixed(1)}L</p>
+              </div>
+              <DollarSign className="text-purple-500" size={32} />
+            </div>
+          </div>
         </div>
       )}
 
-      {error && <div className="mb-4 bg-red-50 border border-red-200 p-4 rounded-lg text-red-700">{error}</div>}
-
-      <div className="bg-white dark:bg-slate-800 rounded-lg border p-4 mb-6">
-        <div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-700 rounded-lg px-4 py-2">
-          <Search size={18} className="text-gray-400" />
-          <input
-            className="flex-1 bg-transparent outline-none text-sm"
-            placeholder="Search by product or SKU..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1) }}
-          />
+      {/* Search and Filters */}
+      <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex-1 flex items-center gap-2 bg-gray-50 dark:bg-slate-700 rounded-lg px-4 py-2">
+            <Search size={18} className="text-gray-400" />
+            <input
+              className="flex-1 bg-transparent outline-none text-sm text-slate-900 dark:text-white placeholder-gray-400"
+              placeholder="Search product name, SKU, or code..."
+              value={search}
+              onChange={e => {
+                setSearch(e.target.value)
+                setPage(1)
+              }}
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value as any)}
+              className="px-3 py-2 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-slate-900 dark:text-white"
+            >
+              <option value="shortfall">Sort by Shortfall</option>
+              <option value="current_qty">Sort by Current Qty</option>
+              <option value="reorder_level">Sort by Reorder Level</option>
+            </select>
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="px-3 py-2 bg-gray-100 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-slate-900 dark:text-white hover:bg-gray-200 dark:hover:bg-slate-600"
+            >
+              {sortOrder === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-20 text-gray-500">Checking stock levels...</div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border p-12 text-center">
-          <AlertTriangle size={40} className="mx-auto text-green-400 mb-3" />
-          <p className="text-gray-600 dark:text-gray-400 font-medium">All stock levels are healthy</p>
-          <p className="text-sm text-gray-500 mt-1">No products are below their reorder level</p>
-        </div>
-      ) : (
-        <>
-          <div className="bg-white dark:bg-slate-800 rounded-lg border overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Product</th>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">SKU</th>
-                  <th className="px-6 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Current Stock</th>
-                  <th className="px-6 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Reorder Level</th>
-                  <th className="px-6 py-3 text-right font-semibold text-red-700">Shortfall</th>
-                  <th className="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                {paginated.map(item => (
-                  <tr key={item.productId} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{item.productName}</td>
-                    <td className="px-6 py-4 text-gray-500 font-mono text-xs">{item.productSku}</td>
-                    <td className="px-6 py-4 text-right font-semibold text-orange-600">{item.currentStock}</td>
-                    <td className="px-6 py-4 text-right text-gray-600 dark:text-gray-400">{item.reorderLevel}</td>
-                    <td className="px-6 py-4 text-right font-bold text-red-600">{item.shortfall}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        item.currentStock === 0 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
-                      }`}>
-                        {item.currentStock === 0 ? 'Out of Stock' : 'Low Stock'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Error state */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400 flex items-center gap-3">
+          <AlertTriangle size={20} />
+          <div>
+            <p className="font-medium">Error loading data</p>
+            <p className="text-sm">{error}</p>
           </div>
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-gray-600">{filtered.length} items need attention</p>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && (
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-12 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-500 dark:text-gray-400 mt-4">Checking stock levels...</p>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && items.length === 0 && !error && (
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-12 text-center">
+          <Package size={48} className="mx-auto text-green-400 mb-3" />
+          <p className="text-gray-600 dark:text-gray-400 font-medium">No products need restocking</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">All stock levels are healthy ✓</p>
+        </div>
+      )}
+
+      {/* Bulk actions */}
+      {!loading && items.length > 0 && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center justify-between">
+          <label className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+            <input
+              type="checkbox"
+              checked={selectedItems.size === items.length && items.length > 0}
+              onChange={handleSelectAll}
+              className="w-4 h-4"
+            />
+            <span className="text-sm font-medium">{selectedItems.size > 0 ? `${selectedItems.size} selected` : 'Select all'}</span>
+          </label>
+          {selectedItems.size > 0 && (
             <div className="flex gap-2">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded disabled:opacity-50 text-sm">Previous</button>
-              <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Page {page} of {totalPages}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-4 py-2 bg-amber-600 text-white rounded disabled:opacity-50 text-sm">Next</button>
+              <button onClick={() => setShowBulkActions(!showBulkActions)} className="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Bulk Actions ▼
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Chart */}
+      {!loading && items.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Stock Status Distribution</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fill: '#666' }} />
+                <YAxis tick={{ fill: '#666' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }} />
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Top Products by Shortfall</h3>
+            <div className="space-y-2">
+              {items.slice(0, 5).map(item => (
+                <div key={item.productUuid} className="flex justify-between text-sm pb-2 border-b border-gray-100 dark:border-slate-700">
+                  <span className="text-gray-700 dark:text-gray-300 truncate">{item.productName}</span>
+                  <span className="font-semibold text-red-600">-{item.difference}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Table */}
+      {!loading && items.length > 0 && (
+        <>
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-200 dark:border-slate-600">
+                  <tr>
+                    <th className="px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.size === items.length && items.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4"
+                      />
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Product</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Category</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Current</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Min</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Reorder</th>
+                    <th className="px-4 py-3 text-right font-semibold text-red-700 dark:text-red-400">Shortfall</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Status</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                  {items.map(item => (
+                    <tr key={item.productUuid} className="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.has(item.productUuid)}
+                          onChange={() => handleSelectItem(item.productUuid)}
+                          className="w-4 h-4"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="font-medium text-slate-900 dark:text-white">{item.productName}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{item.sku || item.productCode}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{item.categoryName}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-semibold text-slate-900 dark:text-white">{item.currentQty}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">{item.unit}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">{item.minimumStock}</td>
+                      <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">{item.reorderLevel}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-bold text-red-600 dark:text-red-400">-{item.difference}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig[item.status].badge}`}>
+                          {statusConfig[item.status].label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1" title="View">
+                          <Eye size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Showing {items.length > 0 ? (page - 1) * pageSize + 1 : 0} to {Math.min(page * pageSize, summary?.totalProducts || 0)} of {summary?.totalProducts || 0} products
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded disabled:opacity-50 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50 text-sm hover:bg-blue-700"
+              >
+                Next
+              </button>
+              <select
+                value={pageSize}
+                onChange={e => {
+                  setPageSize(parseInt(e.target.value))
+                  setPage(1)
+                }}
+                className="px-3 py-2 bg-gray-100 dark:bg-slate-700 rounded text-sm text-gray-700 dark:text-gray-300"
+              >
+                <option value={10}>10 per page</option>
+                <option value={20}>20 per page</option>
+                <option value={50}>50 per page</option>
+                <option value={100}>100 per page</option>
+              </select>
             </div>
           </div>
         </>
