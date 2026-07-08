@@ -304,8 +304,17 @@ export class ProductService {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('[ProductService] Supabase insert error:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        })
+        throw error
+      }
 
+      console.log('[ProductService] Product created successfully:', data.uuid)
       return data as Product
     } catch (error) {
       if (error instanceof ValidationError) throw error
