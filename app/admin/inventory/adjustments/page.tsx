@@ -41,8 +41,16 @@ interface Product {
 
 interface AdjustmentItem {
   product_uuid: string
-  quantity_adjusted: number
-  reason_notes?: string
+  batch_uuid?: string
+  adjustment_type: 'INCREASE' | 'DECREASE'
+  quantity: number
+  notes?: string
+}
+
+interface Batch {
+  uuid: string
+  batch_code: string
+  available_quantity: number
 }
 
 const statusColors = {
@@ -78,6 +86,7 @@ export default function StockAdjustmentsPage() {
 
   // Modal state
   const [products, setProducts] = useState<Product[]>([])
+  const [batches, setBatches] = useState<Record<string, Batch[]>>({})
   const [formData, setFormData] = useState({
     adjustment_date: new Date().toISOString().split('T')[0],
     reason: 'PHYSICAL_COUNT' as const,
@@ -134,6 +143,21 @@ export default function StockAdjustmentsPage() {
     }
   }
 
+  async function fetchBatchesForProduct(productUuid: string) {
+    try {
+      const response = await fetch(`/api/inventory/products/${productUuid}/batches`)
+      if (!response.ok) throw new Error('Failed to fetch batches')
+      const data = await response.json()
+      setBatches(prev => ({
+        ...prev,
+        [productUuid]: data.data || []
+      }))
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to fetch batches')
+    }
+  }
+
   async function handleCreateAdjustment() {
     // Validation
     if (!formData.reason) {
@@ -145,13 +169,39 @@ export default function StockAdjustmentsPage() {
       return
     }
 
+    // Validate all items have required fields
+    for (const item of items) {
+      if (!item.product_uuid) {
+        toast.error('Please select a product for all items')
+        return
+      }
+      if (!item.batch_uuid) {
+        toast.error('Please select a batch for all items')
+        return
+      }
+      if (!item.adjustment_type) {
+        toast.error('Please select adjustment type for all items')
+        return
+      }
+      if (item.quantity === 0) {
+        toast.error('Please enter a quantity for all items')
+        return
+      }
+    }
+
     try {
       setSubmitting(true)
       const payload = {
         adjustment_date: formData.adjustment_date,
         reason: formData.reason,
         notes: formData.notes || undefined,
-        items: items,
+        items: items.map(item => ({
+          product_uuid: item.product_uuid,
+          batch_uuid: item.batch_uuid,
+          adjustment_type: item.adjustment_type,
+          quantity: item.quantity,
+          notes: item.notes || undefined,
+        })),
       }
 
       const response = await fetch('/api/inventory/adjustments', {
@@ -187,8 +237,10 @@ export default function StockAdjustmentsPage() {
       ...items,
       {
         product_uuid: '',
-        quantity_adjusted: 0,
-        reason_notes: '',
+        batch_uuid: '',
+        adjustment_type: 'INCREASE',
+        quantity: 0,
+        notes: '',
       },
     ])
   }
@@ -200,6 +252,13 @@ export default function StockAdjustmentsPage() {
   function updateItem(index: number, field: string, value: any) {
     const newItems = [...items]
     newItems[index] = { ...newItems[index], [field]: value }
+    
+    // When product changes, fetch batches and reset batch selection
+    if (field === 'product_uuid' && value) {
+      fetchBatchesForProduct(value)
+      newItems[index].batch_uuid = ''
+    }
+    
     setItems(newItems)
   }
 
@@ -332,17 +391,53 @@ export default function StockAdjustmentsPage() {
                             </select>
                           </div>
 
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Quantity Adjusted *
-                            </label>
-                            <input
-                              type="number"
-                              value={item.quantity_adjusted}
-                              onChange={(e) => updateItem(index, 'quantity_adjusted', parseInt(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              placeholder="Can be positive or negative"
-                            />
+                          {item.product_uuid && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Batch *
+                              </label>
+                              <select
+                                value={item.batch_uuid || ''}
+                                onChange={(e) => updateItem(index, 'batch_uuid', e.target.value)}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="">Select batch</option>
+                                {(batches[item.product_uuid] || []).map((b) => (
+                                  <option key={b.uuid} value={b.uuid}>
+                                    {b.batch_code} (Available: {b.available_quantity})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Type *
+                              </label>
+                              <select
+                                value={item.adjustment_type}
+                                onChange={(e) => updateItem(index, 'adjustment_type', e.target.value as any)}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="INCREASE">Increase</option>
+                                <option value="DECREASE">Decrease</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Quantity *
+                              </label>
+                              <input
+                                type="number"
+                                value={item.quantity}
+                                onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Qty to adjust"
+                              />
+                            </div>
                           </div>
 
                           <div>
@@ -350,8 +445,8 @@ export default function StockAdjustmentsPage() {
                               Notes
                             </label>
                             <textarea
-                              value={item.reason_notes || ''}
-                              onChange={(e) => updateItem(index, 'reason_notes', e.target.value)}
+                              value={item.notes || ''}
+                              onChange={(e) => updateItem(index, 'notes', e.target.value)}
                               className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               rows={2}
                               placeholder="Additional notes for this item"
