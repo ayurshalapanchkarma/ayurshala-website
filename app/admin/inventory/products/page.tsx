@@ -141,22 +141,46 @@ export default function ProductsPage() {
 
       if (catRes.ok) {
         const catData = await catRes.json()
-        setDropdowns(prev => ({ ...prev, categories: catData.data }))
+        console.log('[Categories API] Status OK, data:', catData)
+        setDropdowns(prev => ({ ...prev, categories: catData.data || [] }))
+      } else {
+        console.error('[Categories API] Error status:', catRes.status, catRes.statusText)
+        const errorData = await catRes.json().catch(() => ({}))
+        console.error('[Categories API] Error response:', errorData)
       }
+
       if (unitRes.ok) {
         const unitData = await unitRes.json()
-        setDropdowns(prev => ({ ...prev, units: unitData.data }))
+        console.log('[Units API] Status OK, data:', unitData)
+        setDropdowns(prev => ({ ...prev, units: unitData.data || [] }))
+      } else {
+        console.error('[Units API] Error status:', unitRes.status, unitRes.statusText)
+        const errorData = await unitRes.json().catch(() => ({}))
+        console.error('[Units API] Error response:', errorData)
       }
+
       if (mfrRes.ok) {
         const mfrData = await mfrRes.json()
-        setDropdowns(prev => ({ ...prev, manufacturers: mfrData.data }))
+        console.log('[Manufacturers API] Status OK, data:', mfrData)
+        setDropdowns(prev => ({ ...prev, manufacturers: mfrData.data || [] }))
+      } else {
+        console.error('[Manufacturers API] Error status:', mfrRes.status, mfrRes.statusText)
+        const errorData = await mfrRes.json().catch(() => ({}))
+        console.error('[Manufacturers API] Error response:', errorData)
       }
+
       if (supRes.ok) {
         const supData = await supRes.json()
-        setDropdowns(prev => ({ ...prev, suppliers: supData.data }))
+        console.log('[Suppliers API] Status OK, data:', supData)
+        setDropdowns(prev => ({ ...prev, suppliers: supData.data || [] }))
+      } else {
+        console.error('[Suppliers API] Error status:', supRes.status, supRes.statusText)
+        const errorData = await supRes.json().catch(() => ({}))
+        console.error('[Suppliers API] Error response:', errorData)
       }
     } catch (err) {
-      console.error('Failed to load dropdown data:', err)
+      console.error('Failed to load dropdown data - Network error:', err)
+      toast.error('Failed to load dropdown data. Check console for details.')
     }
   }
 
