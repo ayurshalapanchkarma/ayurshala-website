@@ -11,12 +11,13 @@ import {
   DollarSign,
   Eye,
   Edit,
-  ShoppingCart,
-  FileText,
   Trash2,
   ChevronDown,
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import ProductPreviewModal from '@/components/inventory/ProductPreviewModal'
+import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
+import { useProductActions } from '@/lib/hooks/useProductActions'
 
 interface LowStockItem {
   productUuid: string
@@ -70,7 +71,29 @@ export default function LowStockPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [summary, setSummary] = useState<any>(null)
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
-  const [showBulkActions, setShowBulkActions] = useState(false)
+
+  // Preview Modal
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewProductId, setPreviewProductId] = useState<string | null>(null)
+
+  // Delete Dialog
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteProductId, setDeleteProductId] = useState<string | null>(null)
+  const [deleteProductName, setDeleteProductName] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const { loading: actionLoading, handleDeleteProduct } = useProductActions({
+    onSuccess: () => {
+      setDeleteOpen(false)
+      setDeleteProductId(null)
+      loadRef.current()
+    },
+    onError: (err) => {
+      console.error('[LowStockPage] Delete error:', err)
+      setDeleteError(err)
+    },
+  })
+
   const loadRef = useRef<() => void>(() => {})
 
   const load = useCallback(async () => {
@@ -86,6 +109,7 @@ export default function LowStockPage() {
         sortOrder,
       })
 
+      console.log(`[LowStockPage] Loading with params:`, params.toString())
       const res = await fetch(`/api/inventory/low-stock?${params}`)
       if (!res.ok) {
         throw new Error(`API error: ${res.statusText}`)
@@ -97,12 +121,13 @@ export default function LowStockPage() {
         throw new Error(data.error)
       }
 
+      console.log(`[LowStockPage] Loaded ${data.data.length} items`)
       setItems(data.data || [])
       setSummary(data.summary)
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Failed to load low stock data'
       setError(errorMsg)
-      console.error('Low stock API error:', e)
+      console.error('[LowStockPage] Load error:', e)
     } finally {
       setLoading(false)
     }
@@ -130,6 +155,31 @@ export default function LowStockPage() {
       newSelected.add(uuid)
     }
     setSelectedItems(newSelected)
+  }
+
+  const handlePreviewClick = (productUuid: string) => {
+    console.log(`[LowStockPage] Opening preview for product: ${productUuid}`)
+    setPreviewProductId(productUuid)
+    setPreviewOpen(true)
+  }
+
+  const handleDeleteClick = (productUuid: string, productName: string) => {
+    console.log(`[LowStockPage] Opening delete dialog for product: ${productUuid}`)
+    setDeleteProductId(productUuid)
+    setDeleteProductName(productName)
+    setDeleteError(null)
+    setDeleteOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteProductId) return
+
+    try {
+      console.log(`[LowStockPage] Confirming delete for: ${deleteProductId}`)
+      await handleDeleteProduct(deleteProductId)
+    } catch (err) {
+      console.error(`[LowStockPage] Delete failed:`, err)
+    }
   }
 
   const handleBulkExportCSV = () => {
@@ -165,17 +215,14 @@ export default function LowStockPage() {
     document.body.removeChild(link)
   }
 
-  const handleBulkExportExcel = () => {
-    // For Excel, we'll use CSV for now - production can add xlsx library
-    handleBulkExportCSV()
-  }
-
   const totalPages = summary ? Math.ceil(summary.totalProducts / pageSize) : 1
-  const chartData = summary ? [
-    { name: 'Out of Stock', value: summary.outOfStock, fill: '#dc2626' },
-    { name: 'Critical', value: summary.critical, fill: '#ea580c' },
-    { name: 'Below Reorder', value: summary.belowReorder, fill: '#eab308' },
-  ] : []
+  const chartData = summary
+    ? [
+        { name: 'Out of Stock', value: summary.outOfStock, fill: '#dc2626' },
+        { name: 'Critical', value: summary.critical, fill: '#ea580c' },
+        { name: 'Below Reorder', value: summary.belowReorder, fill: '#eab308' },
+      ]
+    : []
 
   return (
     <div className="p-4 md:p-8 space-y-6 bg-gray-50 dark:bg-slate-950 min-h-screen">
@@ -319,28 +366,6 @@ export default function LowStockPage() {
         </div>
       )}
 
-      {/* Bulk actions */}
-      {!loading && items.length > 0 && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center justify-between">
-          <label className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
-            <input
-              type="checkbox"
-              checked={selectedItems.size === items.length && items.length > 0}
-              onChange={handleSelectAll}
-              className="w-4 h-4"
-            />
-            <span className="text-sm font-medium">{selectedItems.size > 0 ? `${selectedItems.size} selected` : 'Select all'}</span>
-          </label>
-          {selectedItems.size > 0 && (
-            <div className="flex gap-2">
-              <button onClick={() => setShowBulkActions(!showBulkActions)} className="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Bulk Actions ▼
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Chart */}
       {!loading && items.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -430,9 +455,29 @@ export default function LowStockPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1" title="View">
-                          <Eye size={16} />
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handlePreviewClick(item.productUuid)}
+                            className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400 transition"
+                            title="Preview Product"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => console.log('Edit clicked')}
+                            className="p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded text-green-600 dark:text-green-400 transition"
+                            title="Edit Product"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(item.productUuid, item.productName)}
+                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600 dark:text-red-400 transition"
+                            title="Delete Product"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -481,6 +526,34 @@ export default function LowStockPage() {
           </div>
         </>
       )}
+
+      {/* Modals */}
+      <ProductPreviewModal
+        productUuid={previewProductId}
+        isOpen={previewOpen}
+        onClose={() => {
+          setPreviewOpen(false)
+          setPreviewProductId(null)
+        }}
+        onEdit={(productId) => {
+          console.log('[LowStockPage] Edit product:', productId)
+          // TODO: Implement edit modal
+        }}
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={deleteOpen}
+        isLoading={actionLoading}
+        productName={deleteProductName}
+        error={deleteError}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setDeleteOpen(false)
+          setDeleteProductId(null)
+          setDeleteProductName('')
+          setDeleteError(null)
+        }}
+      />
     </div>
   )
 }
