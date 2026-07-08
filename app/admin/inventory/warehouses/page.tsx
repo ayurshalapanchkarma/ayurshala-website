@@ -203,10 +203,8 @@ export default function WarehousesPage() {
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700 border-b">
                 <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Code</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold">Name</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Location</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Contact</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold">Address</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold">Status</th>
                   <th className="px-6 py-3 text-center text-sm font-semibold">Actions</th>
                 </tr>
@@ -214,13 +212,9 @@ export default function WarehousesPage() {
               <tbody className="divide-y">
                 {warehouses.map((warehouse) => (
                   <tr key={warehouse.uuid} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    <td className="px-6 py-4 text-sm font-mono">{warehouse.warehouse_code}</td>
                     <td className="px-6 py-4 text-sm font-medium">{warehouse.warehouse_name}</td>
-                    <td className="px-6 py-4 text-sm">
-                      {warehouse.city || warehouse.location}
-                    </td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {warehouse.phone || warehouse.email || '-'}
+                      {warehouse.address || '-'}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span
@@ -299,141 +293,31 @@ export default function WarehousesPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Warehouse Code</label>
-                  <input
-                    type="text"
-                    value={formData.warehouse_code}
-                    onChange={(e) =>
-                      setFormData({ ...formData, warehouse_code: e.target.value })
-                    }
-                    placeholder="e.g., WH001"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                  {errors.warehouse_code && (
-                    <p className="text-red-600 text-sm mt-1">{errors.warehouse_code}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Warehouse Name *</label>
-                  <input
-                    type="text"
-                    value={formData.warehouse_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, warehouse_name: e.target.value })
-                    }
-                    placeholder="e.g., Main Warehouse"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                  {errors.warehouse_name && (
-                    <p className="text-red-600 text-sm mt-1">{errors.warehouse_name}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Location *</label>
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
-                    }
-                    placeholder="e.g., Building A"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                  {errors.location && (
-                    <p className="text-red-600 text-sm mt-1">{errors.location}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Address</label>
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    placeholder="Street address"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">City</label>
-                  <input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="City"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">State</label>
-                  <input
-                    type="text"
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    placeholder="State"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Pincode</label>
-                  <input
-                    type="text"
-                    value={formData.pincode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pincode: e.target.value })
-                    }
-                    placeholder="Postal code"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Contact Person</label>
-                  <input
-                    type="text"
-                    value={formData.contact_person}
-                    onChange={(e) =>
-                      setFormData({ ...formData, contact_person: e.target.value })
-                    }
-                    placeholder="Name"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Phone</label>
-                  <input
-                    type="text"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="Phone number"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Warehouse Name *</label>
+                <input
+                  type="text"
+                  value={formData.warehouse_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, warehouse_name: e.target.value })
+                  }
+                  placeholder="e.g., Main Warehouse"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
+                />
+                {errors.warehouse_name && (
+                  <p className="text-red-600 text-sm mt-1">{errors.warehouse_name}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
+                <label className="block text-sm font-medium mb-2">Address</label>
                 <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Email address"
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  placeholder="Street address"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
                 />
               </div>
