@@ -10,12 +10,18 @@ import {
   Calendar,
   DollarSign,
   Eye,
+  Edit,
+  Trash2,
   Lock,
   Trash,
   PrinterIcon,
   TrendingUp,
 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
+import ProductPreviewModal from '@/components/inventory/ProductPreviewModal'
+import EditProductModal from '@/components/inventory/EditProductModal'
+import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
+import { useProductActions } from '@/lib/hooks/useProductActions'
 
 interface ExpiringBatchItem {
   batchUuid: string
@@ -73,6 +79,33 @@ export default function ExpiringStockPage() {
   const [summary, setSummary] = useState<any>(null)
   const [selectedBatches, setSelectedBatches] = useState<Set<string>>(new Set())
   const [showPrintPreview, setShowPrintPreview] = useState(false)
+
+  // Preview Modal
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewProductId, setPreviewProductId] = useState<string | null>(null)
+
+  // Edit Modal
+  const [editOpen, setEditOpen] = useState(false)
+  const [editProductId, setEditProductId] = useState<string | null>(null)
+
+  // Delete Dialog
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteProductId, setDeleteProductId] = useState<string | null>(null)
+  const [deleteProductName, setDeleteProductName] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const { loading: actionLoading, handleDeleteProduct } = useProductActions({
+    onSuccess: () => {
+      setDeleteOpen(false)
+      setDeleteProductId(null)
+      loadRef.current()
+    },
+    onError: (err) => {
+      console.error('[ExpiringStockPage] Delete error:', err)
+      setDeleteError(err)
+    },
+  })
+
   const loadRef = useRef<() => void>(() => {})
 
   const load = useCallback(async () => {
@@ -112,6 +145,37 @@ export default function ExpiringStockPage() {
   }, [page, pageSize, search, statusFilter, sortBy, sortOrder])
 
   loadRef.current = load
+
+  const handlePreviewClick = (productUuid: string) => {
+    console.log(`[ExpiringStockPage] Opening preview for product: ${productUuid}`)
+    setPreviewProductId(productUuid)
+    setPreviewOpen(true)
+  }
+
+  const handleEditClick = (productUuid: string) => {
+    console.log(`[ExpiringStockPage] Opening edit modal for product: ${productUuid}`)
+    setEditProductId(productUuid)
+    setEditOpen(true)
+  }
+
+  const handleDeleteClick = (productUuid: string, productName: string) => {
+    console.log(`[ExpiringStockPage] Opening delete dialog for product: ${productUuid}`)
+    setDeleteProductId(productUuid)
+    setDeleteProductName(productName)
+    setDeleteError(null)
+    setDeleteOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteProductId) return
+
+    try {
+      console.log(`[ExpiringStockPage] Confirming delete for: ${deleteProductId}`)
+      await handleDeleteProduct(deleteProductId)
+    } catch (err) {
+      console.error(`[ExpiringStockPage] Delete failed:`, err)
+    }
+  }
 
   useEffect(() => {
     load()
@@ -475,8 +539,26 @@ export default function ExpiringStockPage() {
                           <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${cfg.badge}`}>{cfg.label}</span>
                         </td>
                         <td className="px-4 py-3 text-center print:hidden">
-                          <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 p-1" title="View">
+                          <button
+                            onClick={() => handlePreviewClick(batch.productUuid)}
+                            className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400 transition"
+                            title="Preview Product"
+                          >
                             <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleEditClick(batch.productUuid)}
+                            className="p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded text-green-600 dark:text-green-400 transition"
+                            title="Edit Product"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(batch.productUuid, batch.productName)}
+                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600 dark:text-red-400 transition"
+                            title="Delete Product"
+                          >
+                            <Trash2 size={16} />
                           </button>
                         </td>
                       </tr>
@@ -512,6 +594,49 @@ export default function ExpiringStockPage() {
               </button>
             </div>
           </div>
+
+          {/* Modals */}
+          <ProductPreviewModal
+            productUuid={previewProductId}
+            isOpen={previewOpen}
+            onClose={() => {
+              setPreviewOpen(false)
+              setPreviewProductId(null)
+            }}
+            onEdit={(productId) => {
+              console.log('[ExpiringStockPage] Edit product from preview:', productId)
+              setPreviewOpen(false)
+              setEditProductId(productId)
+              setEditOpen(true)
+            }}
+          />
+
+          <EditProductModal
+            productUuid={editProductId}
+            isOpen={editOpen}
+            onClose={() => {
+              setEditOpen(false)
+              setEditProductId(null)
+            }}
+            onSuccess={() => {
+              console.log('[ExpiringStockPage] Product updated, reloading list')
+              loadRef.current()
+            }}
+          />
+
+          <DeleteConfirmationDialog
+            isOpen={deleteOpen}
+            isLoading={actionLoading}
+            productName={deleteProductName}
+            error={deleteError}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => {
+              setDeleteOpen(false)
+              setDeleteProductId(null)
+              setDeleteProductName('')
+              setDeleteError(null)
+            }}
+          />
         </>
       )}
     </div>
