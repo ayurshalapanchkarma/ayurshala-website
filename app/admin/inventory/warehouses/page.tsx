@@ -63,7 +63,14 @@ export default function WarehousesPage() {
 
       const data: ListResponse = await response.json()
       console.log('[Warehouses] Loaded:', data.data)
-      setWarehouses(data.data)
+      
+      // Map id → uuid since Supabase returns id for UUID primary keys
+      const warehouses = data.data.map((w: any) => ({
+        ...w,
+        uuid: w.uuid || w.id,
+      }))
+      
+      setWarehouses(warehouses)
       setTotalPages(data.totalPages)
     } catch (err) {
       console.error('Error:', err)
