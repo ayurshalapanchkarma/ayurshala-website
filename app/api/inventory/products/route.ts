@@ -32,18 +32,32 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const input = await request.json()
+    console.log('[Product POST] Received input:', JSON.stringify(input, null, 2))
+    
     const result = await ProductService.createProduct(input)
     return NextResponse.json(result, { status: 201 })
   } catch (error: any) {
+    console.error('[Product POST] Error caught:', {
+      type: error.constructor.name,
+      message: error.message,
+      errors: error.errors,
+      stack: error.stack
+    })
+    
     if (error instanceof ValidationError) {
+      console.error('[Product POST] Validation errors:', error.errors)
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { 
+          error: 'Validation failed', 
+          details: error.errors,
+          fieldErrors: Object.entries(error.errors).map(([field, msg]) => `${field}: ${msg}`).join('; ')
+        },
         { status: 400 }
       )
     }
     console.error('Error creating product:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to create product' },
+      { error: error.message || 'Failed to create product', details: error.message },
       { status: 500 }
     )
   }

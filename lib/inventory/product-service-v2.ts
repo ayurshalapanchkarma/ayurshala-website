@@ -222,8 +222,16 @@ export class ProductService {
     input: CreateProductInput,
     userId?: string
   ): Promise<Product> {
+    console.log('[ProductService.createProduct] Input:', JSON.stringify(input, null, 2))
+    
     const validation = InventoryValidators.validateProduct(input)
+    console.log('[ProductService.createProduct] Validation result:', {
+      valid: validation.valid,
+      errors: validation.errors
+    })
+    
     if (!validation.valid) {
+      console.error('[ProductService.createProduct] Validation failed with errors:', validation.errors)
       throw new ValidationError(validation.errors)
     }
 
