@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Loader, RotateCcw } from 'lucide-react'
 import Link from 'next/link'
 
+import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 // Simple toast implementation
 const toast = {
   success: (message: string) => {
@@ -184,6 +185,7 @@ export default function CategoriesPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
+        <InventoryBackButton />
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Categories</h1>
         <button
           onClick={() => {

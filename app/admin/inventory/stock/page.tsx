@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Search, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 
+import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface CurrentStock {
   product_uuid: string
   product_code: string
@@ -63,6 +64,7 @@ export default function StockManagementPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryBackButton />
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Current Stock</h1>
 
       {/* Filters */}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Search, RefreshCw, Download, Package } from 'lucide-react'
 
+import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface StockItem {
   productId: string
   productName: string
@@ -62,6 +63,7 @@ export default function CurrentStockPage() {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
+        <InventoryBackButton />
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Current Stock</h1>
         <div className="flex gap-3">
           <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 text-sm">

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface StockAdjustment {
   uuid: string
   adjustment_number: string
@@ -407,6 +408,7 @@ export default function StockAdjustmentsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
+        <InventoryBackButton />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Adjustments</h1>
         <button
           onClick={() => setShowCreateModal(true)}

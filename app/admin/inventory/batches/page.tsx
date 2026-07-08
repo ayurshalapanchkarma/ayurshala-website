@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
+import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface ProductBatch {
   uuid: string
   batch_number: string
@@ -75,6 +76,7 @@ export default function BatchManagementPage() {
 
   return (
     <div className="space-y-6">
+      <InventoryBackButton />
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Batch Management</h1>
 
       {/* Filters */}

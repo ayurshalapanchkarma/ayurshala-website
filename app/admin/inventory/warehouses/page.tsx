@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, X, MapPin, Box } from 'lucide-react'
 import { toast } from 'sonner'
 
+import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface Warehouse {
   uuid: string
   warehouse_name: string
@@ -180,6 +181,7 @@ export default function WarehousesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
+          <InventoryBackButton />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <MapPin className="w-8 h-8 text-orange-600" />
             Warehouses

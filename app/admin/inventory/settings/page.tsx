@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { RefreshCw, Save, Plus, Settings as SettingsIcon, Percent, ChevronRight } from 'lucide-react'
 
+import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface Setting {
   key: string
   value: any
@@ -51,6 +52,7 @@ export default function SettingsPage() {
   return (
     <div className="p-8 space-y-8">
       <div>
+        <InventoryBackButton />
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Inventory Settings</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your inventory configuration</p>
       </div>

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import InventoryBackButton from '@/components/inventory/InventoryBackButton'
 interface Transaction {
   uuid: string
   created_at: string
@@ -221,6 +222,7 @@ export default function TransactionsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
+        <InventoryBackButton />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Inventory Transactions
         </h1>
