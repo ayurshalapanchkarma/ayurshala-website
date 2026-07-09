@@ -298,7 +298,7 @@ export default function GRNPage() {
                   <select
                     value={formData.purchase_order_uuid}
                     onChange={(e) => setFormData({ ...formData, purchase_order_uuid: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select a purchase order (optional)</option>
                     {purchaseOrders.map((po) => (
@@ -317,7 +317,7 @@ export default function GRNPage() {
                     type="date"
                     value={formData.received_date}
                     onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -363,7 +363,7 @@ export default function GRNPage() {
                             <select
                               value={item.product_uuid}
                               onChange={(e) => updateItem(index, 'product_uuid', e.target.value)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                               <option value="">Select product</option>
                               {products.map((p) => (
@@ -381,7 +381,7 @@ export default function GRNPage() {
                               type="text"
                               value={item.batch_number}
                               onChange={(e) => updateItem(index, 'batch_number', e.target.value)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               placeholder="Batch/Lot number"
                             />
                           </div>
@@ -393,7 +393,7 @@ export default function GRNPage() {
                               type="number"
                               value={item.received_quantity}
                               onChange={(e) => updateItem(index, 'received_quantity', parseInt(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               min="1"
                             />
                           </div>
@@ -405,7 +405,7 @@ export default function GRNPage() {
                               type="number"
                               value={item.unit_rate || 0}
                               onChange={(e) => updateItem(index, 'unit_rate', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               step="0.01"
                               min="0"
                             />

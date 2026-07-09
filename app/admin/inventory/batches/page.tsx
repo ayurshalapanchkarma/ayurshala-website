@@ -100,7 +100,7 @@ export default function BatchManagementPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white placeholder-gray-500 dark:placeholder-slate-400"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 bg-white text-slate-900 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white placeholder-gray-500 dark:placeholder-slate-400"
             />
           </div>
 
@@ -110,7 +110,7 @@ export default function BatchManagementPage() {
               setStatus(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
+            className="px-4 py-2 border border-gray-300 bg-white text-slate-900 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Status</option>
             <option value="good">Good</option>
@@ -119,7 +119,7 @@ export default function BatchManagementPage() {
             <option value="damaged">Damaged</option>
           </select>
 
-          <label className="flex items-center gap-2 border border-gray-300 dark:border-slate-700 px-4 py-2 rounded-lg cursor-pointer dark:bg-slate-800">
+          <label className="flex items-center gap-2 border border-gray-300 bg-white dark:border-slate-700 px-4 py-2 rounded-lg cursor-pointer dark:bg-slate-800">
             <input
               type="checkbox"
               checked={expiringSoon}

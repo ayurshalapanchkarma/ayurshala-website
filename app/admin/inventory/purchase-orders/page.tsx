@@ -461,7 +461,7 @@ export default function PurchaseOrdersPage() {
                   <select
                     value={formData.supplier_uuid}
                     onChange={(e) => setFormData({ ...formData, supplier_uuid: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select a supplier</option>
                     {suppliers.map((s) => (
@@ -481,7 +481,7 @@ export default function PurchaseOrdersPage() {
                       type="date"
                       value={formData.order_date}
                       onChange={(e) => setFormData({ ...formData, order_date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -492,7 +492,7 @@ export default function PurchaseOrdersPage() {
                       type="date"
                       value={formData.expected_delivery_date}
                       onChange={(e) => setFormData({ ...formData, expected_delivery_date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -504,7 +504,7 @@ export default function PurchaseOrdersPage() {
                   <textarea
                     value={formData.remarks}
                     onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={3}
                   />
                 </div>
@@ -551,7 +551,7 @@ export default function PurchaseOrdersPage() {
                             <select
                               value={item.product_uuid}
                               onChange={(e) => updateItem(index, 'product_uuid', e.target.value)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                               <option value="">Select product</option>
                               {products.map((p) => (
@@ -569,7 +569,7 @@ export default function PurchaseOrdersPage() {
                               type="number"
                               value={item.ordered_quantity}
                               onChange={(e) => updateItem(index, 'ordered_quantity', parseInt(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               min="1"
                             />
                           </div>
@@ -581,7 +581,7 @@ export default function PurchaseOrdersPage() {
                               type="number"
                               value={item.unit_rate}
                               onChange={(e) => updateItem(index, 'unit_rate', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               step="0.01"
                               min="0"
                             />
@@ -594,7 +594,7 @@ export default function PurchaseOrdersPage() {
                               type="number"
                               value={item.discount_percent || 0}
                               onChange={(e) => updateItem(index, 'discount_percent', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               step="0.01"
                               min="0"
                             />
@@ -607,7 +607,7 @@ export default function PurchaseOrdersPage() {
                               type="number"
                               value={item.gst_percentage || 0}
                               onChange={(e) => updateItem(index, 'gst_percentage', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               step="0.01"
                               min="0"
                             />
@@ -625,7 +625,7 @@ export default function PurchaseOrdersPage() {
                                 (1 + (item.gst_percentage || 0) / 100)
                               ).toFixed(2)}`}
                               disabled
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white bg-gray-100 dark:bg-gray-600"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white bg-gray-100 dark:bg-gray-600"
                             />
                           </div>
                         </div>
@@ -670,7 +670,7 @@ export default function PurchaseOrdersPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white placeholder-gray-500 dark:placeholder-slate-400"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 bg-white text-slate-900 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white placeholder-gray-500 dark:placeholder-slate-400"
             />
           </div>
 
@@ -680,7 +680,7 @@ export default function PurchaseOrdersPage() {
               setStatus(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
+            className="px-4 py-2 border border-gray-300 bg-white text-slate-900 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Status</option>
             <option value="draft">Draft</option>
@@ -937,7 +937,7 @@ export default function PurchaseOrdersPage() {
                   <select
                     value={editFormData.supplier_uuid}
                     onChange={(e) => setEditFormData({ ...editFormData, supplier_uuid: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select a supplier</option>
                     {suppliers.map((s) => (
@@ -957,7 +957,7 @@ export default function PurchaseOrdersPage() {
                       type="date"
                       value={editFormData.order_date}
                       onChange={(e) => setEditFormData({ ...editFormData, order_date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -968,7 +968,7 @@ export default function PurchaseOrdersPage() {
                       type="date"
                       value={editFormData.expected_delivery_date}
                       onChange={(e) => setEditFormData({ ...editFormData, expected_delivery_date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -980,7 +980,7 @@ export default function PurchaseOrdersPage() {
                   <textarea
                     value={editFormData.remarks}
                     onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={3}
                   />
                 </div>
@@ -1026,7 +1026,7 @@ export default function PurchaseOrdersPage() {
                             <select
                               value={item.product_uuid}
                               onChange={(e) => updateEditItem(index, 'product_uuid', e.target.value)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                               <option value="">Select product</option>
                               {products.map((p) => (
@@ -1044,7 +1044,7 @@ export default function PurchaseOrdersPage() {
                               type="number"
                               value={item.ordered_quantity}
                               onChange={(e) => updateEditItem(index, 'ordered_quantity', parseInt(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               min="1"
                             />
                           </div>
@@ -1056,7 +1056,7 @@ export default function PurchaseOrdersPage() {
                               type="number"
                               value={item.unit_rate}
                               onChange={(e) => updateEditItem(index, 'unit_rate', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               step="0.01"
                               min="0"
                             />
@@ -1069,7 +1069,7 @@ export default function PurchaseOrdersPage() {
                               type="number"
                               value={item.discount_percent || 0}
                               onChange={(e) => updateEditItem(index, 'discount_percent', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               step="0.01"
                               min="0"
                             />
@@ -1082,7 +1082,7 @@ export default function PurchaseOrdersPage() {
                               type="number"
                               value={item.gst_percentage || 0}
                               onChange={(e) => updateEditItem(index, 'gst_percentage', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                               step="0.01"
                               min="0"
                             />
@@ -1100,7 +1100,7 @@ export default function PurchaseOrdersPage() {
                                 (1 + (item.gst_percentage || 0) / 100)
                               ).toFixed(2)}`}
                               disabled
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white bg-gray-100 dark:bg-gray-600"
+                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white bg-gray-100 dark:bg-gray-600"
                             />
                           </div>
                         </div>
