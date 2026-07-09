@@ -5,10 +5,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params
     const { data, error } = await supabaseAdmin
-      .from('tax_masters')
+      .from('inv_tax_master')
       .select('*')
       .eq('uuid', id)
-      .eq('is_deleted', false)
+      .eq('is_active', true)
       .single()
 
     if (error) throw error
@@ -25,7 +25,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params
     const body = await request.json()
-    const { tax_name, tax_code, tax_rate, tax_type, description } = body
+    console.log('Update payload:', body)
+    
+    const { tax_name, hsn_code, tax_percentage, description } = body
 
     // Validation
     if (!tax_name?.trim()) {
@@ -35,73 +37,68 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       )
     }
 
-    if (tax_rate === undefined || tax_rate === null) {
+    if (tax_percentage === undefined || tax_percentage === null) {
       return NextResponse.json(
-        { error: 'Tax rate is required', details: { tax_rate: 'Tax rate is required' } },
+        { error: 'Tax percentage is required', details: { tax_percentage: 'Tax percentage is required' } },
         { status: 400 }
       )
     }
 
-    const rate = parseFloat(tax_rate)
-    if (isNaN(rate) || rate < 0 || rate > 100) {
+    const percentage = parseFloat(tax_percentage)
+    if (isNaN(percentage) || percentage < 0 || percentage > 100) {
       return NextResponse.json(
-        { error: 'Tax rate must be between 0 and 100', details: { tax_rate: 'Tax rate must be between 0 and 100' } },
-        { status: 400 }
-      )
-    }
-
-    if (!tax_type || !['GST', 'VAT', 'SALES_TAX', 'OTHER'].includes(tax_type)) {
-      return NextResponse.json(
-        { error: 'Invalid or missing tax type', details: { tax_type: 'Valid tax type is required' } },
+        { error: 'Tax percentage must be between 0 and 100', details: { tax_percentage: 'Tax percentage must be between 0 and 100' } },
         { status: 400 }
       )
     }
 
     // Check tax exists
     const { data: existing, error: checkError } = await supabaseAdmin
-      .from('tax_masters')
+      .from('inv_tax_master')
       .select('uuid')
       .eq('uuid', id)
-      .eq('is_deleted', false)
+      .eq('is_active', true)
       .single()
 
     if (checkError || !existing) {
       return NextResponse.json({ error: 'Tax not found', details: {} }, { status: 404 })
     }
 
-    // Check for duplicate code on other taxes
-    if (tax_code?.trim()) {
-      const trimmedCode = tax_code.trim()
-      const { data: codeExists, error: codeCheckError } = await supabaseAdmin
-        .from('tax_masters')
+    // Check for duplicate name on other taxes
+    if (tax_name?.trim()) {
+      const { data: nameExists, error: nameCheckError } = await supabaseAdmin
+        .from('inv_tax_master')
         .select('uuid')
-        .eq('tax_code', trimmedCode)
+        .eq('tax_name', tax_name.trim())
         .neq('uuid', id)
-        .eq('is_deleted', false)
+        .eq('is_active', true)
         .single()
 
-      if (codeCheckError && codeCheckError.code !== 'PGRST116') {
-        throw new Error(`Database check failed: ${codeCheckError.message}`)
+      if (nameCheckError && nameCheckError.code !== 'PGRST116') {
+        throw new Error(`Database check failed: ${nameCheckError.message}`)
       }
 
-      if (codeExists) {
+      if (nameExists) {
         return NextResponse.json(
-          { error: 'Tax code already exists on another tax', details: { tax_code: `Tax code "${trimmedCode}" is already in use` } },
+          { error: 'Tax name already exists on another tax', details: { tax_name: `Tax "${tax_name.trim()}" is already in use` } },
           { status: 409 }
         )
       }
     }
 
+    const updateData = {
+      tax_name: tax_name.trim(),
+      hsn_code: hsn_code?.trim() || null,
+      tax_percentage: percentage,
+      description: description?.trim() || null,
+      updated_at: new Date().toISOString(),
+    }
+    
+    console.log('Supabase update data:', updateData)
+
     const { data, error: updateError } = await supabaseAdmin
-      .from('tax_masters')
-      .update({
-        tax_name: tax_name.trim(),
-        tax_code: tax_code?.trim() || null,
-        tax_rate: rate,
-        tax_type,
-        description: description?.trim() || null,
-        updated_at: new Date().toISOString(),
-      })
+      .from('inv_tax_master')
+      .update(updateData)
       .eq('uuid', id)
       .select()
 
@@ -134,20 +131,20 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     // Check tax exists
     const { data: existing, error: checkError } = await supabaseAdmin
-      .from('tax_masters')
+      .from('inv_tax_master')
       .select('uuid')
       .eq('uuid', id)
-      .eq('is_deleted', false)
+      .eq('is_active', true)
       .single()
 
     if (checkError || !existing) {
       return NextResponse.json({ error: 'Tax not found', details: {} }, { status: 404 })
     }
 
-    // Soft delete
+    // Soft delete (set is_active to false)
     const { error: deleteError } = await supabaseAdmin
-      .from('tax_masters')
-      .update({ is_deleted: true, updated_at: new Date().toISOString() })
+      .from('inv_tax_master')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('uuid', id)
 
     if (deleteError) {

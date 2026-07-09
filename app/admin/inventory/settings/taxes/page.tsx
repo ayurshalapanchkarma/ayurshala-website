@@ -8,9 +8,8 @@ import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 interface TaxMaster {
   uuid: string
   tax_name: string
-  tax_code?: string
-  tax_rate: number
-  tax_type: 'GST' | 'VAT' | 'SALES_TAX' | 'OTHER'
+  hsn_code?: string
+  tax_percentage: number
   description?: string
   is_active: boolean
   created_at: string
@@ -27,18 +26,10 @@ interface ListResponse {
 
 const defaultFormData = {
   tax_name: '',
-  tax_code: '',
-  tax_rate: '',
-  tax_type: 'GST' as const,
+  hsn_code: '',
+  tax_percentage: '',
   description: '',
 }
-
-const TAX_TYPES = [
-  { value: 'GST', label: 'GST (Goods & Services Tax)' },
-  { value: 'VAT', label: 'VAT (Value Added Tax)' },
-  { value: 'SALES_TAX', label: 'Sales Tax' },
-  { value: 'OTHER', label: 'Other' },
-]
 
 export default function TaxMasterPage() {
   const [taxes, setTaxes] = useState<TaxMaster[]>([])
@@ -70,7 +61,6 @@ export default function TaxMasterPage() {
 
       const response = await fetch(`/api/inventory/settings/taxes?${params}`)
       if (!response.ok) {
-        // If endpoint doesn't exist, show empty list
         if (response.status === 404) {
           setTaxes([])
           setTotalPages(1)
@@ -94,9 +84,8 @@ export default function TaxMasterPage() {
     if (tax) {
       setFormData({
         tax_name: tax.tax_name,
-        tax_code: tax.tax_code || '',
-        tax_rate: String(tax.tax_rate),
-        tax_type: tax.tax_type,
+        hsn_code: tax.hsn_code || '',
+        tax_percentage: String(tax.tax_percentage),
         description: tax.description || '',
       })
       setEditingId(tax.uuid)
@@ -116,21 +105,23 @@ export default function TaxMasterPage() {
       return
     }
 
-    if (!formData.tax_rate || isNaN(parseFloat(formData.tax_rate))) {
-      setErrors({ tax_rate: 'Valid tax rate is required' })
+    if (!formData.tax_percentage || isNaN(parseFloat(formData.tax_percentage))) {
+      setErrors({ tax_percentage: 'Valid tax percentage is required' })
       return
     }
 
-    const taxRate = parseFloat(formData.tax_rate)
-    if (taxRate < 0 || taxRate > 100) {
-      setErrors({ tax_rate: 'Tax rate must be between 0 and 100' })
+    const percentage = parseFloat(formData.tax_percentage)
+    if (percentage < 0 || percentage > 100) {
+      setErrors({ tax_percentage: 'Tax percentage must be between 0 and 100' })
       return
     }
 
     try {
       const submitData = {
-        ...formData,
-        tax_rate: taxRate,
+        tax_name: formData.tax_name,
+        hsn_code: formData.hsn_code,
+        tax_percentage: percentage,
+        description: formData.description,
       }
 
       const url = editingId
@@ -228,9 +219,8 @@ export default function TaxMasterPage() {
               <thead className="bg-gray-50 dark:bg-gray-700 border-b">
                 <tr>
                   <th className="px-6 py-3 text-left text-sm font-semibold">Name</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Type</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">Code</th>
-                  <th className="px-6 py-3 text-right text-sm font-semibold">Rate (%)</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold">HSN Code</th>
+                  <th className="px-6 py-3 text-right text-sm font-semibold">Percentage (%)</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold">Status</th>
                   <th className="px-6 py-3 text-center text-sm font-semibold">Actions</th>
                 </tr>
@@ -239,13 +229,8 @@ export default function TaxMasterPage() {
                 {taxes.map((tax) => (
                   <tr key={tax.uuid} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                     <td className="px-6 py-4 text-sm font-medium">{tax.tax_name}</td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full text-xs font-medium">
-                        {TAX_TYPES.find((t) => t.value === tax.tax_type)?.label || tax.tax_type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-mono">{tax.tax_code || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-right font-semibold">{tax.tax_rate}%</td>
+                    <td className="px-6 py-4 text-sm font-mono">{tax.hsn_code || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-right font-semibold">{tax.tax_percentage}%</td>
                     <td className="px-6 py-4 text-sm">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -332,7 +317,7 @@ export default function TaxMasterPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, tax_name: e.target.value })
                     }
-                    placeholder="e.g., 5% GST"
+                    placeholder="e.g., GST 5%"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
                   />
                   {errors.tax_name && (
@@ -341,37 +326,12 @@ export default function TaxMasterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Tax Type *</label>
-                  <select
-                    value={formData.tax_type}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tax_type: e.target.value as typeof formData.tax_type,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  >
-                    {TAX_TYPES.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.tax_type && (
-                    <p className="text-red-600 text-sm mt-1">{errors.tax_type}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Tax Rate (%) *</label>
+                  <label className="block text-sm font-medium mb-2">Tax Percentage (%) *</label>
                   <input
                     type="number"
-                    value={formData.tax_rate}
+                    value={formData.tax_percentage}
                     onChange={(e) =>
-                      setFormData({ ...formData, tax_rate: e.target.value })
+                      setFormData({ ...formData, tax_percentage: e.target.value })
                     }
                     placeholder="e.g., 5"
                     min="0"
@@ -379,23 +339,23 @@ export default function TaxMasterPage() {
                     step="0.01"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
                   />
-                  {errors.tax_rate && (
-                    <p className="text-red-600 text-sm mt-1">{errors.tax_rate}</p>
+                  {errors.tax_percentage && (
+                    <p className="text-red-600 text-sm mt-1">{errors.tax_percentage}</p>
                   )}
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Tax Code</label>
-                  <input
-                    type="text"
-                    value={formData.tax_code}
-                    onChange={(e) =>
-                      setFormData({ ...formData, tax_code: e.target.value })
-                    }
-                    placeholder="e.g., GST5"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">HSN Code</label>
+                <input
+                  type="text"
+                  value={formData.hsn_code}
+                  onChange={(e) =>
+                    setFormData({ ...formData, hsn_code: e.target.value })
+                  }
+                  placeholder="e.g., 9983"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
+                />
               </div>
 
               <div>

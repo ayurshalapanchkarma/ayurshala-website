@@ -10,13 +10,13 @@ export async function GET(request: Request) {
     const offset = (page - 1) * pageSize
 
     let query = supabaseAdmin
-      .from('tax_masters')
+      .from('inv_tax_master')
       .select('*', { count: 'exact' })
-      .eq('is_deleted', false)
+      .eq('is_active', true)
       .order('created_at', { ascending: false })
 
     if (search) {
-      query = query.or(`tax_name.ilike.%${search}%,tax_code.ilike.%${search}%`)
+      query = query.or(`tax_name.ilike.%${search}%,hsn_code.ilike.%${search}%`)
     }
 
     const { data, error, count } = await query.range(offset, offset + pageSize - 1)
@@ -39,7 +39,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { tax_name, tax_code, tax_rate, tax_type, description } = body
+    console.log('Incoming payload:', body)
+    
+    const { tax_name, hsn_code, tax_percentage, description } = body
 
     // Validation
     if (!tax_name?.trim()) {
@@ -49,63 +51,57 @@ export async function POST(request: Request) {
       )
     }
 
-    if (tax_rate === undefined || tax_rate === null) {
+    if (tax_percentage === undefined || tax_percentage === null) {
       return NextResponse.json(
-        { error: 'Tax rate is required', details: { tax_rate: 'Tax rate is required' } },
+        { error: 'Tax percentage is required', details: { tax_percentage: 'Tax percentage is required' } },
         { status: 400 }
       )
     }
 
-    const rate = parseFloat(tax_rate)
-    if (isNaN(rate) || rate < 0 || rate > 100) {
+    const percentage = parseFloat(tax_percentage)
+    if (isNaN(percentage) || percentage < 0 || percentage > 100) {
       return NextResponse.json(
-        { error: 'Tax rate must be between 0 and 100', details: { tax_rate: 'Tax rate must be between 0 and 100' } },
+        { error: 'Tax percentage must be between 0 and 100', details: { tax_percentage: 'Tax percentage must be between 0 and 100' } },
         { status: 400 }
       )
     }
 
-    if (!tax_type || !['GST', 'VAT', 'SALES_TAX', 'OTHER'].includes(tax_type)) {
-      return NextResponse.json(
-        { error: 'Invalid or missing tax type', details: { tax_type: 'Valid tax type is required' } },
-        { status: 400 }
-      )
+    // Check for duplicate name
+    const { data: existing, error: checkError } = await supabaseAdmin
+      .from('inv_tax_master')
+      .select('uuid')
+      .eq('tax_name', tax_name.trim())
+      .eq('is_active', true)
+      .single()
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw new Error(`Database check failed: ${checkError.message}`)
     }
 
-    // Check for duplicate code if provided
-    if (tax_code?.trim()) {
-      const trimmedCode = tax_code.trim()
-      const { data: existing, error: checkError } = await supabaseAdmin
-        .from('tax_masters')
-        .select('uuid')
-        .eq('tax_code', trimmedCode)
-        .eq('is_deleted', false)
-        .single()
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw new Error(`Database check failed: ${checkError.message}`)
-      }
-
-      if (existing) {
-        return NextResponse.json(
-          { error: 'Tax code already exists', details: { tax_code: `Tax code "${trimmedCode}" is already in use` } },
-          { status: 409 }
-        )
-      }
+    if (existing) {
+      return NextResponse.json(
+        { error: 'Tax name already exists', details: { tax_name: `Tax "${tax_name.trim()}" already exists` } },
+        { status: 409 }
+      )
     }
 
     // Insert into database
+    const insertData = {
+      tax_name: tax_name.trim(),
+      hsn_code: hsn_code?.trim() || null,
+      tax_percentage: percentage,
+      description: description?.trim() || null,
+      is_active: true,
+    }
+    
+    console.log('Insert payload:', insertData)
+
     const { data, error: insertError } = await supabaseAdmin
-      .from('tax_masters')
-      .insert({
-        tax_name: tax_name.trim(),
-        tax_code: tax_code?.trim() || null,
-        tax_rate: rate,
-        tax_type,
-        description: description?.trim() || null,
-        is_active: true,
-        is_deleted: false,
-      })
+      .from('inv_tax_master')
+      .insert(insertData)
       .select()
+
+    console.log('Supabase response:', { data, error: insertError })
 
     if (insertError) {
       console.error('Supabase insert error:', insertError)
@@ -113,7 +109,7 @@ export async function POST(request: Request) {
       // More specific error messages
       if (insertError.message?.includes('violates unique constraint')) {
         return NextResponse.json(
-          { error: 'Tax already exists with this configuration', details: { tax_name: 'Tax configuration already exists' } },
+          { error: 'Tax already exists with this configuration', details: { tax_name: 'Tax name must be unique' } },
           { status: 409 }
         )
       }
@@ -122,7 +118,7 @@ export async function POST(request: Request) {
         const match = insertError.message.match(/column "([^"]+)"/)
         const column = match ? match[1] : 'required field'
         return NextResponse.json(
-          { error: `Missing required field: ${column}`, details: { [column]: `${column} is required` } },
+          { error: `${column} is required`, details: { [column]: `${column} is required` } },
           { status: 400 }
         )
       }
