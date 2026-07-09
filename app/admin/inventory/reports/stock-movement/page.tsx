@@ -93,23 +93,18 @@ export default function StockMovementReportPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <InventoryPageHeader
-        icon={TrendingUp}
-        iconColor="text-blue-600 dark:text-blue-400"
-        bgColor="bg-blue-100 dark:bg-blue-950/40"
-        title="Stock Movement"
-        subtitle="Movement analytics"
-      />
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Movement Report</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Track all inventory movements and transactions</p>
-        </div>
+    <div className="p-8 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <InventoryPageHeader
+          icon={TrendingUp}
+          iconColor="text-blue-600 dark:text-blue-400"
+          bgColor="bg-blue-100 dark:bg-blue-950/40"
+          title="Stock Movement Report"
+          subtitle="Track all inventory movements and transactions"
+        />
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex-shrink-0"
         >
           <Download size={20} />
           Export CSV

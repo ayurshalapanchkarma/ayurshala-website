@@ -48,20 +48,14 @@ export default function DeadStockReportPage() {
   }, [page, search])
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={Ban}
         iconColor="text-slate-600 dark:text-slate-400"
         bgColor="bg-slate-100 dark:bg-slate-950/40"
         title="Dead Stock Report"
-        subtitle="Inactive items"
+        subtitle="Identify slow-moving or non-moving stock"
       />
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dead Stock Report</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Identify slow-moving or non-moving stock</p>
-        </div>
-      </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="relative">

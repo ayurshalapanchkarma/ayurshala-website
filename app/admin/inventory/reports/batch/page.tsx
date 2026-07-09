@@ -32,18 +32,14 @@ export default function BatchReportPage() {
   }, [page, search])
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={PackageSearch}
         iconColor="text-pink-600 dark:text-pink-400"
         bgColor="bg-pink-100 dark:bg-pink-950/40"
         title="Batch Report"
-        subtitle="Batch management report"
+        subtitle="View all product batches and expiry details"
       />
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-3xl font-bold text-gray-900 dark:text-white">Batch Report</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">View all product batches and expiry details</p></div>
-      </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="relative">

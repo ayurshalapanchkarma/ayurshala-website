@@ -48,20 +48,14 @@ export default function ExpiryReportPage() {
   }, [page, search])
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={Clock}
         iconColor="text-orange-600 dark:text-orange-400"
         bgColor="bg-orange-100 dark:bg-orange-950/40"
         title="Expiry Report"
-        subtitle="Expiry tracking"
+        subtitle="Monitor batches expiring soon"
       />
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Expiry Report</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Monitor batches expiring soon</p>
-        </div>
-      </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="relative">

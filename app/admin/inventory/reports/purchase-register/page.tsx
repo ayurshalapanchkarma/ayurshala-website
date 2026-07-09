@@ -92,22 +92,18 @@ export default function PurchaseRegisterPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <InventoryPageHeader
-        icon={ShoppingCart}
-        iconColor="text-amber-600 dark:text-amber-400"
-        bgColor="bg-amber-100 dark:bg-amber-950/40"
-        title="Purchase Register"
-        subtitle="Purchase history"
-      />
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Purchase Register</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Summary of all purchase orders and GRNs</p>
-        </div>
+    <div className="p-8 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <InventoryPageHeader
+          icon={ShoppingCart}
+          iconColor="text-amber-600 dark:text-amber-400"
+          bgColor="bg-amber-100 dark:bg-amber-950/40"
+          title="Purchase Register"
+          subtitle="Summary of all purchase orders and GRNs"
+        />
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex-shrink-0"
         >
           <Download size={20} />
           Export

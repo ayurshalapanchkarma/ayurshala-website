@@ -48,20 +48,14 @@ export default function LowStockReportPage() {
   }, [page, search])
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={TriangleAlert}
         iconColor="text-red-600 dark:text-red-400"
         bgColor="bg-red-100 dark:bg-red-950/40"
         title="Low Stock Report"
-        subtitle="Low stock analysis"
+        subtitle="Items below reorder level"
       />
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Low Stock Report</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Items below reorder level</p>
-        </div>
-      </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="relative">

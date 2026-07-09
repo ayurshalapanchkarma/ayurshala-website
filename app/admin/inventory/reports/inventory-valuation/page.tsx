@@ -84,22 +84,18 @@ export default function InventoryValuationPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <InventoryPageHeader
-        icon={DollarSign}
-        iconColor="text-emerald-600 dark:text-emerald-400"
-        bgColor="bg-emerald-100 dark:bg-emerald-950/40"
-        title="Inventory Valuation"
-        subtitle="Valuation report"
-      />
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Inventory Valuation</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Calculate total inventory value and analysis</p>
-        </div>
+    <div className="p-8 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <InventoryPageHeader
+          icon={DollarSign}
+          iconColor="text-emerald-600 dark:text-emerald-400"
+          bgColor="bg-emerald-100 dark:bg-emerald-950/40"
+          title="Inventory Valuation"
+          subtitle="Calculate total inventory value and analysis"
+        />
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex-shrink-0"
         >
           <Download size={20} />
           Export CSV

@@ -43,60 +43,107 @@ export async function POST(request: Request) {
 
     // Validation
     if (!tax_name?.trim()) {
-      return NextResponse.json({ error: 'Tax name is required', details: { tax_name: 'Required' } }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Tax name is required', details: { tax_name: 'Tax name is required' } },
+        { status: 400 }
+      )
     }
 
     if (tax_rate === undefined || tax_rate === null) {
-      return NextResponse.json({ error: 'Tax rate is required', details: { tax_rate: 'Required' } }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Tax rate is required', details: { tax_rate: 'Tax rate is required' } },
+        { status: 400 }
+      )
     }
 
     const rate = parseFloat(tax_rate)
     if (isNaN(rate) || rate < 0 || rate > 100) {
       return NextResponse.json(
-        { error: 'Tax rate must be between 0 and 100', details: { tax_rate: 'Must be 0-100' } },
+        { error: 'Tax rate must be between 0 and 100', details: { tax_rate: 'Tax rate must be between 0 and 100' } },
         { status: 400 }
       )
     }
 
-    if (!['GST', 'VAT', 'SALES_TAX', 'OTHER'].includes(tax_type)) {
+    if (!tax_type || !['GST', 'VAT', 'SALES_TAX', 'OTHER'].includes(tax_type)) {
       return NextResponse.json(
-        { error: 'Invalid tax type', details: { tax_type: 'Invalid' } },
+        { error: 'Invalid or missing tax type', details: { tax_type: 'Valid tax type is required' } },
         { status: 400 }
       )
     }
 
     // Check for duplicate code if provided
-    if (tax_code) {
-      const { data: existing } = await supabaseAdmin
+    if (tax_code?.trim()) {
+      const trimmedCode = tax_code.trim()
+      const { data: existing, error: checkError } = await supabaseAdmin
         .from('tax_masters')
         .select('uuid')
-        .eq('tax_code', tax_code)
+        .eq('tax_code', trimmedCode)
         .eq('is_deleted', false)
         .single()
 
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw new Error(`Database check failed: ${checkError.message}`)
+      }
+
       if (existing) {
         return NextResponse.json(
-          { error: 'Tax code already exists', details: { tax_code: 'Already in use' } },
+          { error: 'Tax code already exists', details: { tax_code: `Tax code "${trimmedCode}" is already in use` } },
           { status: 409 }
         )
       }
     }
 
-    const { data, error } = await supabaseAdmin.from('tax_masters').insert({
-      tax_name: tax_name.trim(),
-      tax_code: tax_code?.trim() || null,
-      tax_rate: rate,
-      tax_type,
-      description: description?.trim() || null,
-      is_active: true,
-      is_deleted: false,
-    }).select()
+    // Insert into database
+    const { data, error: insertError } = await supabaseAdmin
+      .from('tax_masters')
+      .insert({
+        tax_name: tax_name.trim(),
+        tax_code: tax_code?.trim() || null,
+        tax_rate: rate,
+        tax_type,
+        description: description?.trim() || null,
+        is_active: true,
+        is_deleted: false,
+      })
+      .select()
 
-    if (error) throw error
+    if (insertError) {
+      console.error('Supabase insert error:', insertError)
+      
+      // More specific error messages
+      if (insertError.message?.includes('violates unique constraint')) {
+        return NextResponse.json(
+          { error: 'Tax already exists with this configuration', details: { tax_name: 'Tax configuration already exists' } },
+          { status: 409 }
+        )
+      }
+      
+      if (insertError.message?.includes('NOT NULL constraint')) {
+        const match = insertError.message.match(/column "([^"]+)"/)
+        const column = match ? match[1] : 'required field'
+        return NextResponse.json(
+          { error: `Missing required field: ${column}`, details: { [column]: `${column} is required` } },
+          { status: 400 }
+        )
+      }
 
-    return NextResponse.json(data?.[0], { status: 201 })
+      throw insertError
+    }
+
+    if (!data || data.length === 0) {
+      return NextResponse.json(
+        { error: 'Tax created but could not retrieve record', details: {} },
+        { status: 201 }
+      )
+    }
+
+    return NextResponse.json(data[0], { status: 201 })
   } catch (error) {
     console.error('Error creating tax:', error)
-    return NextResponse.json({ error: 'Failed to create tax' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json(
+      { error: `Failed to create tax: ${errorMessage}`, details: {} },
+      { status: 500 }
+    )
   }
 }
