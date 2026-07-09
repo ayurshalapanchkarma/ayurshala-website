@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Loader, RotateCcw, Tags} from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Eye, Loader, RotateCcw, Tags} from 'lucide-react'
 import Link from 'next/link'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 
 // Simple toast implementation
 const toast = {
@@ -317,30 +318,13 @@ export default function CategoriesPage() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, total)} of {total}
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg disabled:opacity-50 text-sm"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => setPage(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg disabled:opacity-50 text-sm"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
+          <InventoryPagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            itemsPerPage={pageSize}
+            onPageChange={setPage}
+          />
         </>
       )}
 

@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import {
   Search,
-  ChevronLeft,
-  ChevronRight,
   Download,
   Loader,
   AlertCircle, BookOpen} from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 
 interface LedgerItem {
   date: string
@@ -457,26 +456,14 @@ export default function StockLedgerPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 px-4 py-4 flex items-center justify-between">
-                <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Page {page} of {totalPages}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage(Math.max(1, page - 1))}
-                    disabled={page === 1}
-                    className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <button
-                    onClick={() => setPage(Math.min(totalPages, page + 1))}
-                    disabled={page === totalPages}
-                    className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                </div>
+              <div className="bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 px-4 py-4">
+                <InventoryPagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  totalItems={total}
+                  itemsPerPage={pageSize}
+                  onPageChange={setPage}
+                />
               </div>
             )}
           </div>

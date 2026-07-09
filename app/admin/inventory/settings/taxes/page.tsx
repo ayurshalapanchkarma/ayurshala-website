@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, X, Percent, ReceiptText} from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 
 interface TaxMaster {
   uuid: string
@@ -268,27 +269,13 @@ export default function TaxMasterPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Page {page} of {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page === 1}
-              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setPage(Math.min(totalPages, page + 1))}
-              disabled={page === totalPages}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+        <InventoryPagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={total}
+          itemsPerPage={pageSize}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Form Modal */}

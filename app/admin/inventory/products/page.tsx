@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, X, Package} from 'lucide-react'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 
 // Simple toast implementation
 const toast = {
@@ -461,23 +462,13 @@ export default function ProductsPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-6 flex justify-center gap-2">
-          <button
-            onClick={() => setPage(Math.max(1, page - 1))}
-            disabled={page === 1}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="px-4 py-2">Page {page} of {totalPages}</span>
-          <button
-            onClick={() => setPage(Math.min(totalPages, page + 1))}
-            disabled={page === totalPages}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+        <InventoryPagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={total}
+          itemsPerPage={pageSize}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Form Modal */}
