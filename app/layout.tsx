@@ -26,12 +26,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/png" href="/ayurshala.png" />
-        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-JDJFTB5DDK" strategy="afterInteractive" />
+        <Script 
+          async 
+          src="https://www.googletagmanager.com/gtag/js?id=G-JDJFTB5DDK" 
+          strategy="afterInteractive"
+          onError={(e) => {
+            console.debug('Analytics script load failed (non-critical)', e)
+          }}
+        />
         <Script id="google-analytics" strategy="afterInteractive">
-          {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-JDJFTB5DDK');`}
+          {`
+            try {
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-JDJFTB5DDK', {
+                'anonymize_ip': true,
+                'allow_google_signals': false
+              });
+            } catch (error) {
+              console.debug('Analytics initialization failed (non-critical)', error);
+            }
+          `}
         </Script>
       </head>
       <body className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50">
