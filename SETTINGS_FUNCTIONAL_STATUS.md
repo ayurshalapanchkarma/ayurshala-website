@@ -19,10 +19,10 @@ The Inventory Settings module is fully functional as a **persistence layer** (sa
 |---|---|---|
 | **Settings Persistence** | ✅ Complete | API saves/loads correctly from `inv_settings` table |
 | **Settings Retrieval** | ✅ Complete | Frontend loads and displays all settings |
-| **Settings Consumption** | ❌ Missing | No service/component reads these values at runtime |
-| **Business Logic Integration** | ❌ Missing | Settings don't influence transactions, reports, forms |
-| **Scheduler Integration** | ❌ Missing | No scheduler for email/notification settings |
-| **Runtime Configuration** | ❌ Missing | Application uses hardcoded values instead |
+| **Settings Consumption** | ⚠️ Not Yet Integrated | No service/component reads these values at runtime |
+| **Business Logic Integration** | ⚠️ Not Yet Integrated | Settings don't influence transactions, reports, forms |
+| **Scheduler Integration** | ⚠️ Not Yet Integrated | No scheduler for email/notification settings |
+| **Runtime Configuration** | ⚠️ Not Yet Integrated | Application uses hardcoded values instead |
 
 ---
 
@@ -151,7 +151,67 @@ Should be added to Settings page:
 
 ---
 
-## Implementation Recommendations
+## User Impact Matrix
+
+| Missing Feature | Users Impacted | Business Impact | Severity |
+|---|---|---|---|
+| Default Warehouse | Inventory staff | Slower data entry, manual selection required | 🔴 High |
+| Timezone | All users | Incorrect timestamps in reports and logs | 🔴 High |
+| PO Number Prefix | Purchasing team | Incorrect/inconsistent document numbering | 🔴 High |
+| Email Notifications | Administrators | No automated alerts, manual monitoring required | 🔴 High |
+| Date Format | All users | Wrong date display in reports and invoices | 🟡 Medium |
+| FIFO/FEFO Selection | Warehouse staff | Incorrect stock rotation, compliance issues | 🟡 Medium |
+| Batch Auto-Generation | Inventory staff | Manual batch creation on every GRN | 🟡 Medium |
+| Default Tax Rate | Purchasing team | Manual tax entry in every PO | 🟡 Medium |
+
+---
+
+## Architecture Overview
+
+```
+Current Implementation State
+
+                     ┌──────────────────────┐
+                     │   Settings UI Form   │
+                     │  (React Component)   │
+                     └──────────┬───────────┘
+                                │
+                                ▼
+                     ┌──────────────────────┐
+                     │   Settings API       │
+                     │  (GET/POST/PUT)      │
+                     └──────────┬───────────┘
+                                │
+                                ▼
+                     ┌──────────────────────┐
+                     │  inv_settings Table  │
+                     │   (PostgreSQL)       │
+                     └──────────┬───────────┘
+                                │
+                    ✅ Data Flow Complete Here
+                                │
+                    ⚠️  Integration Stops Here
+                                │
+                    ┌───────────┴────────────┐
+                    │   Missing Connections   │
+                    └────────────────────────┘
+                           │    │    │
+        ┌──────────────────┘    │    └──────────────────┐
+        │                       │                       │
+        ▼                       ▼                       ▼
+   Business Logic         UI Components          Background Jobs
+   • Product forms    • Report formatting     • Email scheduler
+   • PO numbering     • Date/time display     • Notification sender
+   • Validations      • Warehouse dropdowns   • Cron jobs
+   • Calculations     • Field defaults        • Batch processing
+
+
+Conclusion: Data successfully stored, but never retrieved during execution.
+```
+
+---
+
+## Verification Checklist
 
 ### Effort Estimates
 
@@ -208,7 +268,85 @@ Should be added to Settings page:
 
 ---
 
-## Testing Verification
+## User Impact Matrix
+
+| Missing Feature | Users Impacted | Business Impact | Severity |
+|---|---|---|---|
+| Default Warehouse | Inventory staff | Slower data entry, manual selection required | 🔴 High |
+| Timezone | All users | Incorrect timestamps in reports and logs | 🔴 High |
+| PO Number Prefix | Purchasing team | Incorrect/inconsistent document numbering | 🔴 High |
+| Email Notifications | Administrators | No automated alerts, manual monitoring required | 🔴 High |
+| Date Format | All users | Wrong date display in reports and invoices | 🟡 Medium |
+| FIFO/FEFO Selection | Warehouse staff | Incorrect stock rotation, compliance issues | 🟡 Medium |
+| Batch Auto-Generation | Inventory staff | Manual batch creation on every GRN | 🟡 Medium |
+| Default Tax Rate | Purchasing team | Manual tax entry in every PO | 🟡 Medium |
+
+---
+
+## Architecture Overview
+
+```
+Current Implementation State
+
+                     ┌──────────────────────┐
+                     │   Settings UI Form   │
+                     │  (React Component)   │
+                     └──────────┬───────────┘
+                                │
+                                ▼
+                     ┌──────────────────────┐
+                     │   Settings API       │
+                     │  (GET/POST/PUT)      │
+                     └──────────┬───────────┘
+                                │
+                                ▼
+                     ┌──────────────────────┐
+                     │  inv_settings Table  │
+                     │   (PostgreSQL)       │
+                     └──────────┬───────────┘
+                                │
+                    ✅ Data Flow Complete Here
+                                │
+                    ⚠️  Integration Stops Here
+                                │
+                    ┌───────────┴────────────┐
+                    │   Missing Connections   │
+                    └────────────────────────┘
+                           │    │    │
+        ┌──────────────────┘    │    └──────────────────┐
+        │                       │                       │
+        ▼                       ▼                       ▼
+   Business Logic         UI Components          Background Jobs
+   • Product forms    • Report formatting     • Email scheduler
+   • PO numbering     • Date/time display     • Notification sender
+   • Validations      • Warehouse dropdowns   • Cron jobs
+   • Calculations     • Field defaults        • Batch processing
+
+
+Conclusion: Data successfully stored, but never retrieved during execution.
+```
+
+---
+
+## Verification Checklist
+
+| Component | Verified | Status |
+|---|---|---|
+| **Persistence Layer** | | |
+| Save API endpoint | ✅ | Stores values in DB |
+| Load API endpoint | ✅ | Retrieves values from DB |
+| Database persistence | ✅ | Values survive page refresh |
+| **Runtime Integration** | | |
+| Warehouse auto-fill | ❌ | Not connected |
+| Timezone usage | ❌ | Hardcoded to Asia/Kolkata |
+| PO number generation | ❌ | Using internal IDs only |
+| Date format applied | ❌ | Not used anywhere |
+| Email scheduler | ❌ | Not implemented |
+| Batch auto-creation | ❌ | Feature not activated |
+| FIFO/FEFO logic | ❌ | Not implemented |
+| Low stock filtering | ❌ | Uses hardcoded value |
+
+---
 
 To verify settings are working:
 1. Edit a setting
