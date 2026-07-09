@@ -1,8 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { RefreshCw, Save, Settings as SettingsIcon, Percent, ChevronRight, Loader } from 'lucide-react'
+import { RefreshCw, Save, Settings as SettingsIcon, Loader } from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
@@ -146,26 +145,7 @@ export default function SettingsPage() {
       />
 
       {/* Quick Links */}
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Settings Modules</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link
-            href="/admin/inventory/settings/taxes"
-            className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 hover:shadow-md transition flex items-center justify-between"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                <Percent className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white">Tax Master</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Manage tax rates</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-gray-400" />
-          </Link>
-        </div>
-      </div>
+      {/* Tax Master section removed - moved to dedicated /settings/taxes page */}
 
       {/* Configuration Settings */}
       <div>
