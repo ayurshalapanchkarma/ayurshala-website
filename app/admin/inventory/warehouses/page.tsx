@@ -5,6 +5,7 @@ import { Plus, Edit2, Trash2, X, MapPin, Box } from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
+import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 
 interface Warehouse {
   uuid: string
@@ -344,32 +345,18 @@ export default function WarehousesPage() {
       )}
 
       {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm">
-            <h3 className="text-lg font-bold mb-4">Delete Warehouse?</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Are you sure you want to delete "{deleteConfirm.warehouse_name}"? This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmationDialog
+        isOpen={!!deleteConfirm}
+        itemName={deleteConfirm?.warehouse_name}
+        title="Delete Warehouse?"
+        message="Are you sure you want to delete this warehouse? This action cannot be undone."
+        confirmText="Delete"
+        isLoading={isDeleting}
+        onConfirm={() => {
+          if (deleteConfirm) handleDelete(deleteConfirm)
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   )
 }

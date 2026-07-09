@@ -14,6 +14,7 @@ import {
   Loader, ClipboardList} from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 
 interface PurchaseOrder {
@@ -92,6 +93,9 @@ export default function PurchaseOrdersPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [actionInProgress, setActionInProgress] = useState(false)
+  const [deleteConfirmPO, setDeleteConfirmPO] = useState<PurchaseOrder | null>(null)
+  const [submitConfirmPO, setSubmitConfirmPO] = useState<PurchaseOrder | null>(null)
+  const [approveConfirmPO, setApproveConfirmPO] = useState<PurchaseOrder | null>(null)
 
   // Modal form state
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -187,8 +191,6 @@ export default function PurchaseOrdersPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Are you sure?')) return
-
     try {
       const response = await fetch(`/api/inventory/purchase-orders/${id}`, {
         method: 'DELETE',
@@ -196,6 +198,7 @@ export default function PurchaseOrdersPage() {
 
       if (!response.ok) throw new Error('Failed to delete')
       toast.success('Purchase order cancelled')
+      setDeleteConfirmPO(null)
       fetchOrders()
     } catch (error) {
       console.error('Error:', error)
@@ -214,8 +217,6 @@ export default function PurchaseOrdersPage() {
   }
 
   async function handleSubmit(id: string) {
-    if (!confirm('Submit this PO for approval?')) return
-
     setActionInProgress(true)
     try {
       const response = await fetch(`/api/inventory/purchase-orders/${id}/submit`, {
@@ -228,6 +229,7 @@ export default function PurchaseOrdersPage() {
       }
       
       toast.success('Purchase order submitted for approval')
+      setSubmitConfirmPO(null)
       fetchOrders()
     } catch (error: any) {
       console.error('Error:', error)
@@ -238,8 +240,6 @@ export default function PurchaseOrdersPage() {
   }
 
   async function handleApprove(id: string) {
-    if (!confirm('Approve this PO?')) return
-
     setActionInProgress(true)
     try {
       const response = await fetch(`/api/inventory/purchase-orders/${id}/approve`, {
@@ -252,6 +252,7 @@ export default function PurchaseOrdersPage() {
       }
       
       toast.success('Purchase order approved')
+      setApproveConfirmPO(null)
       fetchOrders()
     } catch (error: any) {
       console.error('Error:', error)
@@ -774,7 +775,7 @@ export default function PurchaseOrdersPage() {
                           )}
                           {order.status === 'draft' && (
                             <button
-                              onClick={() => handleSubmit(order.uuid)}
+                              onClick={() => setSubmitConfirmPO(order)}
                               disabled={actionInProgress}
                               className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800"
                               title="Submit for Approval"
@@ -784,7 +785,7 @@ export default function PurchaseOrdersPage() {
                           )}
                           {order.status === 'pending' && (
                             <button
-                              onClick={() => handleApprove(order.uuid)}
+                              onClick={() => setApproveConfirmPO(order)}
                               disabled={actionInProgress}
                               className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800"
                               title="Approve"
@@ -794,7 +795,7 @@ export default function PurchaseOrdersPage() {
                           )}
                           {order.status === 'draft' && (
                             <button
-                              onClick={() => handleDelete(order.uuid)}
+                              onClick={() => setDeleteConfirmPO(order)}
                               className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
                               title="Cancel"
                             >
@@ -1161,6 +1162,39 @@ export default function PurchaseOrdersPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={!!deleteConfirmPO}
+        itemName={deleteConfirmPO?.po_number}
+        title="Cancel Purchase Order?"
+        message="Are you sure you want to cancel this purchase order? This action cannot be undone."
+        confirmText="Cancel PO"
+        onConfirm={() => deleteConfirmPO && handleDelete(deleteConfirmPO.uuid)}
+        onCancel={() => setDeleteConfirmPO(null)}
+      />
+
+      {/* Submit Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={!!submitConfirmPO}
+        itemName={submitConfirmPO?.po_number}
+        title="Submit Purchase Order?"
+        message="Are you sure you want to submit this purchase order for approval?"
+        confirmText="Submit"
+        onConfirm={() => submitConfirmPO && handleSubmit(submitConfirmPO.uuid)}
+        onCancel={() => setSubmitConfirmPO(null)}
+      />
+
+      {/* Approve Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={!!approveConfirmPO}
+        itemName={approveConfirmPO?.po_number}
+        title="Approve Purchase Order?"
+        message="Are you sure you want to approve this purchase order?"
+        confirmText="Approve"
+        onConfirm={() => approveConfirmPO && handleApprove(approveConfirmPO.uuid)}
+        onCancel={() => setApproveConfirmPO(null)}
+      />
     </div>
   )
 }

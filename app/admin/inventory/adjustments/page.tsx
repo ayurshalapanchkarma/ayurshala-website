@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
+import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 
 interface StockAdjustment {
   uuid: string
@@ -81,12 +82,13 @@ export default function StockAdjustmentsPage() {
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
-  const [reason, setReason] = useState('')
+  const [reason, setReasonFilter] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [selectedAdjustment, setSelectedAdjustment] = useState<StockAdjustment | null>(null)
+  const [deleteConfirmAdj, setDeleteConfirmAdj] = useState<StockAdjustment | null>(null)
 
   // Modal state
   const [products, setProducts] = useState<Product[]>([])
@@ -354,8 +356,6 @@ export default function StockAdjustmentsPage() {
   }
 
   async function handleDeleteAdjustment(adjUuid: string) {
-    if (!confirm('Are you sure you want to delete this adjustment?')) return
-
     try {
       const response = await fetch(`/api/inventory/adjustments/${adjUuid}`, {
         method: 'DELETE',
@@ -1047,7 +1047,7 @@ export default function StockAdjustmentsPage() {
                                 <Edit size={20} className="text-amber-400 hover:text-amber-300" />
                               </button>
                               <button
-                                onClick={() => handleDeleteAdjustment(adj.uuid)}
+                                onClick={() => setDeleteConfirmAdj(adj)}
                                 className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
                                 title="Delete adjustment"
                               >
@@ -1076,6 +1076,22 @@ export default function StockAdjustmentsPage() {
           />
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={!!deleteConfirmAdj}
+        itemName={deleteConfirmAdj?.adjustment_number}
+        title="Delete Stock Adjustment?"
+        message="Are you sure you want to delete this stock adjustment? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={() => {
+          if (deleteConfirmAdj) {
+            handleDeleteAdjustment(deleteConfirmAdj.uuid)
+            setDeleteConfirmAdj(null)
+          }
+        }}
+        onCancel={() => setDeleteConfirmAdj(null)}
+      />
     </div>
   )
 }

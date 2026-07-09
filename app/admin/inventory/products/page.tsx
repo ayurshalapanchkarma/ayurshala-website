@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, X, Package} from 'lucide-react'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
+import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 
 // Simple toast implementation
 const toast = {
@@ -700,31 +701,18 @@ export default function ProductsPage() {
       )}
 
       {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Delete Product?</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Are you sure you want to delete {deleteConfirm.product_name}?
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-slate-600 text-gray-900 dark:text-white rounded-lg"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmationDialog
+        isOpen={!!deleteConfirm}
+        itemName={deleteConfirm?.product_name}
+        title="Delete Product?"
+        message="Are you sure you want to delete this product? This action cannot be undone."
+        confirmText="Delete"
+        isLoading={isDeleting}
+        onConfirm={() => {
+          if (deleteConfirm) handleDelete(deleteConfirm)
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   )
 }

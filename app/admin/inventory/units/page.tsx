@@ -4,6 +4,7 @@ import { useState } from 'react'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { MasterListPage } from '@/components/inventory/MasterListPage'
 import { Ruler } from 'lucide-react'
+import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 
 // Simple toast implementation
 const toast = {

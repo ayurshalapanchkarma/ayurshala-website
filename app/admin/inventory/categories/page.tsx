@@ -5,6 +5,7 @@ import { Plus, Search, Edit, Trash2, Eye, Loader, RotateCcw, Tags} from 'lucide-
 import Link from 'next/link'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
+import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 
 // Simple toast implementation
 const toast = {
@@ -441,6 +442,20 @@ export default function CategoriesPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={!!showDeleteConfirm}
+        itemName={showDeleteConfirm?.name}
+        title="Delete Category?"
+        message="Are you sure you want to delete this category? This action cannot be undone."
+        confirmText="Delete"
+        isLoading={isDeleting}
+        onConfirm={() => {
+          if (showDeleteConfirm) handleDelete(showDeleteConfirm)
+        }}
+        onCancel={() => setShowDeleteConfirm(null)}
+      />
     </div>
   )
 }

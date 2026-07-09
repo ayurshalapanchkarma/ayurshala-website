@@ -13,6 +13,7 @@ import {
   Loader, Receipt} from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 
 interface GRN {
@@ -85,6 +86,7 @@ export default function GRNPage() {
   const [status, setStatus] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedGRN, setSelectedGRN] = useState<GRN | null>(null)
+  const [deleteConfirmGRN, setDeleteConfirmGRN] = useState<GRN | null>(null)
 
   // Modal state
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([])
@@ -219,8 +221,6 @@ export default function GRNPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Are you sure?')) return
-
     try {
       const response = await fetch(`/api/inventory/grns/${id}`, {
         method: 'DELETE',
@@ -228,6 +228,7 @@ export default function GRNPage() {
 
       if (!response.ok) throw new Error('Failed to delete')
       toast.success('GRN cancelled')
+      setDeleteConfirmGRN(null)
       fetchGRNs()
     } catch (error) {
       console.error('Error:', error)
@@ -559,7 +560,7 @@ export default function GRNPage() {
                           )}
                           {grn.status === 'draft' && (
                             <button
-                              onClick={() => handleDelete(grn.uuid)}
+                              onClick={() => setDeleteConfirmGRN(grn)}
                               className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
                               title="Cancel"
                             >
@@ -587,6 +588,22 @@ export default function GRNPage() {
           />
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={!!deleteConfirmGRN}
+        itemName={deleteConfirmGRN?.grn_number}
+        title="Cancel GRN?"
+        message="Are you sure you want to cancel this GRN? This action cannot be undone."
+        confirmText="Cancel GRN"
+        onConfirm={() => {
+          if (deleteConfirmGRN) {
+            handleDelete(deleteConfirmGRN.uuid)
+            setDeleteConfirmGRN(null)
+          }
+        }}
+        onCancel={() => setDeleteConfirmGRN(null)}
+      />
     </div>
   )
 }
