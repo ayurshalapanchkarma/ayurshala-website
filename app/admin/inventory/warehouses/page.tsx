@@ -193,7 +193,7 @@ export default function WarehousesPage() {
       />
 
       {/* Search */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+      <div className="mb-6">
         <input
           type="text"
           placeholder="Search warehouses..."
@@ -202,7 +202,7 @@ export default function WarehousesPage() {
             setSearch(e.target.value)
             setPage(1)
           }}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-slate-800 dark:text-white"
         />
       </div>
 
