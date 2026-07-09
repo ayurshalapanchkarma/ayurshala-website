@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { RefreshCw, Save, Settings as SettingsIcon, Loader } from 'lucide-react'
+import { Save, Settings as SettingsIcon, Loader } from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
@@ -124,12 +124,9 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSettingChange = (key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: { ...prev[key], value },
-    }))
-    setHasChanges(true)
+  const handleCancel = () => {
+    loadSettings()
+    setHasChanges(false)
   }
 
   const categories = Array.from(new Set(Object.values(settings).map(s => s.category)))
@@ -153,11 +150,11 @@ export default function SettingsPage() {
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Configuration</h2>
           <div className="flex gap-3">
             <button
-              onClick={loadSettings}
-              disabled={loading || saving}
+              onClick={handleCancel}
+              disabled={loading || saving || !hasChanges}
               className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 transition"
             >
-              <RefreshCw size={16} className={saving || loading ? 'animate-spin' : ''} /> Reload
+              Cancel
             </button>
             <button
               onClick={saveSettings}
