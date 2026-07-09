@@ -41,6 +41,7 @@ export default function WarehousesPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<Warehouse | null>(null)
@@ -74,6 +75,7 @@ export default function WarehousesPage() {
       
       setWarehouses(warehouses)
       setTotalPages(data.totalPages)
+      setTotal(data.total)
     } catch (err) {
       console.error('Error:', err)
       toast.error('Failed to load warehouses')

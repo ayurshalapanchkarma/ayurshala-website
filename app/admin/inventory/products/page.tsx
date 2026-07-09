@@ -89,6 +89,7 @@ export default function ProductsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<Product | null>(null)
@@ -212,6 +213,7 @@ export default function ProductsPage() {
       const data: ListResponse = await response.json()
       setProducts(data.data)
       setTotalPages(data.totalPages)
+      setTotal(data.total)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to load products')
     } finally {

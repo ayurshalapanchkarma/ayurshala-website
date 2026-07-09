@@ -64,6 +64,7 @@ export default function StockLedgerPage() {
   const [pageSize] = useState(50)
   const [exporting, setExporting] = useState(false)
   const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [dateError, setDateError] = useState<string>('')
 
   useEffect(() => {
@@ -129,6 +130,7 @@ export default function StockLedgerPage() {
       const data = await response.json()
       setLedgerData(data.data)
       setTotalPages(data.totalPages)
+      setTotal(data.total)
     } catch (error) {
       console.error('Error:', error)
       toast.error('Failed to generate ledger')

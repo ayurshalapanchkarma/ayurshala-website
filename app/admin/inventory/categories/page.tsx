@@ -95,6 +95,7 @@ export default function CategoriesPage() {
       setCategories(data.data)
       setTotal(data.total)
       setTotalPages(data.totalPages)
+      setTotal(data.total)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load categories')

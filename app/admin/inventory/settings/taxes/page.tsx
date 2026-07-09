@@ -41,6 +41,7 @@ export default function TaxMasterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<TaxMaster | null>(null)
@@ -73,6 +74,7 @@ export default function TaxMasterPage() {
       const data: ListResponse = await response.json()
       setTaxes(data.data)
       setTotalPages(data.totalPages)
+      setTotal(data.total)
     } catch (err) {
       console.error('Error:', err)
       toast.error('Failed to load tax masters')

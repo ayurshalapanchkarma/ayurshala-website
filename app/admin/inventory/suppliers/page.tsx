@@ -53,6 +53,7 @@ export default function SuppliersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<Supplier | null>(null)
@@ -112,6 +113,7 @@ export default function SuppliersPage() {
       const data: ListResponse = await response.json()
       setSuppliers(data.data)
       setTotalPages(data.totalPages)
+      setTotal(data.total)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to load suppliers')
     } finally {

@@ -99,6 +99,7 @@ export default function TransactionsPage() {
       setTransactions(data.data)
       setTotalPages(data.totalPages)
       setTotal(data.total)
+      setTotal(data.total)
     } catch (error) {
       console.error('Error:', error)
       toast.error('Failed to fetch transactions')

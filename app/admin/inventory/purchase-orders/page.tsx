@@ -83,6 +83,7 @@ export default function PurchaseOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -152,6 +153,7 @@ export default function PurchaseOrdersPage() {
       const data: ListResponse = await response.json()
       setOrders(data.data)
       setTotalPages(data.totalPages)
+      setTotal(data.total)
     } catch (error) {
       console.error('Error:', error)
       toast.error('Failed to fetch purchase orders')

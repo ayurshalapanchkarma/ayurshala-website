@@ -30,6 +30,7 @@ export default function StockMovementReportPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [movementType, setMovementType] = useState('')
 
@@ -55,6 +56,7 @@ export default function StockMovementReportPage() {
       const data: ListResponse = await response.json()
       setItems(data.data)
       setTotalPages(data.totalPages)
+      setTotal(data.total)
     } catch (error) {
       console.error('Error:', error)
       toast.error('Failed to fetch stock movement report')
