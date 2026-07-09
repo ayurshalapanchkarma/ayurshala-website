@@ -218,21 +218,20 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <InventoryPageHeader
-        icon={ArrowLeftRight}
-        iconColor="text-blue-500 dark:text-blue-400"
-        bgColor="bg-blue-100 dark:bg-blue-950/40"
-        title="Transactions"
-        subtitle="All stock movements"
-      />
-      {/* Header */}
-      <div className="flex items-center justify-between">        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Inventory Transactions
-        </h1>
+    <div className="p-8 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex-1">
+          <InventoryPageHeader
+            icon={ArrowLeftRight}
+            iconColor="text-blue-500 dark:text-blue-400"
+            bgColor="bg-blue-100 dark:bg-blue-950/40"
+            title="Transactions"
+            subtitle="All stock movements"
+          />
+        </div>
         <button
           onClick={() => setShowStats(!showStats)}
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center gap-2"
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center gap-2 flex-shrink-0"
         >
           <FileText size={20} />
           {showStats ? 'Hide' : 'Show'} Stats

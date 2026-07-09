@@ -61,7 +61,7 @@ export default function CurrentStockPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={Boxes}
         iconColor="text-green-600 dark:text-green-400"
@@ -69,15 +69,24 @@ export default function CurrentStockPage() {
         title="Current Stock"
         subtitle="Real-time stock levels"
       />
-      <div className="flex items-center justify-between mb-8">        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Current Stock</h1>
-        <div className="flex gap-3">
-          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 text-sm">
-            <Download size={16} /> Export CSV
-          </button>
-          <button onClick={load} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm">
-            <RefreshCw size={16} /> Refresh
-          </button>
-        </div>
+      <div className="flex gap-3 mb-6 justify-end">
+        <button onClick={() => load()} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm">
+          <RefreshCw size={16} /> Refresh
+        </button>
+        <button onClick={() => {
+          const rows = [['Product', 'SKU', 'Quantity', 'Value (₹)', 'Batches']]
+          filtered.forEach(i => rows.push([i.productName, i.sku, String(i.quantity), String(i.value), String(i.batchCount)]))
+          const csv = rows.map(r => r.join(',')).join('\n')
+          const blob = new Blob([csv], { type: 'text/csv' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `current-stock-${new Date().toISOString().slice(0, 10)}.csv`
+          a.click()
+          URL.revokeObjectURL(url)
+        }} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 text-sm">
+          <Download size={16} /> Export CSV
+        </button>
       </div>
 
       {/* Summary */}

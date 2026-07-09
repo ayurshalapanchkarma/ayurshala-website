@@ -35,6 +35,7 @@ interface MasterListPageProps {
   onEditClick?: (item: any) => void
   showDeletedColumn?: boolean
   enableRestore?: boolean
+  hideHeader?: boolean // Hide the old header entirely
 }
 
 export function MasterListPage({
@@ -45,6 +46,7 @@ export function MasterListPage({
   onEditClick,
   showDeletedColumn = false,
   enableRestore = false,
+  hideHeader = false,
 }: MasterListPageProps) {
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -133,18 +135,22 @@ export function MasterListPage({
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{title}</h1>
-        {onAddClick && (
-          <button
-            onClick={onAddClick}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            <Plus size={20} /> Add {title.slice(0, -1)}
-          </button>
-        )}
-      </div>
+      {!hideHeader && (
+        <>
+          {/* Old Header - Hidden when hideHeader is true */}
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{title}</h1>
+            {onAddClick && (
+              <button
+                onClick={onAddClick}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                <Plus size={20} /> Add {title.slice(0, -1)}
+              </button>
+            )}
+          </div>
+        </>
+      )}
 
       {error && (
         <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">

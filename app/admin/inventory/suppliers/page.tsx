@@ -253,20 +253,13 @@ export default function SuppliersPage() {
         bgColor="bg-emerald-100 dark:bg-emerald-950/40"
         title="Suppliers"
         subtitle="Manage suppliers"
+        onAdd={() => {
+          setShowForm(true)
+          setEditingId(null)
+          setErrors({})
+        }}
+        addButtonLabel="Add Supplier"
       />
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Suppliers</h1>
-        <button
-          onClick={() => {
-            setShowForm(true)
-            setEditingId(null)
-            setErrors({})
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-        >
-          <Plus size={20} /> Add Supplier
-        </button>
-      </div>
 
       {/* Search */}
       <div className="mb-6">

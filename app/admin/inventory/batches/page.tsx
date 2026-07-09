@@ -75,7 +75,7 @@ export default function BatchManagementPage() {
   }
 
   return (
-    <div className="space-y-6">      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Batch Management</h1>
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={PackageSearch}
         iconColor="text-pink-600 dark:text-pink-400"

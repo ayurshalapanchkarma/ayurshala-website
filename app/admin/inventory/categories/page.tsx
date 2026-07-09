@@ -190,18 +190,12 @@ export default function CategoriesPage() {
         bgColor="bg-violet-100 dark:bg-violet-950/40"
         title="Categories"
         subtitle="Manage product categories"
+        onAdd={() => {
+          setFormData({ name: '', description: '', display_order: 0 })
+          setEditModal({} as any)
+        }}
+        addButtonLabel="Add Category"
       />
-      <div className="flex items-center justify-between mb-8">        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Categories</h1>
-        <button
-          onClick={() => {
-            setFormData({ name: '', description: '', display_order: 0 })
-            setEditModal({} as any)
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-        >
-          <Plus size={20} /> Add Category
-        </button>
-      </div>
 
       {error && (
         <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">

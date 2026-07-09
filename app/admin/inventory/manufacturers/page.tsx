@@ -202,20 +202,13 @@ export default function ManufacturersPage() {
         bgColor="bg-slate-100 dark:bg-slate-950/40"
         title="Manufacturers"
         subtitle="Manage manufacturers"
+        onAdd={() => {
+          setShowForm(true)
+          setEditingId(null)
+          setErrors({})
+        }}
+        addButtonLabel="Add Manufacturer"
       />
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Manufacturers</h1>
-        <button
-          onClick={() => {
-            setShowForm(true)
-            setEditingId(null)
-            setErrors({})
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-        >
-          <Plus size={20} /> Add Manufacturer
-        </button>
-      </div>
 
       {/* Search */}
       <div className="mb-6">

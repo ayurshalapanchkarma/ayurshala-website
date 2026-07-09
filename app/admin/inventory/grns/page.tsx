@@ -257,24 +257,16 @@ export default function GRNPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={Receipt}
         iconColor="text-teal-600 dark:text-teal-400"
         bgColor="bg-teal-100 dark:bg-teal-950/40"
         title="GRN"
         subtitle="Goods Receipt Notes"
+        onAdd={() => setShowCreateModal(true)}
+        addButtonLabel="New GRN"
       />
-      {/* Header */}
-      <div className="flex items-center justify-between">        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Goods Receipt Notes</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          New GRN
-        </button>
-      </div>
 
       {/* Create Modal */}
       {showCreateModal && (

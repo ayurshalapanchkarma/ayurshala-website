@@ -177,29 +177,16 @@ export default function WarehousesPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={MapPin}
         iconColor="text-orange-600 dark:text-orange-400"
         bgColor="bg-orange-100 dark:bg-orange-950/40"
         title="Warehouses"
-        subtitle="Manage warehouses"
+        subtitle="Manage warehouse locations"
+        onAdd={() => openForm()}
+        addButtonLabel="New Warehouse"
       />
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <MapPin className="w-8 h-8 text-orange-600" />
-            Warehouses
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage inventory warehouse locations</p>
-        </div>
-        <button
-          onClick={() => openForm()}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
-        >
-          <Plus size={18} /> New Warehouse
-        </button>
-      </div>
 
       {/* Search */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">

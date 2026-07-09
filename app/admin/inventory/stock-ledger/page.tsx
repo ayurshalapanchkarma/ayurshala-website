@@ -203,7 +203,7 @@ export default function StockLedgerPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={BookOpen}
         iconColor="text-cyan-600 dark:text-cyan-400"
@@ -211,12 +211,6 @@ export default function StockLedgerPage() {
         title="Stock Ledger"
         subtitle="Stock transaction history"
       />
-      {/* Header */}
-      <div>        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Ledger</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          Product-wise running ledger with opening and closing balances
-        </p>
-      </div>
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { MasterListPage } from '@/components/inventory/MasterListPage'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { MasterListPage } from '@/components/inventory/MasterListPage'
 import { Ruler } from 'lucide-react'
 
 // Simple toast implementation
@@ -77,23 +77,25 @@ export default function UnitsPage() {
   ]
 
   return (
-    <>
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={Ruler}
         iconColor="text-indigo-600 dark:text-indigo-400"
         bgColor="bg-indigo-100 dark:bg-indigo-950/40"
         title="Units"
         subtitle="Manage measurement units"
-      />
-      <MasterListPage
-        title="Units"
-        apiBase="/api/inventory/units"
-        columns={columns}
-        onAddClick={() => {
+        onAdd={() => {
           setFormData({ name: '', short_name: '', decimal_allowed: false })
           setEditUnit(null)
           setShowForm(true)
         }}
+        addButtonLabel="Add Unit"
+      />
+
+      <MasterListPage
+        title="Units"
+        apiBase="/api/inventory/units"
+        columns={columns}
         onEditClick={(unit) => {
           setFormData({
             name: unit.name,
@@ -103,6 +105,7 @@ export default function UnitsPage() {
           setEditUnit(unit)
           setShowForm(true)
         }}
+        hideHeader={true}
       />
 
       {showForm && (
@@ -156,6 +159,6 @@ export default function UnitsPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

@@ -404,24 +404,16 @@ export default function StockAdjustmentsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 max-w-7xl mx-auto">
       <InventoryPageHeader
         icon={SlidersHorizontal}
         iconColor="text-red-600 dark:text-red-400"
         bgColor="bg-red-100 dark:bg-red-950/40"
         title="Stock Adjustments"
         subtitle="Adjust stock levels"
+        onAdd={() => setShowCreateModal(true)}
+        addButtonLabel="New Adjustment"
       />
-      {/* Header */}
-      <div className="flex items-center justify-between">        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stock Adjustments</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          New Adjustment
-        </button>
-      </div>
 
       {/* Create Modal */}
       {showCreateModal && (
