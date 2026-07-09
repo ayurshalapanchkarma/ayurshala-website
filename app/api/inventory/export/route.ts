@@ -246,9 +246,19 @@ export async function GET(request: NextRequest) {
     console.error('[Export API] Error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Failed to export data'
     console.error('[Export API] Error message:', errorMessage)
-    return NextResponse.json(
-      { error: errorMessage, details: error instanceof Error ? { stack: error.stack } : null },
-      { status: 500 }
+    
+    // Return error as JSON response (not as CSV file)
+    return new NextResponse(
+      JSON.stringify({
+        error: errorMessage,
+        type: error instanceof Error ? error.constructor.name : typeof error
+      }),
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
     )
   }
 }
