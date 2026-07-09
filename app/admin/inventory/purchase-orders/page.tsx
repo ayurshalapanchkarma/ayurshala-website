@@ -762,7 +762,7 @@ export default function PurchaseOrdersPage() {
                             className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
                             title="Preview"
                           >
-                            <Eye size={20} className="text-sky-400 hover:text-sky-300" />
+                            <Eye size={20} className="text-sky-500" />
                           </button>
                           {order.status === 'draft' && (
                             <button
@@ -770,7 +770,7 @@ export default function PurchaseOrdersPage() {
                               className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
                               title="Edit"
                             >
-                              <Edit2 size={20} className="text-amber-400 hover:text-amber-300" />
+                              <Edit2 size={20} className="text-amber-500" />
                             </button>
                           )}
                           {order.status === 'draft' && (
@@ -780,7 +780,7 @@ export default function PurchaseOrdersPage() {
                               className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800"
                               title="Submit for Approval"
                             >
-                              <CheckCircle size={20} className="text-sky-400 hover:text-sky-300" />
+                              <CheckCircle size={20} className="text-emerald-500" />
                             </button>
                           )}
                           {order.status === 'pending' && (
@@ -790,7 +790,7 @@ export default function PurchaseOrdersPage() {
                               className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800"
                               title="Approve"
                             >
-                              <CheckCircle size={20} className="text-green-500 hover:text-green-400" />
+                              <CheckCircle size={20} className="text-emerald-500" />
                             </button>
                           )}
                           {order.status === 'draft' && (
@@ -799,7 +799,7 @@ export default function PurchaseOrdersPage() {
                               className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
                               title="Cancel"
                             >
-                              <Trash2 size={20} className="text-red-500 hover:text-red-400" />
+                              <Trash2 size={20} className="text-red-500" />
                             </button>
                           )}
                         </div>
