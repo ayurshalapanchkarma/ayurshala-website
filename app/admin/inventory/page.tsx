@@ -140,19 +140,91 @@ export default function InventoryOverview() {
             ].map((action, i) => {
               const Icon = action.icon
               const isButton = !action.href
-              const Component = isButton ? 'button' : Link
 
+              if (action.action === 'import') {
+                return (
+                  <div key={i} className="relative">
+                    <input
+                      type="file"
+                      id={`import-${i}`}
+                      accept=".csv,.xlsx"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+
+                        try {
+                          const formData = new FormData()
+                          formData.append('file', file)
+
+                          const res = await fetch('/api/inventory/import', {
+                            method: 'POST',
+                            body: formData,
+                          })
+
+                          const result = await res.json()
+
+                          if (!res.ok) {
+                            toast.error(result.error || 'Import failed')
+                            return
+                          }
+
+                          toast.success(result.message)
+                          fetchMetrics() // Refresh metrics after import
+                        } catch (error) {
+                          toast.error(error instanceof Error ? error.message : 'Import failed')
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor={`import-${i}`}
+                      className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 transition text-center cursor-pointer block"
+                    >
+                      <div className="flex justify-center mb-2">
+                        <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <p className="text-xs font-medium text-slate-900 dark:text-white">Import</p>
+                    </label>
+                  </div>
+                )
+              }
+
+              if (action.action === 'export') {
+                return (
+                  <button
+                    key={i}
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/inventory/export?format=csv&type=products')
+                        const blob = await res.blob()
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `inventory-products-${new Date().toISOString().split('T')[0]}.csv`
+                        document.body.appendChild(a)
+                        a.click()
+                        window.URL.revokeObjectURL(url)
+                        document.body.removeChild(a)
+                        toast.success('Export downloaded')
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : 'Export failed')
+                      }
+                    }}
+                    className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 transition text-center"
+                  >
+                    <div className="flex justify-center mb-2">
+                      <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <p className="text-xs font-medium text-slate-900 dark:text-white">Export</p>
+                  </button>
+                )
+              }
+
+              const Component = isButton ? 'button' : Link
               return (
                 <Component
                   key={i}
                   href={!isButton ? action.href : undefined}
-                  onClick={() => {
-                    if (action.action === 'import') {
-                      toast.info('Import feature - coming soon')
-                    } else if (action.action === 'export') {
-                      toast.info('Export feature - coming soon')
-                    }
-                  }}
                   className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 transition text-center cursor-pointer"
                 >
                   <div className="flex justify-center mb-2">
