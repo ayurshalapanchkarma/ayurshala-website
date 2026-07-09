@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AdminGuard } from '@/components/AdminGuard'
-import InventoryHeaderSimple from '@/components/inventory/InventoryHeaderSimple'
+import InventoryHeader from '@/components/inventory/InventoryHeader'
 import { 
   ChevronDown, Menu, X, Home, Tooltip,
   LayoutDashboard, Package2, Tags, Ruler, Factory, Truck as TruckIcon, MapPin,
@@ -190,8 +190,8 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
 
         {/* Main content */}
         <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
-          {/* Header */}
-          <InventoryHeaderSimple />
+          {/* Global Inventory Header */}
+          <InventoryHeader />
 
           {/* Content area */}
           <div className="flex-1 overflow-auto">
