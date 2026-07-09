@@ -110,15 +110,9 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-60' : 'w-16'} bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 transition-all duration-300 flex flex-col overflow-hidden fixed h-screen z-40`}>
-          {/* Sidebar Header */}
-          <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
-            {sidebarOpen && <h2 className="font-semibold text-slate-900 dark:text-white text-sm">📦 Inventory</h2>}
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition">
-              {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
-          </div>
-
+      <div className={`${sidebarOpen ? 'w-60' : 'w-16'} transition-all duration-300 flex flex-col overflow-hidden fixed h-screen z-40 pt-24`}>
+        {/* Sidebar Glass Container */}
+        <div className="m-3 flex-1 rounded-2xl bg-white/70 dark:bg-slate-900/65 backdrop-blur-xl border border-gray-200/50 dark:border-slate-700/50 shadow-xl overflow-hidden flex flex-col">
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-2">
             {navSections.map(section => (
@@ -184,15 +178,18 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
               </div>
             ))}
           </nav>
+        </div>
       </div>
 
       {/* Main content */}
       <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
-        {/* Inventory Header - Custom branding */}
-        <AdminHeader 
-          title="Ayurshala Inventory Console"
-          subtitle="Inventory • Procurement • Stock Control"
-        />
+        {/* Inventory Header - Full width, no margins */}
+        <div className="px-0">
+          <AdminHeader 
+            title="Ayurshala Inventory Console"
+            subtitle="Inventory • Procurement • Stock Control"
+          />
+        </div>
 
         {/* Content area */}
         <div className="flex-1 overflow-auto">

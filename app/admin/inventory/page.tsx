@@ -101,7 +101,7 @@ export default function InventoryOverview() {
           </p>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {loading && !metrics ? (
               <div className="col-span-full flex justify-center py-12">
                 <Loader className="w-6 h-6 animate-spin text-gray-400" />
@@ -110,13 +110,13 @@ export default function InventoryOverview() {
               kpiData.map((kpi, i) => {
                 const Icon = kpi.icon
                 return (
-                  <div key={i} className={`${colorMap[kpi.color]} rounded-lg p-4 border`}>
+                  <div key={i} className={`${colorMap[kpi.color]} rounded-lg p-6 border`}>
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-medium opacity-75">{kpi.label}</p>
-                        <p className="text-2xl font-semibold mt-2">{kpi.value}</p>
+                        <p className="text-3xl font-semibold mt-3">{kpi.value}</p>
                       </div>
-                      <Icon className="w-8 h-8 opacity-20" />
+                      <Icon className="w-10 h-10 opacity-20" />
                     </div>
                   </div>
                 )

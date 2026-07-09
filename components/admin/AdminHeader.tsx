@@ -76,10 +76,10 @@ export default function AdminHeader({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="sticky top-0 z-40 px-4 sm:px-6 lg:px-8 py-4"
+      className="sticky top-0 z-40"
     >
       <div
-        className="rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300"
+        className="rounded-none overflow-hidden transition-all duration-300 mx-3 mt-3 rounded-2xl"
         style={{
           background: theme === 'dark'
             ? 'rgba(15, 23, 42, 0.7)'
