@@ -235,7 +235,7 @@ export default function ManufacturersPage() {
             setSearchTerm(e.target.value)
             setPage(1)
           }}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-slate-800 dark:text-white"
+          className="w-full px-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg dark:border-gray-600 dark:bg-slate-800 dark:text-white"
         />
       </div>
 

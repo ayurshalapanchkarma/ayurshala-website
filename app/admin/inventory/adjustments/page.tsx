@@ -936,7 +936,7 @@ export default function StockAdjustmentsPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white placeholder-gray-500 dark:placeholder-slate-400"
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-400"
             />
           </div>
 
@@ -946,7 +946,7 @@ export default function StockAdjustmentsPage() {
               setStatus(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
+            className="px-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Status</option>
             <option value="draft">Draft</option>
@@ -960,7 +960,7 @@ export default function StockAdjustmentsPage() {
               setReason(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
+            className="px-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Reasons</option>
             <option value="PHYSICAL_COUNT">Physical Count</option>
