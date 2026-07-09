@@ -191,32 +191,74 @@ export default function InventoryOverview() {
 
               if (action.action === 'export') {
                 return (
-                  <button
-                    key={i}
-                    onClick={async () => {
-                      try {
-                        const res = await fetch('/api/inventory/export?format=csv&type=products')
-                        const blob = await res.blob()
-                        const url = window.URL.createObjectURL(blob)
-                        const a = document.createElement('a')
-                        a.href = url
-                        a.download = `inventory-products-${new Date().toISOString().split('T')[0]}.csv`
-                        document.body.appendChild(a)
-                        a.click()
-                        window.URL.revokeObjectURL(url)
-                        document.body.removeChild(a)
-                        toast.success('Export downloaded')
-                      } catch (error) {
-                        toast.error(error instanceof Error ? error.message : 'Export failed')
-                      }
-                    }}
-                    className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 transition text-center"
-                  >
-                    <div className="flex justify-center mb-2">
-                      <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                  <div key={i} className="relative group">
+                    <button
+                      className="w-full bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 transition text-center"
+                    >
+                      <div className="flex justify-center mb-2">
+                        <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <p className="text-xs font-medium text-slate-900 dark:text-white">Export</p>
+                    </button>
+                    
+                    {/* Export options dropdown */}
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg hidden group-hover:block z-50">
+                      <button
+                        onClick={async () => {
+                          try {
+                            const res = await fetch('/api/inventory/export?format=csv&type=products')
+                            if (!res.ok) {
+                              const error = await res.json()
+                              throw new Error(error.error || `HTTP ${res.status}`)
+                            }
+                            const blob = await res.blob()
+                            const url = window.URL.createObjectURL(blob)
+                            const a = document.createElement('a')
+                            a.href = url
+                            a.download = `inventory-products-${new Date().toISOString().split('T')[0]}.csv`
+                            document.body.appendChild(a)
+                            a.click()
+                            window.URL.revokeObjectURL(url)
+                            document.body.removeChild(a)
+                            toast.success('CSV exported successfully')
+                          } catch (error) {
+                            console.error('[CSV Export Error]', error)
+                            toast.error(error instanceof Error ? error.message : 'CSV export failed')
+                          }
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-slate-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition first:rounded-t-lg"
+                      >
+                        CSV
+                      </button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const res = await fetch('/api/inventory/export?format=excel&type=products')
+                            if (!res.ok) {
+                              const error = await res.json()
+                              throw new Error(error.error || `HTTP ${res.status}`)
+                            }
+                            const blob = await res.blob()
+                            const url = window.URL.createObjectURL(blob)
+                            const a = document.createElement('a')
+                            a.href = url
+                            a.download = `inventory-products-${new Date().toISOString().split('T')[0]}.xlsx`
+                            document.body.appendChild(a)
+                            a.click()
+                            window.URL.revokeObjectURL(url)
+                            document.body.removeChild(a)
+                            toast.success('Excel exported successfully')
+                          } catch (error) {
+                            console.error('[Excel Export Error]', error)
+                            toast.error(error instanceof Error ? error.message : 'Excel export failed')
+                          }
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-slate-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition last:rounded-b-lg"
+                      >
+                        Excel
+                      </button>
                     </div>
-                    <p className="text-xs font-medium text-slate-900 dark:text-white">Export</p>
-                  </button>
+                  </div>
                 )
               }
 
