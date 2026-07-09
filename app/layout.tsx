@@ -26,14 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/png" href="/ayurshala.png" />
-        <Script 
-          async 
-          src="https://www.googletagmanager.com/gtag/js?id=G-JDJFTB5DDK" 
-          strategy="afterInteractive"
-          onError={(e) => {
-            console.debug('Analytics script load failed (non-critical)', e)
-          }}
-        />
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-JDJFTB5DDK" strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
             try {
@@ -41,11 +34,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
               gtag('config', 'G-JDJFTB5DDK', {
-                'anonymize_ip': true,
-                'allow_google_signals': false
+                'anonymize_ip': true
               });
             } catch (error) {
-              console.debug('Analytics initialization failed (non-critical)', error);
+              // Silently fail analytics, don't break page
             }
           `}
         </Script>
