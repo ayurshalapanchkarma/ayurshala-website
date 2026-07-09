@@ -124,6 +124,14 @@ export default function SettingsPage() {
     }
   }
 
+  const handleSettingChange = (key: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: { ...prev[key], value },
+    }))
+    setHasChanges(true)
+  }
+
   const handleCancel = () => {
     loadSettings()
     setHasChanges(false)
