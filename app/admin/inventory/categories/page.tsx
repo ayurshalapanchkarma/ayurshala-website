@@ -49,6 +49,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -60,15 +61,25 @@ export default function CategoriesPage() {
   const [isRestoring, setIsRestoring] = useState(false)
   const [formData, setFormData] = useState({ name: '', description: '', display_order: 0 })
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setPage(1)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
   useEffect(() => {
     loadCategories()
-  }, [searchTerm, page])
+  }, [debouncedSearch, page])
 
   async function loadCategories() {
     try {
       setLoading(true)
       const params = new URLSearchParams({
-        search: searchTerm,
+        search: debouncedSearch,
         page: page.toString(),
         pageSize: pageSize.toString(),
         sortBy: 'display_order',

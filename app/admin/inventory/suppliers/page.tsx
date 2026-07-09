@@ -49,6 +49,7 @@ export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showForm, setShowForm] = useState(false)
@@ -81,15 +82,25 @@ export default function SuppliersPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setPage(1)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
   useEffect(() => {
     loadSuppliers()
-  }, [searchTerm, page])
+  }, [debouncedSearch, page])
 
   async function loadSuppliers() {
     try {
       setLoading(true)
       const params = new URLSearchParams({
-        search: searchTerm,
+        search: debouncedSearch,
         page: page.toString(),
         pageSize: pageSize.toString(),
       })

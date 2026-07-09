@@ -50,6 +50,7 @@ export default function ManufacturersPage() {
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showForm, setShowForm] = useState(false)
@@ -71,15 +72,25 @@ export default function ManufacturersPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setPage(1)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
   useEffect(() => {
     loadManufacturers()
-  }, [searchTerm, page])
+  }, [debouncedSearch, page])
 
   async function loadManufacturers() {
     try {
       setLoading(true)
       const params = new URLSearchParams({
-        search: searchTerm,
+        search: debouncedSearch,
         page: page.toString(),
         pageSize: pageSize.toString(),
       })

@@ -45,14 +45,14 @@ interface Product {
 }
 
 const movementTypeColors = {
-  PURCHASE: 'bg-blue-100 text-blue-800',
-  SALE: 'bg-red-100 text-red-800',
-  RETURN: 'bg-yellow-100 text-yellow-800',
-  TRANSFER: 'bg-purple-100 text-purple-800',
-  ADJUSTMENT: 'bg-orange-100 text-orange-800',
-  CONSUMPTION: 'bg-green-100 text-green-800',
-  EXPIRED: 'bg-gray-100 text-gray-800',
-  DAMAGED: 'bg-pink-100 text-pink-800',
+  PURCHASE: 'bg-blue-600 text-white dark:bg-blue-700 dark:text-white',
+  SALE: 'bg-green-600 text-white dark:bg-green-700 dark:text-white',
+  RETURN: 'bg-purple-600 text-white dark:bg-purple-700 dark:text-white',
+  TRANSFER: 'bg-cyan-600 text-white dark:bg-cyan-700 dark:text-white',
+  ADJUSTMENT: 'bg-orange-600 text-white dark:bg-orange-700 dark:text-white',
+  CONSUMPTION: 'bg-slate-600 text-white dark:bg-slate-700 dark:text-white',
+  EXPIRED: 'bg-slate-600 text-white dark:bg-slate-700 dark:text-white',
+  DAMAGED: 'bg-red-600 text-white dark:bg-red-700 dark:text-white',
 }
 
 export default function TransactionsPage() {

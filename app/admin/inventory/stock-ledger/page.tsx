@@ -65,6 +65,7 @@ export default function StockLedgerPage() {
   const [pageSize] = useState(50)
   const [exporting, setExporting] = useState(false)
   const [totalPages, setTotalPages] = useState(1)
+  const [dateError, setDateError] = useState<string>('')
 
   useEffect(() => {
     fetchProducts()
@@ -95,10 +96,20 @@ export default function StockLedgerPage() {
   }
 
   async function generateLedger() {
+    // Validate
     if (!selectedProduct) {
       toast.error('Please select a product')
       return
     }
+
+    if (dateFrom && dateTo) {
+      if (dateFrom > dateTo) {
+        setDateError('From Date cannot be later than To Date')
+        return
+      }
+    }
+
+    setDateError('')
 
     try {
       setLoading(true)
@@ -213,7 +224,7 @@ export default function StockLedgerPage() {
       />
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -260,7 +271,10 @@ export default function StockLedgerPage() {
             <input
               type="date"
               value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
+              onChange={(e) => {
+                setDateFrom(e.target.value)
+                setDateError('')
+              }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
@@ -272,22 +286,47 @@ export default function StockLedgerPage() {
             <input
               type="date"
               value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
+              onChange={(e) => {
+                setDateTo(e.target.value)
+                setDateError('')
+              }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
-          <div className="flex items-end">
+          <div className="flex flex-col items-stretch justify-end">
             <button
               onClick={generateLedger}
-              disabled={!selectedProduct || loading}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+              disabled={!selectedProduct || loading || !!dateError}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
             >
               {loading && <Loader size={18} className="animate-spin" />}
               {loading ? 'Loading...' : 'Generate'}
             </button>
           </div>
         </div>
+
+        {/* Date Validation Error */}
+        {dateError && (
+          <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 rounded-lg text-sm">
+            {dateError}
+          </div>
+        )}
+
+        {/* Export Button - Aligned with Generate */}
+        {ledgerData && (
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={() => exportLedger('csv')}
+              disabled={exporting}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+            >
+              {exporting && <Loader size={18} className="animate-spin" />}
+              <Download size={18} />
+              Export CSV
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Summary */}
@@ -330,19 +369,6 @@ export default function StockLedgerPage() {
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Export Button */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => exportLedger('csv')}
-              disabled={exporting}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
-            >
-              {exporting && <Loader size={18} className="animate-spin" />}
-              <Download size={18} />
-              Export CSV
-            </button>
           </div>
 
           {/* Ledger Table */}

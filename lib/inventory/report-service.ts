@@ -106,7 +106,6 @@ export class ReportService {
           unit:inv_units(name)
         `)
         .eq('is_active', true)
-        .eq('is_deleted', false)
 
       if (filters.category_uuid) {
         query = query.eq('category_uuid', filters.category_uuid)

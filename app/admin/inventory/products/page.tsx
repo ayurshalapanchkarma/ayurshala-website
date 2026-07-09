@@ -85,6 +85,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showForm, setShowForm] = useState(false)
@@ -126,10 +127,20 @@ export default function ProductsPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setPage(1)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
   useEffect(() => {
     loadDropdowns()
     loadProducts()
-  }, [searchTerm, page])
+  }, [debouncedSearch, page])
 
   async function loadDropdowns() {
     try {
@@ -189,7 +200,7 @@ export default function ProductsPage() {
     try {
       setLoading(true)
       const params = new URLSearchParams({
-        search: searchTerm,
+        search: debouncedSearch,
         page: page.toString(),
         pageSize: pageSize.toString(),
       })
