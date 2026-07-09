@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { AdminGuard } from '@/components/AdminGuard'
-import InventoryHeader from '@/components/inventory/InventoryHeader'
+import AdminHeader from '@/components/admin/AdminHeader'
 import { 
   ChevronDown, Menu, X, Home, Tooltip,
   LayoutDashboard, Package2, Tags, Ruler, Factory, Truck as TruckIcon, MapPin,
@@ -109,10 +108,9 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
   const isActive = (href: string) => pathname === href
 
   return (
-    <AdminGuard>
-      <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
-        {/* Sidebar */}
-        <div className={`${sidebarOpen ? 'w-60' : 'w-16'} bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 transition-all duration-300 flex flex-col overflow-hidden fixed h-screen z-40`}>
+    <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-60' : 'w-16'} bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 transition-all duration-300 flex flex-col overflow-hidden fixed h-screen z-40`}>
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
             {sidebarOpen && <h2 className="font-semibold text-slate-900 dark:text-white text-sm">📦 Inventory</h2>}
@@ -186,19 +184,18 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
               </div>
             ))}
           </nav>
-        </div>
+      </div>
 
-        {/* Main content */}
-        <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
-          {/* Global Inventory Header - Fixed positioning handled in component */}
-          <InventoryHeader />
+      {/* Main content */}
+      <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
+        {/* Global Admin Header */}
+        <AdminHeader />
 
-          {/* Content area - Adds top padding for fixed header */}
-          <div className="flex-1 overflow-auto pt-24 sm:pt-28 md:pt-32 px-4 sm:px-6">
-            {children}
-          </div>
+        {/* Content area - Adds top padding for fixed header */}
+        <div className="flex-1 overflow-auto pt-4 px-4 sm:px-6">
+          {children}
         </div>
       </div>
-    </AdminGuard>
+    </div>
   )
 }

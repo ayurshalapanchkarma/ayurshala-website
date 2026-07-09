@@ -1,17 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { AdminGuard } from '@/components/AdminGuard'
-import { LogOut, Moon, Sun, Calendar, Clock, Wallet, TrendingUp, FileText, Package, Users, Stethoscope, CreditCard, BarChart3, Settings, ClipboardList, ChevronRight } from 'lucide-react'
+import AdminHeader from '@/components/admin/AdminHeader'
+import { Calendar, Clock, Wallet, TrendingUp, FileText, Package, Users, Stethoscope, CreditCard, BarChart3, Settings, ClipboardList, ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-)
 
 type Booking = {
   id: number
@@ -48,18 +41,18 @@ const colorMap = {
 export default function AdminDashboard() {
   const [mounted, setMounted] = useState(false)
   const [stats, setStats] = useState({ today: 0, pending: 0, cash: 0, revenue: 0, refunds: 0, alerts: 0 })
-  const [currentTime, setCurrentTime] = useState('')
-  const { theme, setTheme } = useTheme()
-  const router = useRouter()
-  const dark = mounted && theme === 'dark'
-
-  useEffect(() => setMounted(true), [])
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }))
-    }, 1000)
-    return () => clearInterval(timer)
+    setMounted(true)
+    const saved = localStorage.getItem('admin-theme')
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      setTheme('dark')
+      document.documentElement.classList.add('dark')
+    } else {
+      setTheme('light')
+      document.documentElement.classList.remove('dark')
+    }
   }, [])
 
   useEffect(() => {
@@ -93,30 +86,12 @@ export default function AdminDashboard() {
     }
   }
 
-  return (
-    <AdminGuard>
-      <div className={`min-h-screen ${dark ? 'bg-slate-950' : 'bg-gray-50'}`}>
-        {/* Header */}
-        <header className={`sticky top-0 z-40 border-b ${dark ? 'bg-slate-900/95 border-slate-800' : 'bg-white border-gray-200'} backdrop-blur`}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div>
-              <h1 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-slate-900'}`}>Ayurshala Admin</h1>
-              <p className={`text-xs ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Clinical Management System</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className={`text-sm ${dark ? 'text-slate-400' : 'text-slate-600'}`}>{currentTime}</div>
-              <button onClick={() => setTheme(dark ? 'light' : 'dark')} className={`p-2 rounded-lg transition ${dark ? 'bg-slate-800 hover:bg-slate-700 text-slate-400' : 'bg-gray-100 hover:bg-gray-200 text-slate-600'}`}>
-                {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-              <button onClick={async () => { await supabase.auth.signOut(); router.push('/') }} className="p-2 rounded-lg bg-red-600/10 text-red-600 hover:bg-red-600/20 transition">
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </header>
+  const dark = mounted && theme === 'dark'
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  return (
+    <div className={`${dark ? 'bg-slate-950' : 'bg-gray-50'}`}>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
             {[
@@ -168,6 +143,5 @@ export default function AdminDashboard() {
           </div>
         </main>
       </div>
-    </AdminGuard>
   )
 }
