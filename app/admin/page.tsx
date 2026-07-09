@@ -90,6 +90,9 @@ export default function AdminDashboard() {
 
   return (
     <div className={`${dark ? 'bg-slate-950' : 'bg-gray-50'}`}>
+      {/* Admin Header */}
+      <AdminHeader />
+      
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* KPI Cards */}
