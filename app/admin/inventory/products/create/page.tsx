@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Loader, Save, Plus} from 'lucide-react'
-import { ProductService, CategoryService } from '@/lib/inventory'
+import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 
 interface CreateProductForm {
@@ -24,9 +24,15 @@ interface Category {
   name: string
 }
 
+interface Unit {
+  id: string
+  name: string
+}
+
 export default function CreateProductPage() {
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
+  const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,17 +49,29 @@ export default function CreateProductPage() {
   })
 
   useEffect(() => {
-    loadCategories()
+    loadDropdowns()
   }, [])
 
-  async function loadCategories() {
+  async function loadDropdowns() {
     try {
       setLoading(true)
-      const cats = await CategoryService.getCategories()
-      setCategories(cats)
+      // Fetch categories from API
+      const catRes = await fetch('/api/inventory/categories?pageSize=1000')
+      if (!catRes.ok) throw new Error('Failed to load categories')
+      const catData = await catRes.json()
+      setCategories(catData.data || [])
+
+      // Fetch units from API
+      const unitRes = await fetch('/api/inventory/units?pageSize=1000')
+      if (!unitRes.ok) throw new Error('Failed to load units')
+      const unitData = await unitRes.json()
+      setUnits(unitData.data || [])
+
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load categories')
+      const msg = err instanceof Error ? err.message : 'Failed to load data'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -63,15 +81,30 @@ export default function CreateProductPage() {
     e.preventDefault()
     if (!formData.name || !formData.sku || !formData.category_id || !formData.unit) {
       setError('Please fill in all required fields')
+      toast.error('Please fill in all required fields')
       return
     }
 
     try {
       setSaving(true)
-      await ProductService.createProduct(formData as any)
+      // Create product via API
+      const res = await fetch('/api/inventory/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Failed to create product')
+      }
+
+      toast.success('Product created successfully')
       router.push('/admin/inventory/products')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create product')
+      const msg = err instanceof Error ? err.message : 'Failed to create product'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setSaving(false)
     }
