@@ -54,9 +54,9 @@ interface Batch {
 }
 
 const statusColors = {
-  draft: 'bg-gray-100 text-gray-800',
-  approved: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
+  draft: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100',
+  approved: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+  cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 }
 
 const statusIcons = {
@@ -936,7 +936,7 @@ export default function StockAdjustmentsPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white placeholder-gray-500 dark:placeholder-slate-400"
             />
           </div>
 
@@ -946,7 +946,7 @@ export default function StockAdjustmentsPage() {
               setStatus(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Status</option>
             <option value="draft">Draft</option>
@@ -960,7 +960,7 @@ export default function StockAdjustmentsPage() {
               setReason(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Reasons</option>
             <option value="PHYSICAL_COUNT">Physical Count</option>
@@ -1032,26 +1032,26 @@ export default function StockAdjustmentsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleViewAdjustment(adj.uuid)}
-                            className="text-blue-600 hover:text-blue-800 transition"
+                            className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
                             title="View details"
                           >
-                            <Eye size={18} />
+                            <Eye size={20} className="text-sky-400 hover:text-sky-300" />
                           </button>
                           {adj.status === 'draft' && (
                             <>
                               <button
                                 onClick={() => handleEditAdjustment(adj.uuid)}
-                                className="text-amber-600 hover:text-amber-800 transition"
+                                className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
                                 title="Edit adjustment"
                               >
-                                <Edit size={18} />
+                                <Edit size={20} className="text-amber-400 hover:text-amber-300" />
                               </button>
                               <button
                                 onClick={() => handleDeleteAdjustment(adj.uuid)}
-                                className="text-red-600 hover:text-red-800 transition"
+                                className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
                                 title="Delete adjustment"
                               >
-                                <Trash2 size={18} />
+                                <Trash2 size={20} className="text-red-500 hover:text-red-400" />
                               </button>
                             </>
                           )}

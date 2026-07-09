@@ -64,9 +64,9 @@ interface GRNItem {
 }
 
 const statusColors = {
-  draft: 'bg-gray-100 text-gray-800 border-gray-300',
-  posted: 'bg-green-100 text-green-800 border-green-300',
-  cancelled: 'bg-red-100 text-red-800 border-red-300',
+  draft: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100',
+  posted: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 }
 
 const statusIcons = {
@@ -451,7 +451,7 @@ export default function GRNPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white placeholder-gray-500 dark:placeholder-slate-400"
             />
           </div>
 
@@ -461,7 +461,7 @@ export default function GRNPage() {
               setStatus(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Status</option>
             <option value="draft">Draft</option>
@@ -534,34 +534,39 @@ export default function GRNPage() {
                         ₹{grn.total_amount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border ${statusColors[grn.status]}`}>
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full ${statusColors[grn.status]}`}>
                           <StatusIcon size={14} />
                           {grn.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-right space-x-2">
-                        <button
-                          onClick={() => setSelectedGRN(grn)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        {grn.status === 'draft' && (
+                      <td className="px-6 py-4 text-sm text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setSelectedGRN(grn)}
-                            className="text-green-600 hover:text-green-800"
+                            className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                            title="Preview"
                           >
-                            <Edit2 size={18} />
+                            <Eye size={20} className="text-sky-400 hover:text-sky-300" />
                           </button>
-                        )}
-                        {grn.status === 'draft' && (
-                          <button
-                            onClick={() => handleDelete(grn.uuid)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        )}
+                          {grn.status === 'draft' && (
+                            <button
+                              onClick={() => setSelectedGRN(grn)}
+                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                              title="Edit"
+                            >
+                              <Edit2 size={20} className="text-amber-400 hover:text-amber-300" />
+                            </button>
+                          )}
+                          {grn.status === 'draft' && (
+                            <button
+                              onClick={() => handleDelete(grn.uuid)}
+                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                              title="Cancel"
+                            >
+                              <Trash2 size={20} className="text-red-500 hover:text-red-400" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )

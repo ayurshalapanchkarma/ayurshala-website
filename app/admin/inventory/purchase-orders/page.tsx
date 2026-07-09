@@ -61,12 +61,12 @@ interface POItem {
 }
 
 const statusColors = {
-  draft: 'bg-gray-100 text-gray-800 border-gray-300',
-  pending: 'bg-blue-100 text-blue-800 border-blue-300',
-  approved: 'bg-green-100 text-green-800 border-green-300',
-  partially_received: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  received: 'bg-purple-100 text-purple-800 border-purple-300',
-  cancelled: 'bg-red-100 text-red-800 border-red-300',
+  draft: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100',
+  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+  approved: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+  partially_received: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+  received: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
+  cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 }
 
 const statusIcons = {
@@ -669,7 +669,7 @@ export default function PurchaseOrdersPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white placeholder-gray-500 dark:placeholder-slate-400"
             />
           </div>
 
@@ -679,7 +679,7 @@ export default function PurchaseOrdersPage() {
               setStatus(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Status</option>
             <option value="draft">Draft</option>
@@ -749,57 +749,59 @@ export default function PurchaseOrdersPage() {
                         ₹{order.total_amount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border ${statusColors[order.status]}`}>
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full ${statusColors[order.status]}`}>
                           <StatusIcon size={14} />
                           {order.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-right space-x-2 flex justify-end items-center gap-1">
-                        <button
-                          onClick={() => handlePreview(order)}
-                          className="text-blue-600 hover:text-blue-800 p-1"
-                          title="Preview"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        {order.status === 'draft' && (
+                      <td className="px-6 py-4 text-sm text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => handleEdit(order)}
-                            className="text-green-600 hover:text-green-800 p-1"
-                            title="Edit"
+                            onClick={() => handlePreview(order)}
+                            className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                            title="Preview"
                           >
-                            <Edit2 size={18} />
+                            <Eye size={20} className="text-sky-400 hover:text-sky-300" />
                           </button>
-                        )}
-                        {order.status === 'draft' && (
-                          <button
-                            onClick={() => handleSubmit(order.uuid)}
-                            disabled={actionInProgress}
-                            className="text-blue-600 hover:text-blue-800 p-1 disabled:opacity-50"
-                            title="Submit for Approval"
-                          >
-                            <CheckCircle size={18} />
-                          </button>
-                        )}
-                        {order.status === 'pending' && (
-                          <button
-                            onClick={() => handleApprove(order.uuid)}
-                            disabled={actionInProgress}
-                            className="text-green-600 hover:text-green-800 p-1 disabled:opacity-50"
-                            title="Approve"
-                          >
-                            <CheckCircle size={18} />
-                          </button>
-                        )}
-                        {order.status === 'draft' && (
-                          <button
-                            onClick={() => handleDelete(order.uuid)}
-                            className="text-red-600 hover:text-red-800 p-1"
-                            title="Cancel"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        )}
+                          {order.status === 'draft' && (
+                            <button
+                              onClick={() => handleEdit(order)}
+                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                              title="Edit"
+                            >
+                              <Edit2 size={20} className="text-amber-400 hover:text-amber-300" />
+                            </button>
+                          )}
+                          {order.status === 'draft' && (
+                            <button
+                              onClick={() => handleSubmit(order.uuid)}
+                              disabled={actionInProgress}
+                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800"
+                              title="Submit for Approval"
+                            >
+                              <CheckCircle size={20} className="text-sky-400 hover:text-sky-300" />
+                            </button>
+                          )}
+                          {order.status === 'pending' && (
+                            <button
+                              onClick={() => handleApprove(order.uuid)}
+                              disabled={actionInProgress}
+                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800"
+                              title="Approve"
+                            >
+                              <CheckCircle size={20} className="text-green-500 hover:text-green-400" />
+                            </button>
+                          )}
+                          {order.status === 'draft' && (
+                            <button
+                              onClick={() => handleDelete(order.uuid)}
+                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                              title="Cancel"
+                            >
+                              <Trash2 size={20} className="text-red-500 hover:text-red-400" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
