@@ -1,7 +1,11 @@
 # Inventory Settings Audit Report
 
 ## Current Status
-All settings are saved to `inv_settings` database table but **NONE are being used** by the system.
+
+All settings are saved to `inv_settings` database table.
+**However, NONE are being used by the system at runtime.**
+
+Settings persistence is complete. Settings consumption is missing.
 
 ## Settings Audit Table
 
@@ -43,7 +47,40 @@ Should add:
 - Email Sending Schedule (daily, hourly, instant)
 - Email Scheduler Implementation
 
-## Next Steps
+## Architecture Gap
+
+**What's Built:**
+- ✅ Settings API (`/api/inventory/settings/general`) 
+- ✅ Settings UI (Frontend form)
+- ✅ Database storage (`inv_settings` table)
+- ✅ Load/Save/Update operations
+
+**What's Missing:**
+- ❌ Any code that reads settings at runtime
+- ❌ Business logic integration
+- ❌ Scheduled jobs
+- ❌ Form auto-fill logic
+- ❌ Validation rules that use settings
+- ❌ Notification scheduler
+- ❌ Timezone/locale providers
+
+## Severity Assessment
+
+**🔴 HIGH** (Blocks workflows):
+- Default Warehouse (forms, transactions)
+- Timezone (timestamps, reports)
+- PO Prefix (numbering)
+- Email Notifications (critical missing feature)
+
+**🟡 MEDIUM** (Improves UX):
+- Date Format (display formatting)
+- FIFO/FEFO (stock selection)
+- Batch Auto-Generation (workflow efficiency)
+
+**🟢 LOW** (Nice to have):
+- Clinic Name display
+- Currency formatting
+- Barcode generation
 
 ### Phase 1: UI Refinement (No Functional Changes)
 - [ ] Change Reload → Cancel button

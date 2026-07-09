@@ -3,11 +3,46 @@
 ## Commit
 `99c81b8`
 
-## Summary
+## Executive Summary
 **Total Settings: 23**
 - Saved to DB: ✅ 23/23 (100%)
 - Used by System: ❌ 0/23 (0%)
-- **Status: 100% PLACEHOLDER**
+- **Status: All settings are persisted but currently not referenced by runtime logic**
+
+The Inventory Settings module is fully functional as a **persistence layer** (save/load), but it is not integrated with the application's **runtime behavior**. All 23 settings are stored successfully in the database but are currently unused by business logic, scheduled jobs, or UI workflows.
+
+---
+
+## Technical Summary
+
+| Layer | Status | Details |
+|---|---|---|
+| **Settings Persistence** | ✅ Complete | API saves/loads correctly from `inv_settings` table |
+| **Settings Retrieval** | ✅ Complete | Frontend loads and displays all settings |
+| **Settings Consumption** | ❌ Missing | No service/component reads these values at runtime |
+| **Business Logic Integration** | ❌ Missing | Settings don't influence transactions, reports, forms |
+| **Scheduler Integration** | ❌ Missing | No scheduler for email/notification settings |
+| **Runtime Configuration** | ❌ Missing | Application uses hardcoded values instead |
+
+---
+
+## Root Cause
+
+The settings page correctly stores configuration values in the database. However, no application services, business logic, schedulers, or API endpoints currently read these values during execution. Consequently, modifying any setting has no runtime effect. Completing the implementation requires connecting these stored values to the relevant services rather than redesigning the settings module itself.
+
+---
+
+## Severity by Feature Area
+
+| Feature Area | Severity | Impact | Why |
+|---|---|---|---|
+| Default Warehouse Ignored | 🔴 High | Users cannot create products/POs/stock transactions efficiently | Should auto-fill forms in 5+ places |
+| Timezone Ignored | 🔴 High | All timestamps use hardcoded `Asia/Kolkata` | Reports, ledger, exports all wrong for other zones |
+| PO Number Prefix Ignored | 🔴 High | PO numbers don't follow configured prefix | System generates internal IDs only |
+| Notification System Absent | 🔴 High | No email alerts ever sent regardless of settings | Email scheduler not implemented |
+| Date Format Ignored | 🟡 Medium | All dates display in system format regardless of setting | Low priority but affects reports/exports |
+| FIFO/FEFO Not Implemented | 🟡 Medium | Batch selection doesn't follow configured logic | Stock issuance uses arbitrary order |
+| Batch Auto-Generation Absent | 🟡 Medium | Manual batch creation required even when configured | GRN processing less efficient |
 
 ---
 
@@ -116,6 +151,33 @@ Should be added to Settings page:
 
 ---
 
+## Implementation Recommendations
+
+### Effort Estimates
+
+| Feature | Effort | Priority | Impact | Details |
+|---|---|---|---|---|
+| Clinic Name display | XS | Low | Display only | Add to dashboard, reports |
+| Default Warehouse | S | High | Forms | Auto-fill in 5+ forms |
+| Low Stock Threshold | S | Medium | Reports | Filter Low Stock report |
+| Expiry Warning Days | S | Medium | Reports | Filter Expiry report |
+| PO Prefix generation | M | High | Numbering | Implement sequential numbering |
+| Timezone system-wide | M | High | Critical | Update all timestamps, reports |
+| Date Format | M | Medium | Formatting | Apply to all date displays |
+| Default Tax rate | M | Medium | Forms | Auto-fill in PO/Invoice |
+| Email Scheduler | L | High | Notifications | Build cron/scheduled job |
+| FIFO/FEFO Logic | XL | Medium | Complex | Implement batch selection algorithm |
+| Approval Workflow | XL | Low | Complex | Full PO approval system |
+
+**Effort Scale:**
+- **XS** (Extra Small): 15-30 min
+- **S** (Small): 1-2 hours
+- **M** (Medium): 3-5 hours
+- **L** (Large): 6-12 hours
+- **XL** (Extra Large): 16+ hours (multiple sessions)
+
+---
+
 ## Recommendations
 
 ### Immediate Actions
@@ -157,9 +219,22 @@ To verify settings are working:
 
 ---
 
-## Status
-**BLOCKING**: Settings page is 100% non-functional.
-Users can edit settings but they have NO EFFECT on system.
+## Conclusion
 
-**Recommended**: Disable all settings with "Coming Soon" badge
-until actual implementation is done.
+The Inventory Settings module is fully functional as a persistence layer (save/load), but it is not integrated with the application's runtime behavior. All 23 settings are stored successfully in the database but are currently unused by business logic, scheduled jobs, or UI workflows. 
+
+Completing the implementation requires connecting these stored values to the relevant services rather than redesigning the settings module itself. Priority should be given to the High-severity items (Default Warehouse, Timezone, PO Prefix, Email Notifications) which directly impact user workflows.
+
+---
+
+## Status
+
+| Aspect | Status | Notes |
+|---|---|---|
+| Settings Storage | ✅ Working | Saves to DB correctly |
+| Settings Retrieval | ✅ Working | UI loads values properly |
+| Settings Application | ❌ Missing | No runtime consumption |
+| Persistence across refresh | ✅ Working | Values persisted in DB |
+| System behavior impact | ❌ None | All settings are inert |
+
+**Overall Assessment**: Fully functional persistence layer, zero runtime integration.
