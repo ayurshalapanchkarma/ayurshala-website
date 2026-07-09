@@ -190,11 +190,11 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
 
         {/* Main content */}
         <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
-          {/* Global Inventory Header */}
+          {/* Global Inventory Header - Fixed positioning handled in component */}
           <InventoryHeader />
 
-          {/* Content area */}
-          <div className="flex-1 overflow-auto">
+          {/* Content area - Adds top padding for fixed header */}
+          <div className="flex-1 overflow-auto pt-24 sm:pt-28 md:pt-32 px-4 sm:px-6">
             {children}
           </div>
         </div>
