@@ -759,7 +759,7 @@ export default function PurchaseOrdersPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handlePreview(order)}
-                            className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                            className="h-9 w-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                             title="Preview"
                           >
                             <Eye size={20} className="text-sky-500" />
@@ -767,7 +767,7 @@ export default function PurchaseOrdersPage() {
                           {order.status === 'draft' && (
                             <button
                               onClick={() => handleEdit(order)}
-                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                              className="h-9 w-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                               title="Edit"
                             >
                               <Edit2 size={20} className="text-amber-500" />
@@ -777,7 +777,7 @@ export default function PurchaseOrdersPage() {
                             <button
                               onClick={() => setSubmitConfirmPO(order)}
                               disabled={actionInProgress}
-                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800"
+                              className="h-9 w-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                               title="Submit for Approval"
                             >
                               <CheckCircle size={20} className="text-emerald-500" />
@@ -787,7 +787,7 @@ export default function PurchaseOrdersPage() {
                             <button
                               onClick={() => setApproveConfirmPO(order)}
                               disabled={actionInProgress}
-                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800"
+                              className="h-9 w-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                               title="Approve"
                             >
                               <CheckCircle size={20} className="text-emerald-500" />
@@ -796,7 +796,7 @@ export default function PurchaseOrdersPage() {
                           {order.status === 'draft' && (
                             <button
                               onClick={() => setDeleteConfirmPO(order)}
-                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                              className="h-9 w-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                               title="Cancel"
                             >
                               <Trash2 size={20} className="text-red-500" />

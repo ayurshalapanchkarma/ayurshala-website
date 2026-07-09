@@ -1032,7 +1032,7 @@ export default function StockAdjustmentsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleViewAdjustment(adj.uuid)}
-                            className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                            className="h-9 w-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                             title="View details"
                           >
                             <Eye size={20} className="text-sky-500" />
@@ -1041,14 +1041,14 @@ export default function StockAdjustmentsPage() {
                             <>
                               <button
                                 onClick={() => handleEditAdjustment(adj.uuid)}
-                                className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                                className="h-9 w-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                                 title="Edit adjustment"
                               >
                                 <Edit size={20} className="text-amber-500" />
                               </button>
                               <button
                                 onClick={() => setDeleteConfirmAdj(adj)}
-                                className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center dark:border-slate-600 dark:bg-slate-800"
+                                className="h-9 w-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                                 title="Delete adjustment"
                               >
                                 <Trash2 size={20} className="text-red-500" />
