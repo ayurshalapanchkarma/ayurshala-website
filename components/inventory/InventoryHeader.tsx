@@ -11,16 +11,16 @@ import { toast } from 'sonner'
  * InventoryHeader - Premium glassmorphic header matching Ayurshala website
  * 
  * Features:
- * - Floating glass panel design
+ * - Floating glass panel with warm Ayurvedic gold/orange theme
  * - Ayurshala logo (44-48px)
- * - "Ayurshala Inventory" title with subtitle
- * - Subtitle: "Inventory • Procurement • Stock Control"
+ * - "Ayurshala Admin Console" title
  * - Theme toggle (glass icon button)
  * - Logout (outlined pill button)
+ * - Date display
  * - Smooth fade + slide-down animation on load
  * - Sticky positioning
  * - Light & Dark mode support
- * - Premium, minimal, elegant design
+ * - Premium, minimal, elegant design matching website branding
  */
 export default function InventoryHeader() {
   const router = useRouter()
@@ -57,6 +57,17 @@ export default function InventoryHeader() {
     toast.success('Logged out successfully')
   }
 
+  // Get current date for display
+  const getFormattedDate = () => {
+    const now = new Date()
+    return now.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    })
+  }
+
   if (!mounted) return null
 
   return (
@@ -67,50 +78,48 @@ export default function InventoryHeader() {
       className="sticky top-0 z-50 px-5 mt-4 mb-5"
     >
       <div
-        className="rounded-2xl overflow-hidden transition-all duration-300"
+        className="rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300"
         style={{
           background: theme === 'dark'
-            ? 'rgba(15, 23, 42, 0.65)'
-            : 'rgba(255, 255, 255, 0.70)',
-          backdropFilter: 'blur(20px) saturate(180%) brightness(1.05)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%) brightness(1.05)',
-          border: theme === 'dark'
-            ? '1px solid rgba(255, 255, 255, 0.10)'
-            : '1px solid rgba(226, 232, 240, 0.80)',
-          boxShadow: theme === 'dark'
-            ? '0 8px 32px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-            : '0 8px 32px rgba(203, 213, 225, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+            ? 'rgba(15, 26, 18, 0.08)'
+            : 'rgba(255, 255, 255, 0.08)',
+          backdropFilter: 'blur(12px) saturate(180%) contrast(1.05) brightness(1.08)',
+          WebkitBackdropFilter: 'blur(12px) saturate(180%) contrast(1.05) brightness(1.08)',
+          border: '1px solid rgba(232, 98, 26, 0.18)',
+          boxShadow: '0 8px 32px rgba(232, 98, 26, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 0 rgba(255, 255, 255, 0.1)',
         }}
       >
-        <div className="px-8 py-5 flex items-center justify-between gap-4">
+        <div className="px-3 sm:px-6 md:px-8 py-4 sm:py-5 flex items-center justify-between gap-4">
           
-          {/* Left Section: Logo + Title & Subtitle */}
-          <div className="flex items-center gap-4 flex-1 min-w-0">
+          {/* Left Section: Logo + Title */}
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Image
                 src="/ayurshala_text.png"
                 alt="Ayurshala"
-                width={48}
-                height={48}
+                width={260}
+                height={80}
                 priority
-                className="h-12 w-auto"
+                className="h-8 sm:h-10 w-auto"
               />
             </div>
 
-            {/* Title & Subtitle */}
+            {/* Title */}
             <div className="flex flex-col min-w-0">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight whitespace-nowrap">
-                Ayurshala Inventory
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-stone-900 dark:text-white leading-tight whitespace-nowrap">
+                Admin Console
               </h1>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 tracking-wide mt-0.5">
-                Inventory • Procurement • Stock Control
-              </p>
             </div>
           </div>
 
-          {/* Right Section: Theme Toggle + Logout */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Right Section: Date + Theme Toggle + Logout */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">{/* Date Display */}
+            <span className="hidden sm:inline text-xs sm:text-sm text-stone-700 dark:text-gray-400 px-3 py-2 rounded-lg" style={{
+              background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(232, 98, 26, 0.05)',
+            }}>
+              {getFormattedDate()}
+            </span>
             {/* Theme Toggle - Glass Icon Button */}
             <button
               onClick={toggleTheme}
@@ -120,26 +129,26 @@ export default function InventoryHeader() {
               style={{
                 background: theme === 'dark'
                   ? 'rgba(255, 255, 255, 0.08)'
-                  : 'rgba(226, 232, 240, 0.40)',
+                  : 'rgba(232, 98, 26, 0.10)',
                 border: theme === 'dark'
                   ? '1px solid rgba(255, 255, 255, 0.12)'
-                  : '1px solid rgba(203, 213, 225, 0.60)',
+                  : '1px solid rgba(232, 98, 26, 0.20)',
               }}
               onMouseEnter={(e) => {
                 const target = e.currentTarget as HTMLElement
                 target.style.background = theme === 'dark'
                   ? 'rgba(255, 255, 255, 0.12)'
-                  : 'rgba(226, 232, 240, 0.60)'
+                  : 'rgba(232, 98, 26, 0.15)'
               }}
               onMouseLeave={(e) => {
                 const target = e.currentTarget as HTMLElement
                 target.style.background = theme === 'dark'
                   ? 'rgba(255, 255, 255, 0.08)'
-                  : 'rgba(226, 232, 240, 0.40)'
+                  : 'rgba(232, 98, 26, 0.10)'
               }}
             >
               {theme === 'light' ? (
-                <Moon className="w-4 h-4 text-gray-700" />
+                <Moon className="w-4 h-4 text-orange-600" />
               ) : (
                 <Sun className="w-4 h-4 text-amber-300" />
               )}
@@ -148,36 +157,36 @@ export default function InventoryHeader() {
             {/* Logout Button - Outlined Pill */}
             <button
               onClick={handleLogout}
-              className="px-4 py-2 flex items-center gap-2 text-sm font-medium transition-all duration-200 rounded-full backdrop-blur-sm"
+              className="px-3 sm:px-4 py-2 flex items-center gap-2 text-xs sm:text-sm font-medium transition-all duration-200 rounded-full backdrop-blur-sm"
               style={{
-                color: theme === 'dark' ? '#e0e7ff' : '#1f2937',
+                color: theme === 'dark' ? '#fbbf24' : '#ea580c',
                 background: theme === 'dark'
                   ? 'rgba(255, 255, 255, 0.05)'
-                  : 'rgba(226, 232, 240, 0.30)',
+                  : 'rgba(232, 98, 26, 0.10)',
                 border: theme === 'dark'
                   ? '1px solid rgba(255, 255, 255, 0.15)'
-                  : '1px solid rgba(203, 213, 225, 0.70)',
+                  : '1px solid rgba(232, 98, 26, 0.30)',
               }}
               onMouseEnter={(e) => {
                 const target = e.currentTarget as HTMLElement
                 target.style.background = theme === 'dark'
                   ? 'rgba(255, 255, 255, 0.10)'
-                  : 'rgba(226, 232, 240, 0.50)'
+                  : 'rgba(232, 98, 26, 0.15)'
                 target.style.boxShadow = theme === 'dark'
-                  ? '0 0 12px rgba(255, 255, 255, 0.08)'
-                  : '0 0 12px rgba(203, 213, 225, 0.20)'
+                  ? '0 0 12px rgba(251, 191, 36, 0.10)'
+                  : '0 0 12px rgba(232, 98, 26, 0.15)'
               }}
               onMouseLeave={(e) => {
                 const target = e.currentTarget as HTMLElement
                 target.style.background = theme === 'dark'
                   ? 'rgba(255, 255, 255, 0.05)'
-                  : 'rgba(226, 232, 240, 0.30)'
+                  : 'rgba(232, 98, 26, 0.10)'
                 target.style.boxShadow = 'none'
               }}
               aria-label="Logout"
             >
               <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Log Out</span>
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
