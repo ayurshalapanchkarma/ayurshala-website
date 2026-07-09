@@ -8,20 +8,28 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 
+interface AdminHeaderProps {
+  title?: string
+  subtitle?: string
+}
+
 /**
  * AdminHeader - Premium glasmorphic header matching Ayurshala website
  * 
  * Features:
  * - Glasmorphic design (backdrop blur + transparency)
- * - Ayurshala branding (logo + "Ayurshala Admin")
- * - Subtitle: "Clinical Management System"
+ * - Ayurshala branding (logo + customizable title)
+ * - Optional subtitle
  * - Theme toggle (light/dark mode)
  * - Logout button
  * - Responsive design (mobile, tablet, desktop)
  * - Matches website header styling exactly
  * - Light & Dark theme support
  */
-export default function AdminHeader() {
+export default function AdminHeader({ 
+  title = 'Ayurshala Admin',
+  subtitle = 'Clinical Management System'
+}: AdminHeaderProps) {
   const router = useRouter()
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [mounted, setMounted] = useState(false)
@@ -105,10 +113,10 @@ export default function AdminHeader() {
             {/* Title + Subtitle */}
             <div className="flex flex-col min-w-0 hidden sm:flex">
               <h1 className={`text-sm sm:text-base font-semibold tracking-wide ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                Ayurshala Admin
+                {title}
               </h1>
               <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                Clinical Management System
+                {subtitle}
               </p>
             </div>
           </div>
@@ -116,7 +124,7 @@ export default function AdminHeader() {
           {/* Right Section: Theme Toggle + Logout */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             
-            {/* Theme Toggle Button */}
+            {/* Theme Toggle Button - Icon only */}
             <button
               onClick={toggleTheme}
               title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}

@@ -81,28 +81,27 @@ export default function InventoryOverview() {
 
   return (
     <InventoryPageWrapper title="Inventory Overview" subtitle="Track your inventory at a glance">
-      <div className="space-y-6">
+      <div>
         {/* KPI Cards */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Key Metrics</h2>
-            <button
-              onClick={fetchMetrics}
-              disabled={loading}
-              className="text-xs px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition disabled:opacity-50"
-              title="Refresh metrics"
-            >
-              {loading ? <Loader className="w-4 h-4 animate-spin inline" /> : '↻ Refresh'}
-            </button>
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Key Metrics</h2>
+          <button
+            onClick={fetchMetrics}
+            disabled={loading}
+            className="text-xs px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition disabled:opacity-50"
+            title="Refresh metrics"
+          >
+            {loading ? <Loader className="w-4 h-4 animate-spin inline" /> : '↻ Refresh'}
+          </button>
+        </div>
 
-          {lastRefresh && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-              Last updated: {lastRefresh.toLocaleTimeString()}
-            </p>
-          )}
+        {lastRefresh && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            Last updated: {lastRefresh.toLocaleTimeString()}
+          </p>
+        )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {loading && !metrics ? (
               <div className="col-span-full flex justify-center py-12">
                 <Loader className="w-6 h-6 animate-spin text-gray-400" />
@@ -124,160 +123,6 @@ export default function InventoryOverview() {
               })
             )}
           </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div>
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {[
-              { label: 'Create Product', href: '/admin/inventory/products/create', icon: Plus },
-              { label: 'Create PO', href: '/admin/inventory/purchase-orders', icon: ShoppingCart },
-              { label: 'Receive GRN', href: '/admin/inventory/grns', icon: Truck },
-              { label: 'Adjust Stock', href: '/admin/inventory/adjustments', icon: TrendingUp },
-              { label: 'Import', action: 'import', icon: Upload },
-              { label: 'Export', action: 'export', icon: Download },
-            ].map((action, i) => {
-              const Icon = action.icon
-              const isButton = !action.href && !action.action
-
-              if (action.action === 'import') {
-                return (
-                  <div key={i} className="relative">
-                    <input
-                      type="file"
-                      id={`import-${i}`}
-                      accept=".csv,.xlsx"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0]
-                        if (!file) return
-
-                        try {
-                          const formData = new FormData()
-                          formData.append('file', file)
-
-                          const res = await fetch('/api/inventory/import', {
-                            method: 'POST',
-                            body: formData,
-                          })
-
-                          const result = await res.json()
-
-                          if (!res.ok) {
-                            toast.error(result.error || 'Import failed')
-                            return
-                          }
-
-                          toast.success(result.message)
-                          fetchMetrics() // Refresh metrics after import
-                        } catch (error) {
-                          toast.error(error instanceof Error ? error.message : 'Import failed')
-                        }
-                      }}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor={`import-${i}`}
-                      className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 transition text-center cursor-pointer block"
-                    >
-                      <div className="flex justify-center mb-2">
-                        <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                      </div>
-                      <p className="text-xs font-medium text-slate-900 dark:text-white">Import</p>
-                    </label>
-                  </div>
-                )
-              }
-
-              if (action.action === 'export') {
-                return (
-                  <div key={i} className="relative group">
-                    <button
-                      className="w-full bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 transition text-center"
-                    >
-                      <div className="flex justify-center mb-2">
-                        <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                      </div>
-                      <p className="text-xs font-medium text-slate-900 dark:text-white">Export</p>
-                    </button>
-                    
-                    {/* Export options dropdown */}
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg hidden group-hover:block z-50">
-                      <button
-                        onClick={async () => {
-                          try {
-                            const res = await fetch('/api/inventory/export?format=csv&type=products')
-                            if (!res.ok) {
-                              const error = await res.json()
-                              throw new Error(error.error || `HTTP ${res.status}`)
-                            }
-                            const blob = await res.blob()
-                            const url = window.URL.createObjectURL(blob)
-                            const a = document.createElement('a')
-                            a.href = url
-                            a.download = `inventory-products-${new Date().toISOString().split('T')[0]}.csv`
-                            document.body.appendChild(a)
-                            a.click()
-                            window.URL.revokeObjectURL(url)
-                            document.body.removeChild(a)
-                            toast.success('CSV exported successfully')
-                          } catch (error) {
-                            console.error('[CSV Export Error]', error)
-                            toast.error(error instanceof Error ? error.message : 'CSV export failed')
-                          }
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-slate-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition first:rounded-t-lg"
-                      >
-                        CSV
-                      </button>
-                      <button
-                        onClick={async () => {
-                          try {
-                            const res = await fetch('/api/inventory/export?format=excel&type=products')
-                            if (!res.ok) {
-                              const error = await res.json()
-                              throw new Error(error.error || `HTTP ${res.status}`)
-                            }
-                            const blob = await res.blob()
-                            const url = window.URL.createObjectURL(blob)
-                            const a = document.createElement('a')
-                            a.href = url
-                            a.download = `inventory-products-${new Date().toISOString().split('T')[0]}.xlsx`
-                            document.body.appendChild(a)
-                            a.click()
-                            window.URL.revokeObjectURL(url)
-                            document.body.removeChild(a)
-                            toast.success('Excel exported successfully')
-                          } catch (error) {
-                            console.error('[Excel Export Error]', error)
-                            toast.error(error instanceof Error ? error.message : 'Excel export failed')
-                          }
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-slate-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition last:rounded-b-lg"
-                      >
-                        Excel
-                      </button>
-                    </div>
-                  </div>
-                )
-              }
-
-              const Component = isButton ? 'button' : Link
-              return (
-                <Component
-                  key={i}
-                  href={!isButton ? action.href : undefined}
-                  className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 transition text-center cursor-pointer"
-                >
-                  <div className="flex justify-center mb-2">
-                    <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <p className="text-xs font-medium text-slate-900 dark:text-white">{action.label}</p>
-                </Component>
-              )
-            })}
-          </div>
-        </div>
       </div>
     </InventoryPageWrapper>
   )

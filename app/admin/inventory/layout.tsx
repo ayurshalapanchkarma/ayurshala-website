@@ -188,11 +188,14 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
-        {/* Global Admin Header */}
-        <AdminHeader />
+        {/* Inventory Header - Custom branding */}
+        <AdminHeader 
+          title="Ayurshala Inventory Console"
+          subtitle="Inventory • Procurement • Stock Control"
+        />
 
-        {/* Content area - Adds top padding for fixed header */}
-        <div className="flex-1 overflow-auto pt-4 px-4 sm:px-6">
+        {/* Content area */}
+        <div className="flex-1 overflow-auto">
           {children}
         </div>
       </div>
