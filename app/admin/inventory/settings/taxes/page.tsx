@@ -204,7 +204,7 @@ export default function TaxMasterPage() {
             setSearch(e.target.value)
             setPage(1)
           }}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
+          className="w-full px-4 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-800 dark:text-white dark:border-slate-700"
         />
       </div>
 
@@ -308,7 +308,7 @@ export default function TaxMasterPage() {
                       setFormData({ ...formData, tax_name: e.target.value })
                     }
                     placeholder="e.g., GST 5%"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
+                    className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg dark:bg-slate-800 dark:text-white dark:border-slate-700"
                   />
                   {errors.tax_name && (
                     <p className="text-red-600 text-sm mt-1">{errors.tax_name}</p>
@@ -327,7 +327,7 @@ export default function TaxMasterPage() {
                     min="0"
                     max="100"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
+                    className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg dark:bg-slate-800 dark:text-white dark:border-slate-700"
                   />
                   {errors.tax_percentage && (
                     <p className="text-red-600 text-sm mt-1">{errors.tax_percentage}</p>
@@ -344,7 +344,7 @@ export default function TaxMasterPage() {
                     setFormData({ ...formData, hsn_code: e.target.value })
                   }
                   placeholder="e.g., 9983"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
+                  className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg dark:bg-slate-800 dark:text-white dark:border-slate-700"
                 />
               </div>
 
@@ -357,7 +357,7 @@ export default function TaxMasterPage() {
                   }
                   placeholder="Optional description"
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700"
+                  className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg dark:bg-slate-800 dark:text-white dark:border-slate-700"
                 />
               </div>
             </div>
