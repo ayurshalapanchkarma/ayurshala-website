@@ -139,7 +139,7 @@ export default function InventoryOverview() {
               { label: 'Export', action: 'export', icon: Download },
             ].map((action, i) => {
               const Icon = action.icon
-              const isButton = !action.href
+              const isButton = !action.href && !action.action
 
               if (action.action === 'import') {
                 return (
