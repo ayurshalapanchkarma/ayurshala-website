@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Search, RefreshCw, Download, Package, Boxes} from 'lucide-react'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface StockItem {
   productId: string
@@ -69,6 +70,9 @@ export default function CurrentStockPage() {
         title="Current Stock"
         subtitle="Real-time stock levels"
       />
+
+      <BackButton />
+
       <div className="flex gap-3 mb-6 justify-end">
         <button onClick={() => load()} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm">
           <RefreshCw size={16} /> Refresh

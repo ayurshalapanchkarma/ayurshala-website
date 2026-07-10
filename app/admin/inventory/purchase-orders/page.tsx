@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface PurchaseOrder {
   uuid: string
@@ -432,6 +433,8 @@ export default function PurchaseOrdersPage() {
         onAdd={() => setShowCreateModal(true)}
         addButtonLabel="New Purchase Order"
       />
+
+      <BackButton />
 
       {/* Create Modal */}
       {showCreateModal && (

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Save, Settings as SettingsIcon, Loader } from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface SettingRow {
   key: string
@@ -148,6 +149,8 @@ export default function SettingsPage() {
         title="Inventory Settings"
         subtitle="Configure your inventory system"
       />
+
+      <BackButton />
 
       {/* Quick Links */}
       {/* Tax Master section removed - moved to dedicated /settings/taxes page */}

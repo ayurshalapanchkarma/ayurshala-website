@@ -5,6 +5,7 @@ import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { MasterListPage } from '@/components/inventory/MasterListPage'
 import { Ruler } from 'lucide-react'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
+import { BackButton } from '@/components/inventory/BackButton'
 
 // Simple toast implementation
 const toast = {
@@ -92,6 +93,8 @@ export default function UnitsPage() {
         }}
         addButtonLabel="Add Unit"
       />
+
+      <BackButton />
 
       <MasterListPage
         title="Units"

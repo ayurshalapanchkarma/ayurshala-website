@@ -52,6 +52,7 @@ export function MasterListPage({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -61,15 +62,25 @@ export function MasterListPage({
   const [isDeleting, setIsDeleting] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setPage(1)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
   useEffect(() => {
     loadItems()
-  }, [searchTerm, page])
+  }, [debouncedSearch, page])
 
   async function loadItems() {
     try {
       setLoading(true)
       const params = new URLSearchParams({
-        search: searchTerm,
+        search: debouncedSearch,
         page: page.toString(),
         pageSize: pageSize.toString(),
         ...(showDeletedColumn && { includeDeleted: 'true' }),
@@ -164,10 +175,7 @@ export function MasterListPage({
           type="text"
           placeholder={`Search ${title.toLowerCase()}...`}
           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value)
-            setPage(1)
-          }}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 rounded-lg"
         />
       </div>

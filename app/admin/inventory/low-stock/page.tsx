@@ -19,6 +19,7 @@ import EditProductModal from '@/components/inventory/EditProductModal'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 import { useProductActions } from '@/lib/hooks/useProductActions'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface LowStockItem {
   productUuid: string
@@ -247,6 +248,8 @@ export default function LowStockPage() {
         title="Low Stock"
         subtitle="Products below minimum stock"
       />
+
+      <BackButton />
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">          <div>

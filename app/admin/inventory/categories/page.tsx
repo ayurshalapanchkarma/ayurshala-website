@@ -6,6 +6,7 @@ import Link from 'next/link'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
+import { BackButton } from '@/components/inventory/BackButton'
 
 // Simple toast implementation
 const toast = {
@@ -210,6 +211,8 @@ export default function CategoriesPage() {
         }}
         addButtonLabel="Add Category"
       />
+
+      <BackButton />
 
       {error && (
         <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">

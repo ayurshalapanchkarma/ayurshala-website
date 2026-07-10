@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import DoctorsNavbar from '@/components/admin/DoctorsNavbar'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface Doctor {
   id: string
@@ -180,6 +181,8 @@ export default function DoctorsPage() {
       {/* Main Content - offset below fixed header */}
       <div className="min-h-screen bg-gradient-to-br from-white to-orange-50 dark:from-slate-950 dark:to-orange-950/20 pt-28 sm:pt-32 md:pt-36">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <BackButton href="/admin" />
+
           {/* Filters and Actions */}
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex items-center gap-3">

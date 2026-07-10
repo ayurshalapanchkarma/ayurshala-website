@@ -23,6 +23,7 @@ import EditProductModal from '@/components/inventory/EditProductModal'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
 import { useProductActions } from '@/lib/hooks/useProductActions'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface ExpiringBatchItem {
   batchUuid: string
@@ -270,6 +271,9 @@ export default function ExpiringStockPage() {
         title="Expiring Stock"
         subtitle="Products near expiry"
       />
+
+      <BackButton />
+
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">          <div>

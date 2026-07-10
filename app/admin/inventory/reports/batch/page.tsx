@@ -4,6 +4,7 @@ import { Search, Download, AlertTriangle, PackageSearch} from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface BatchItem { uuid: string; product_code: string; product_name: string; batch_number: string; quantity: number; mfg_date: string; exp_date: string }
 interface ListResponse { data: BatchItem[]; total: number; page: number; pageSize: number; totalPages: number }
@@ -43,6 +44,8 @@ export default function BatchReportPage() {
         title="Batch Report"
         subtitle="View all product batches and expiry details"
       />
+
+      <BackButton />
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="relative">

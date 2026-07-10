@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface TaxMaster {
   uuid: string
@@ -193,6 +194,8 @@ export default function TaxMasterPage() {
         onAdd={() => openForm()}
         addButtonLabel="New Tax"
       />
+
+      <BackButton />
 
       {/* Search */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">

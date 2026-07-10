@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, X, Truck} from 'lucide-react'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
+import { BackButton } from '@/components/inventory/BackButton'
 
 // Simple toast implementation
 const toast = {
@@ -275,6 +276,8 @@ export default function SuppliersPage() {
         }}
         addButtonLabel="Add Supplier"
       />
+
+      <BackButton />
 
       {/* Search */}
       <div className="mb-6">

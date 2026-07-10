@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface Transaction {
   uuid: string
@@ -237,6 +238,8 @@ export default function TransactionsPage() {
           {showStats ? 'Hide' : 'Show'} Stats
         </button>
       </div>
+
+      <BackButton />
 
       {/* Summary Cards */}
       {showStats && (

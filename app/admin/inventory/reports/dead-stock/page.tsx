@@ -4,6 +4,7 @@ import { Search, Ban} from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface DeadStockItem {
   uuid: string
@@ -59,6 +60,8 @@ export default function DeadStockReportPage() {
         title="Dead Stock Report"
         subtitle="Identify slow-moving or non-moving stock"
       />
+
+      <BackButton />
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="relative">

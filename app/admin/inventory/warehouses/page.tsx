@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface Warehouse {
   uuid: string
@@ -191,6 +192,8 @@ export default function WarehousesPage() {
         onAdd={() => openForm()}
         addButtonLabel="New Warehouse"
       />
+
+      <BackButton />
 
       {/* Search */}
       <div className="mb-6">

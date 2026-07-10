@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface StockAdjustment {
   uuid: string
@@ -415,6 +416,8 @@ export default function StockAdjustmentsPage() {
         onAdd={() => setShowCreateModal(true)}
         addButtonLabel="New Adjustment"
       />
+
+      <BackButton />
 
       {/* Create Modal */}
       {showCreateModal && (

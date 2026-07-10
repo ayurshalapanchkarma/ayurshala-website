@@ -5,6 +5,7 @@ import { Search, Download, ShoppingCart} from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { InventoryPagination } from '@/components/inventory/InventoryPagination'
+import { BackButton } from '@/components/inventory/BackButton'
 
 interface PurchaseRecord {
   uuid: string
@@ -112,6 +113,8 @@ export default function PurchaseRegisterPage() {
           Export
         </button>
       </div>
+
+      <BackButton />
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="relative">
