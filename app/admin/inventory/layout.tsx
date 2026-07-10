@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import AdminHeader from '@/components/admin/AdminHeader'
+import InventoryNavbar from '@/components/admin/InventoryNavbar'
 import { 
   ChevronDown, Menu, X, Home, Tooltip,
   LayoutDashboard, Package2, Tags, Ruler, Factory, Truck as TruckIcon, MapPin,
@@ -183,9 +183,9 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
-        {/* Inventory Header - Full width, no margins */}
+        {/* Inventory Navbar - Full width, no margins */}
         <div className="px-0">
-          <AdminHeader 
+          <InventoryNavbar 
             title="Ayurshala Inventory Console"
             subtitle="Inventory • Procurement • Stock Control"
           />

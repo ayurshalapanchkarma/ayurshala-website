@@ -114,6 +114,20 @@
     border-color: rgba(232, 98, 26, 0.75);
     box-shadow: 0 0 20px rgba(232,98,26,0.15);
   }
+  
+  /* Inventory form inputs - light theme fix */
+  input, select, textarea {
+    @apply bg-white dark:bg-slate-700;
+    @apply text-slate-900 dark:text-white;
+    @apply border-slate-300 dark:border-slate-600;
+    @apply placeholder:text-slate-400 dark:placeholder:text-slate-400;
+  }
+  
+  input:focus, select:focus, textarea:focus {
+    @apply border-emerald-500 dark:border-emerald-500;
+    @apply ring-2 ring-emerald-500/20;
+    @apply outline-none;
+  }
   .section-title {
     @apply font-serif text-4xl md:text-5xl font-light leading-tight;
     color: #1a1008;
