@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Save, Settings as SettingsIcon, Loader } from 'lucide-react'
+import { Save, Settings as SettingsIcon, Loader, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { BackButton } from '@/components/inventory/BackButton'
@@ -55,6 +55,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, SettingRow>>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [sendingTestEmail, setSendingTestEmail] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
 
   // Load settings from API
@@ -136,6 +137,29 @@ export default function SettingsPage() {
   const handleCancel = () => {
     loadSettings()
     setHasChanges(false)
+  }
+
+  const sendTestEmail = async () => {
+    try {
+      setSendingTestEmail(true)
+      const res = await fetch('/api/inventory/settings/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: 'Admin' }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to send test email')
+      }
+
+      toast.success('Test email sent successfully! Check your inbox.')
+    } catch (error) {
+      console.error('[Test Email Error]', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to send test email')
+    } finally {
+      setSendingTestEmail(false)
+    }
   }
 
   const categories = Array.from(new Set(Object.values(settings).map(s => s.category)))
@@ -233,6 +257,30 @@ export default function SettingsPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Test Notification Section */}
+      <div>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
+          <div className="bg-gray-50 dark:bg-slate-700/50 px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+            <h3 className="font-semibold text-slate-900 dark:text-white">Test Notification</h3>
+          </div>
+
+          <div className="p-6">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Send a test email to verify your notification system configuration, including SMTP settings, branding, and email formatting.
+            </p>
+
+            <button
+              onClick={sendTestEmail}
+              disabled={sendingTestEmail}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 transition"
+            >
+              {sendingTestEmail ? <Loader size={16} className="animate-spin" /> : <Mail size={16} />}
+              {sendingTestEmail ? 'Sending...' : 'Send Test Email'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
