@@ -129,7 +129,7 @@ export class StockService {
       let query = getSupabase()
         .from('inv_products')
         .select(`
-          uuid, product_code, product_name, generic_name, reorder_level, min_stock, is_active,
+          uuid, product_code, product_name, generic_name, reorder_level, minimum_stock, is_active,
           category:inv_categories(name),
           unit:inv_units(name, short_name)
         `, { count: 'exact' })
@@ -206,7 +206,7 @@ export class StockService {
               unit_short: product.unit?.short_name,
               current_stock: currentStock,
               reorder_level: product.reorder_level ?? 0,
-              min_stock: product.min_stock ?? 0,
+              min_stock: product.minimum_stock ?? 0,
               is_low_stock: isLowStock,
               batches_count: batchCount ?? 0,
             } as CurrentStock
