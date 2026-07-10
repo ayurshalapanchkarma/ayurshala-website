@@ -216,7 +216,10 @@ export default function StockLedgerPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto space-y-4">
+
+      <BackButton />
+
       <InventoryPageHeader
         icon={BookOpen}
         iconColor="text-cyan-600 dark:text-cyan-400"
@@ -225,10 +228,8 @@ export default function StockLedgerPage() {
         subtitle="Stock transaction history"
       />
 
-      <BackButton />
-
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -336,7 +337,7 @@ export default function StockLedgerPage() {
       {/* Summary */}
       {ledgerData && (
         <>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-4">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">Product</p>
@@ -376,7 +377,7 @@ export default function StockLedgerPage() {
           </div>
 
           {/* Ledger Table */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">

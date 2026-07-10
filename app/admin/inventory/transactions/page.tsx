@@ -219,8 +219,11 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between gap-4 mb-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-4">
+
+      <BackButton />
+
+      <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
           <InventoryPageHeader
             icon={ArrowLeftRight}
@@ -239,50 +242,47 @@ export default function TransactionsPage() {
         </button>
       </div>
 
-      <BackButton />
-
       {/* Summary Cards */}
       {showStats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Today's Transactions</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.today}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-5">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Today's Transactions</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{stats.today}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Stock In</p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-5">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Stock In</p>
+            <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">
               {stats.stockIn.toFixed(2)}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Stock Out</p>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-5">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Stock Out</p>
+            <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-1">
               {stats.stockOut.toFixed(2)}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Movements</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.total}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-5">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Movements</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{stats.total}</p>
           </div>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setPage(1)
-              }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-gray-700 dark:text-white"
-            />
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setPage(1)
+            }}
+            className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+          />
+        </div>
 
           <select
             value={product_uuid}
@@ -290,7 +290,7 @@ export default function TransactionsPage() {
               setProductUuid(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-gray-700 dark:text-white"
+            className="h-11 px-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
           >
             <option value="">All Products</option>
             {products.map((p) => (
@@ -306,7 +306,7 @@ export default function TransactionsPage() {
               setMovementType(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-gray-700 dark:text-white"
+            className="h-11 px-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
           >
             <option value="">All Types</option>
             <option value="PURCHASE">Purchase</option>
@@ -325,7 +325,7 @@ export default function TransactionsPage() {
               setDateFrom(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-gray-700 dark:text-white"
+            className="h-11 px-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
           />
 
           <input
@@ -335,25 +335,24 @@ export default function TransactionsPage() {
               setDateTo(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-gray-700 dark:text-white"
+            className="h-11 px-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
           />
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <div className="flex gap-2">
           <button
             onClick={exportCSV}
             disabled={exporting || transactions.length === 0}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2 text-sm"
           >
-            {exporting && <Loader size={18} className="animate-spin" />}
-            <Download size={18} />
+            {exporting && <Loader size={16} className="animate-spin" />}
+            <Download size={16} />
             Export CSV
           </button>
         </div>
-      </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">

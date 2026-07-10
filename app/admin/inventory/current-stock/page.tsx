@@ -1,17 +1,32 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, RefreshCw, Download, Package, Boxes} from 'lucide-react'
+import { Search, RefreshCw, Download, Package, Boxes } from 'lucide-react'
 import InventoryPageHeader from '@/components/inventory/InventoryPageHeader'
 import { BackButton } from '@/components/inventory/BackButton'
+import { InventoryPagination } from '@/components/inventory/InventoryPagination'
 
 interface StockItem {
-  productId: string
-  productName: string
-  sku: string
-  quantity: number
-  value: number
-  batchCount: number
+  product_uuid: string
+  product_code: string
+  product_name: string
+  generic_name?: string
+  category?: string
+  unit_name?: string
+  unit_short?: string
+  current_stock: number
+  reorder_level: number
+  min_stock: number
+  is_low_stock: boolean
+  batches_count: number
+}
+
+interface StockResponse {
+  data: StockItem[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
 }
 
 export default function CurrentStockPage() {
@@ -19,39 +34,61 @@ export default function CurrentStockPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const pageSize = 20
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [search])
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      const res = await fetch('/api/inventory/reports/current-stock')
-      if (!res.ok) throw new Error('Failed to load current stock')
-      const data = await res.json()
-      setItems(data.data || data || [])
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        search: debouncedSearch,
+      })
+      const res = await fetch(`/api/inventory/stock?${params}`)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `Server error ${res.status}`)
+      }
+      const data: StockResponse = await res.json()
+      setItems(data.data || [])
+      setTotal(data.total || 0)
+      setTotalPages(data.totalPages || 1)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load')
+      setError(e instanceof Error ? e.message : 'Failed to load stock data')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [page, debouncedSearch])
 
   useEffect(() => { load() }, [load])
 
-  const filtered = items.filter(
-    i => i.productName?.toLowerCase().includes(search.toLowerCase()) ||
-         i.sku?.toLowerCase().includes(search.toLowerCase())
-  )
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
-  const totalValue = filtered.reduce((s, i) => s + (i.value || 0), 0)
-  const totalUnits = filtered.reduce((s, i) => s + (i.quantity || 0), 0)
-
   function exportCSV() {
-    const rows = [['Product', 'SKU', 'Quantity', 'Value (₹)', 'Batches']]
-    filtered.forEach(i => rows.push([i.productName, i.sku, String(i.quantity), String(i.value), String(i.batchCount)]))
-    const csv = rows.map(r => r.join(',')).join('\n')
+    const rows = [['Product Code', 'Product Name', 'Category', 'Unit', 'Current Stock', 'Reorder Level', 'Batches', 'Status']]
+    items.forEach(i => rows.push([
+      i.product_code,
+      i.product_name,
+      i.category || '',
+      i.unit_name || '',
+      String(i.current_stock),
+      String(i.reorder_level),
+      String(i.batches_count),
+      i.current_stock === 0 ? 'Out of Stock' : i.is_low_stock ? 'Low Stock' : 'In Stock',
+    ]))
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -61,8 +98,14 @@ export default function CurrentStockPage() {
     URL.revokeObjectURL(url)
   }
 
+  const outOfStock = items.filter(i => i.current_stock === 0).length
+  const lowStock = items.filter(i => i.is_low_stock && i.current_stock > 0).length
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto space-y-4">
+
+      <BackButton />
+
       <InventoryPageHeader
         icon={Boxes}
         iconColor="text-green-600 dark:text-green-400"
@@ -71,94 +114,111 @@ export default function CurrentStockPage() {
         subtitle="Real-time stock levels"
       />
 
-      <BackButton />
-
-      <div className="flex gap-3 mb-6 justify-end">
-        <button onClick={() => load()} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm">
-          <RefreshCw size={16} /> Refresh
+      {/* Action buttons */}
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={() => load()}
+          className="flex items-center gap-2 px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm"
+        >
+          <RefreshCw size={15} /> Refresh
         </button>
-        <button onClick={() => {
-          const rows = [['Product', 'SKU', 'Quantity', 'Value (₹)', 'Batches']]
-          filtered.forEach(i => rows.push([i.productName, i.sku, String(i.quantity), String(i.value), String(i.batchCount)]))
-          const csv = rows.map(r => r.join(',')).join('\n')
-          const blob = new Blob([csv], { type: 'text/csv' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `current-stock-${new Date().toISOString().slice(0, 10)}.csv`
-          a.click()
-          URL.revokeObjectURL(url)
-        }} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 text-sm">
-          <Download size={16} /> Export CSV
+        <button
+          onClick={exportCSV}
+          className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 text-sm"
+        >
+          <Download size={15} /> Export CSV
         </button>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white dark:bg-slate-800 rounded-lg border p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Total Products</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{filtered.length}</p>
+      {/* Metric cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Products</p>
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{total}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-lg border p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Total Units</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalUnits.toLocaleString()}</p>
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">In Stock</p>
+          <p className="text-3xl font-bold text-green-600 mt-1">{total - outOfStock - lowStock}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-lg border p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Inventory Value</p>
-          <p className="text-2xl font-bold text-green-600">₹{totalValue.toLocaleString()}</p>
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Low Stock</p>
+          <p className="text-3xl font-bold text-yellow-600 mt-1">{lowStock}</p>
         </div>
-      </div>
-
-      {error && <div className="mb-4 bg-red-50 border border-red-200 p-4 rounded-lg text-red-700">{error}</div>}
-
-      <div className="bg-white dark:bg-slate-800 rounded-lg border p-4 mb-6">
-        <div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-700 rounded-lg px-4 py-2">
-          <Search size={18} className="text-gray-400" />
-          <input
-            className="flex-1 bg-white dark:bg-transparent outline-none text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400"
-            placeholder="Search by product or SKU..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1) }}
-          />
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Out of Stock</p>
+          <p className="text-3xl font-bold text-red-600 mt-1">{outOfStock}</p>
         </div>
       </div>
 
+      {/* Search */}
+      <div className="relative">
+        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Search by product or code..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+        />
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      {/* Table */}
       {loading ? (
-        <div className="flex justify-center py-20 text-gray-500">Loading stock data...</div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border p-12 text-center">
+        <div className="flex justify-center py-16 text-gray-500">Loading stock data...</div>
+      ) : items.length === 0 ? (
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
           <Package size={40} className="mx-auto text-gray-400 mb-3" />
-          <p className="text-gray-600 dark:text-gray-400">{search ? 'No products match your search' : 'No stock data available'}</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {search ? 'No products match your search' : 'No stock data available'}
+          </p>
         </div>
       ) : (
         <>
-          <div className="bg-white dark:bg-slate-800 rounded-lg border overflow-x-auto">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b">
+              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
                 <tr>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Product</th>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">SKU</th>
-                  <th className="px-6 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Qty</th>
-                  <th className="px-6 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Value (₹)</th>
-                  <th className="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Batches</th>
-                  <th className="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Status</th>
+                  <th className="px-5 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Product</th>
+                  <th className="px-5 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Code</th>
+                  <th className="px-5 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Category</th>
+                  <th className="px-5 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Stock</th>
+                  <th className="px-5 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Reorder Lvl</th>
+                  <th className="px-5 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Batches</th>
+                  <th className="px-5 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                {paginated.map(item => (
-                  <tr key={item.productId} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{item.productName}</td>
-                    <td className="px-6 py-4 text-gray-500 font-mono text-xs">{item.sku}</td>
-                    <td className="px-6 py-4 text-right font-semibold">{item.quantity}</td>
-                    <td className="px-6 py-4 text-right text-green-700 dark:text-green-400">₹{item.value?.toLocaleString() ?? 0}</td>
-                    <td className="px-6 py-4 text-center text-gray-600 dark:text-gray-400">{item.batchCount}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        item.quantity === 0 ? 'bg-red-100 text-red-700' :
-                        item.quantity <= 10 ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-green-100 text-green-700'
+                {items.map(item => (
+                  <tr key={item.product_uuid} className="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                    <td className="px-5 py-3.5 font-medium text-slate-900 dark:text-white">
+                      {item.product_name}
+                      {item.generic_name && (
+                        <span className="block text-xs text-gray-400 font-normal">{item.generic_name}</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5 font-mono text-xs text-gray-500 dark:text-gray-400">{item.product_code}</td>
+                    <td className="px-5 py-3.5 text-gray-600 dark:text-gray-400">{item.category || '—'}</td>
+                    <td className="px-5 py-3.5 text-right font-semibold text-slate-900 dark:text-white">
+                      {item.current_stock} <span className="text-xs font-normal text-gray-400">{item.unit_short}</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right text-gray-500 dark:text-gray-400">{item.reorder_level}</td>
+                    <td className="px-5 py-3.5 text-center text-gray-600 dark:text-gray-400">{item.batches_count}</td>
+                    <td className="px-5 py-3.5 text-center">
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
+                        item.current_stock === 0
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          : item.is_low_stock
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                       }`}>
-                        {item.quantity === 0 ? 'Out of Stock' : item.quantity <= 10 ? 'Low Stock' : 'In Stock'}
+                        {item.current_stock === 0 ? 'Out of Stock' : item.is_low_stock ? 'Low Stock' : 'In Stock'}
                       </span>
                     </td>
                   </tr>
@@ -166,16 +226,14 @@ export default function CurrentStockPage() {
               </tbody>
             </table>
           </div>
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Showing {Math.min((page - 1) * pageSize + 1, filtered.length)}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
-            </p>
-            <div className="flex gap-2">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded disabled:opacity-50 text-sm">Previous</button>
-              <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Page {page} of {totalPages}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-4 py-2 bg-amber-600 text-white rounded disabled:opacity-50 text-sm">Next</button>
-            </div>
-          </div>
+
+          <InventoryPagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            itemsPerPage={pageSize}
+            onPageChange={setPage}
+          />
         </>
       )}
     </div>
