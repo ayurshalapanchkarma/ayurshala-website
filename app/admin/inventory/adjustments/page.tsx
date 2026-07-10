@@ -444,7 +444,7 @@ export default function StockAdjustmentsPage() {
                   <select
                     value={formData.reason}
                     onChange={(e) => setFormData({ ...formData, reason: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                   >
                     {reasonOptions.map((r) => (
                       <option key={r} value={r}>
@@ -462,7 +462,7 @@ export default function StockAdjustmentsPage() {
                     type="date"
                     value={formData.adjustment_date}
                     onChange={(e) => setFormData({ ...formData, adjustment_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
 
@@ -473,7 +473,7 @@ export default function StockAdjustmentsPage() {
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                     rows={3}
                   />
                 </div>
@@ -520,7 +520,7 @@ export default function StockAdjustmentsPage() {
                             <select
                               value={item.product_uuid}
                               onChange={(e) => updateItem(index, 'product_uuid', e.target.value)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                             >
                               <option value="">Select product</option>
                               {products.map((p) => (
@@ -539,7 +539,7 @@ export default function StockAdjustmentsPage() {
                               <select
                                 value={item.batch_uuid || ''}
                                 onChange={(e) => updateItem(index, 'batch_uuid', e.target.value)}
-                                className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                               >
                                 <option value="">Select batch</option>
                                 {(batches[item.product_uuid] || []).map((b) => (
@@ -559,7 +559,7 @@ export default function StockAdjustmentsPage() {
                               <select
                                 value={item.adjustment_type}
                                 onChange={(e) => updateItem(index, 'adjustment_type', e.target.value as any)}
-                                className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                               >
                                 <option value="INCREASE">Increase</option>
                                 <option value="DECREASE">Decrease</option>
@@ -574,7 +574,7 @@ export default function StockAdjustmentsPage() {
                                 type="number"
                                 value={item.quantity}
                                 onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                                className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 placeholder="Qty to adjust"
                               />
                             </div>
@@ -587,7 +587,7 @@ export default function StockAdjustmentsPage() {
                             <textarea
                               value={item.notes || ''}
                               onChange={(e) => updateItem(index, 'notes', e.target.value)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                               rows={2}
                               placeholder="Additional notes for this item"
                             />
@@ -746,7 +746,7 @@ export default function StockAdjustmentsPage() {
                   <select
                     value={formData.reason}
                     onChange={(e) => setFormData({ ...formData, reason: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                   >
                     {reasonOptions.map((r) => (
                       <option key={r} value={r}>
@@ -764,7 +764,7 @@ export default function StockAdjustmentsPage() {
                     type="date"
                     value={formData.adjustment_date}
                     onChange={(e) => setFormData({ ...formData, adjustment_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
 
@@ -775,7 +775,7 @@ export default function StockAdjustmentsPage() {
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                     rows={3}
                   />
                 </div>
@@ -822,7 +822,7 @@ export default function StockAdjustmentsPage() {
                             <select
                               value={item.product_uuid}
                               onChange={(e) => updateItem(index, 'product_uuid', e.target.value)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                             >
                               <option value="">Select product</option>
                               {products.map((p) => (
@@ -841,7 +841,7 @@ export default function StockAdjustmentsPage() {
                               <select
                                 value={item.batch_uuid || ''}
                                 onChange={(e) => updateItem(index, 'batch_uuid', e.target.value)}
-                                className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                               >
                                 <option value="">Select batch</option>
                                 {(batches[item.product_uuid] || []).map((b) => (
@@ -861,7 +861,7 @@ export default function StockAdjustmentsPage() {
                               <select
                                 value={item.adjustment_type}
                                 onChange={(e) => updateItem(index, 'adjustment_type', e.target.value as any)}
-                                className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                               >
                                 <option value="INCREASE">Increase</option>
                                 <option value="DECREASE">Decrease</option>
@@ -876,7 +876,7 @@ export default function StockAdjustmentsPage() {
                                 type="number"
                                 value={item.quantity}
                                 onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                                className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 placeholder="Qty to adjust"
                               />
                             </div>
@@ -889,7 +889,7 @@ export default function StockAdjustmentsPage() {
                             <textarea
                               value={item.notes || ''}
                               onChange={(e) => updateItem(index, 'notes', e.target.value)}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 bg-white text-slate-900 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                               rows={2}
                               placeholder="Additional notes for this item"
                             />
@@ -936,7 +936,7 @@ export default function StockAdjustmentsPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-400"
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-400"
             />
           </div>
 
@@ -946,7 +946,7 @@ export default function StockAdjustmentsPage() {
               setStatus(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            className="px-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Status</option>
             <option value="draft">Draft</option>
@@ -960,7 +960,7 @@ export default function StockAdjustmentsPage() {
               setReason(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            className="px-4 py-2 border border-slate-300 bg-white text-slate-900 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           >
             <option value="">All Reasons</option>
             <option value="PHYSICAL_COUNT">Physical Count</option>
