@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { NotificationService } from '@/lib/inventory/notification.service'
+import { sendTestNotification } from '@/lib/inventory/notification.service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Sending test notification to:', adminName)
 
-    const result = await NotificationService.sendTestNotification(adminName)
+    const result = await sendTestNotification(adminName)
 
     console.log('========== POST /api/inventory/settings/notifications/test END (SUCCESS) ==========')
 

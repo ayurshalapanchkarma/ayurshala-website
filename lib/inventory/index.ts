@@ -49,7 +49,7 @@ export { AnalyticsService } from './analytics.service'
 
 // Phase 10: Master Settings & ERP Foundation
 export { SettingsService } from './settings.service'
-export { NotificationService } from './notification.service'
+export * from './notification.service'
 
 // Phase 11: Human Resource Management
 export { HRMSService } from './hrms.service'
