@@ -183,17 +183,21 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <div className={`${sidebarOpen ? 'ml-60' : 'ml-16'} flex-1 flex flex-col overflow-hidden transition-all duration-300`}>
-        {/* Inventory Navbar - Full width, no margins */}
-        <div className="px-0">
-          <InventoryNavbar 
-            title="Ayurshala Inventory Console"
-            subtitle="Inventory • Procurement • Stock Control"
-          />
+        {/* Inventory Navbar - Fixed at top */}
+        <div className="fixed top-0 left-0 right-0 z-50 px-2 sm:px-4 pt-2 sm:pt-6" style={{ marginLeft: sidebarOpen ? '15rem' : '4rem' }}>
+          <div className="w-full">
+            <InventoryNavbar 
+              title="Ayurshala Inventory Console"
+              subtitle="Inventory • Procurement • Stock Control"
+            />
+          </div>
         </div>
 
-        {/* Content area */}
-        <div className="flex-1 overflow-auto">
-          {children}
+        {/* Content area - offset below fixed header */}
+        <div className="flex-1 overflow-auto pt-28 sm:pt-32 md:pt-36">
+          <div className="px-4 sm:px-6 md:px-8">
+            {children}
+          </div>
         </div>
       </div>
     </div>

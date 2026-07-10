@@ -5,7 +5,7 @@ import { Plus, Search, Edit2, Trash2, Eye, Mail, Phone, MapPin, Award } from 'lu
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import InventoryHeader from '@/components/inventory/InventoryHeader'
+import DoctorsNavbar from '@/components/admin/DoctorsNavbar'
 
 interface Doctor {
   id: string
@@ -173,19 +173,16 @@ export default function DoctorsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-orange-50 dark:from-slate-950 dark:to-orange-950/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <InventoryHeader />
-
-        {/* Header */}
-        <div className="mb-8 mt-6">
-          <h1 className="text-4xl font-bold text-stone-900 dark:text-white mb-2">Doctors</h1>
-          <p className="text-stone-600 dark:text-stone-400">Manage your medical team</p>
-        </div>
-
-        {/* Filters and Actions */}
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex items-center gap-3">
+    <>
+      {/* Doctors Navbar */}
+      <DoctorsNavbar />
+      
+      {/* Main Content - offset below fixed header */}
+      <div className="min-h-screen bg-gradient-to-br from-white to-orange-50 dark:from-slate-950 dark:to-orange-950/20 pt-28 sm:pt-32 md:pt-36">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Filters and Actions */}
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex items-center gap-3">
             <button
               onClick={() => setShowForm(true)}
               className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
@@ -489,6 +486,7 @@ export default function DoctorsPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   )
 }
