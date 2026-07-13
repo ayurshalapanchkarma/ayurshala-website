@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, Edit2, Trash2, Eye, Mail, Phone, MapPin, Award } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, Eye, Mail, Phone, MapPin, Award, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import DoctorsNavbar from '@/components/admin/DoctorsNavbar'
+import AdminPremiumHeader from '@/components/admin/AdminPremiumHeader'
 import { BackButton } from '@/components/inventory/BackButton'
 
 interface Doctor {
@@ -27,6 +27,24 @@ interface Doctor {
 }
 
 export default function DoctorsPage() {
+  // Specialization options
+  const SPECIALIZATIONS = [
+    'General Physician',
+    'Ayurveda',
+    'Panchakarma',
+    'Orthopedics',
+    'Pediatrics',
+    'Gynecology',
+    'Dermatology',
+    'ENT',
+    'Cardiology',
+    'Neurology',
+    'Ophthalmology',
+    'Dentistry',
+    'Physiotherapy',
+    'Psychology',
+    'Nutrition',
+  ]
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -36,6 +54,10 @@ export default function DoctorsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [mounted, setMounted] = useState(false)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -46,16 +68,28 @@ export default function DoctorsPage() {
     phone: '',
     email: '',
     status: 'active' as const,
-    photo_url: '',
     availability_days: '',
     treatments_offered: '',
     bio: '',
   })
 
+  // Initialize theme
+  useEffect(() => {
+    setMounted(true)
+    const saved = localStorage.getItem('admin-theme')
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      setTheme('dark')
+    } else {
+      setTheme('light')
+    }
+  }, [])
+
   // Fetch doctors
   useEffect(() => {
-    fetchDoctors()
-  }, [])
+    if (mounted) {
+      fetchDoctors()
+    }
+  }, [mounted])
 
   const fetchDoctors = async () => {
     try {
@@ -86,6 +120,23 @@ export default function DoctorsPage() {
   // Get unique specializations
   const specializations = [...new Set(doctors.map((d) => d.specialization))].sort()
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setPhotoFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removePhoto = () => {
+    setPhotoFile(null)
+    setPhotoPreview(null)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
@@ -94,11 +145,33 @@ export default function DoctorsPage() {
       const method = editingId ? 'PUT' : 'POST'
       const url = editingId ? `/api/admin/doctors?id=${editingId}` : '/api/admin/doctors'
 
+      // If there's a new photo file, upload it first
+      let photoUrl = editingId ? doctors.find(d => d.id === editingId)?.photo_url || '' : ''
+      
+      if (photoFile) {
+        const formDataWithFile = new FormData()
+        formDataWithFile.append('file', photoFile)
+        formDataWithFile.append('bucket', 'doctor-photos')
+        
+        const uploadRes = await fetch('/api/admin/upload', {
+          method: 'POST',
+          body: formDataWithFile,
+        })
+
+        if (!uploadRes.ok) {
+          throw new Error('Failed to upload photo')
+        }
+
+        const uploadData = await uploadRes.json()
+        photoUrl = uploadData.url
+      }
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          photo_url: photoUrl,
           treatments_offered: formData.treatments_offered
             .split(',')
             .map((t) => t.trim())
@@ -114,6 +187,8 @@ export default function DoctorsPage() {
       await fetchDoctors()
       setShowForm(false)
       setEditingId(null)
+      setPhotoFile(null)
+      setPhotoPreview(null)
       setFormData({
         name: '',
         qualification: '',
@@ -123,7 +198,6 @@ export default function DoctorsPage() {
         phone: '',
         email: '',
         status: 'active',
-        photo_url: '',
         availability_days: '',
         treatments_offered: '',
         bio: '',
@@ -147,11 +221,13 @@ export default function DoctorsPage() {
       phone: doctor.phone,
       email: doctor.email,
       status: doctor.status,
-      photo_url: doctor.photo_url || '',
       availability_days: doctor.availability_days || '',
       treatments_offered: (doctor.treatments_offered || []).join(', '),
       bio: doctor.bio || '',
     })
+    if (doctor.photo_url) {
+      setPhotoPreview(doctor.photo_url)
+    }
     setEditingId(doctor.id)
     setShowForm(true)
   }
@@ -173,13 +249,22 @@ export default function DoctorsPage() {
     }
   }
 
+  const dark = mounted && theme === 'dark'
+
+  if (!mounted) return null
+
   return (
     <>
-      {/* Doctors Navbar */}
-      <DoctorsNavbar />
+      {/* Admin Premium Header */}
+      <AdminPremiumHeader 
+        title="Doctors"
+        subtitle="Manage your medical team"
+        showBackButton
+        backTo="/admin"
+      />
       
       {/* Main Content - offset below fixed header */}
-      <div className="min-h-screen bg-gradient-to-br from-white to-orange-50 dark:from-slate-950 dark:to-orange-950/20 pt-28 sm:pt-32 md:pt-36">
+      <div className={`${dark ? 'bg-slate-950' : 'bg-gradient-to-br from-white to-orange-50'} min-h-screen pt-28 sm:pt-32 md:pt-36`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <BackButton href="/admin" />
 
@@ -214,7 +299,7 @@ export default function DoctorsPage() {
               className="px-4 py-2 rounded-lg border border-orange-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-stone-900 dark:text-white"
             >
               <option value="">All Specializations</option>
-              {specializations.map((spec) => (
+              {SPECIALIZATIONS.map((spec) => (
                 <option key={spec} value={spec}>
                   {spec}
                 </option>
@@ -370,14 +455,19 @@ export default function DoctorsPage() {
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="px-4 py-2 rounded-lg border border-orange-200 dark:border-slate-700 bg-white dark:bg-slate-700 text-stone-900 dark:text-white"
                   />
-                  <input
-                    type="text"
-                    placeholder="Specialization *"
+                  <select
                     required
                     value={formData.specialization}
                     onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
                     className="px-4 py-2 rounded-lg border border-orange-200 dark:border-slate-700 bg-white dark:bg-slate-700 text-stone-900 dark:text-white"
-                  />
+                  >
+                    <option value="">Select Specialization *</option>
+                    {SPECIALIZATIONS.map((spec) => (
+                      <option key={spec} value={spec}>
+                        {spec}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -414,13 +504,45 @@ export default function DoctorsPage() {
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
-                  <input
-                    type="text"
-                    placeholder="Photo URL"
-                    value={formData.photo_url}
-                    onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-                    className="px-4 py-2 rounded-lg border border-orange-200 dark:border-slate-700 bg-white dark:bg-slate-700 text-stone-900 dark:text-white"
-                  />
+                </div>
+
+                {/* Photo Upload Section */}
+                <div className="border border-orange-200 dark:border-slate-700 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-stone-900 dark:text-white mb-3">
+                    Doctor Photo
+                  </label>
+                  
+                  {photoPreview && (
+                    <div className="relative mb-3 inline-block">
+                      <Image
+                        src={photoPreview}
+                        alt="Doctor photo preview"
+                        width={120}
+                        height={120}
+                        className="w-32 h-32 rounded-lg object-cover border-2 border-orange-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={removePhoto}
+                        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
+                  
+                  <label className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-orange-300 dark:border-slate-600 rounded-lg cursor-pointer hover:border-orange-400 transition">
+                    <Upload size={18} className="text-orange-600" />
+                    <span className="text-sm text-stone-600 dark:text-stone-400">
+                      {photoFile ? photoFile.name : 'Upload doctor photo'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
 
                 <div className="flex gap-4 pt-6">
@@ -429,6 +551,8 @@ export default function DoctorsPage() {
                     onClick={() => {
                       setShowForm(false)
                       setEditingId(null)
+                      setPhotoFile(null)
+                      setPhotoPreview(null)
                       setFormData({
                         name: '',
                         qualification: '',
@@ -438,7 +562,6 @@ export default function DoctorsPage() {
                         phone: '',
                         email: '',
                         status: 'active',
-                        photo_url: '',
                         availability_days: '',
                         treatments_offered: '',
                         bio: '',

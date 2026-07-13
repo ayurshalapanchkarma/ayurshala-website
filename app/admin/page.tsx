@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { AdminGuard } from '@/components/AdminGuard'
-import AdminHeader from '@/components/admin/AdminHeader'
+import AdminPremiumHeader from '@/components/admin/AdminPremiumHeader'
 import { Calendar, Clock, Wallet, TrendingUp, FileText, Package, Users, Stethoscope, CreditCard, BarChart3, Settings, ClipboardList, ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -90,8 +90,11 @@ export default function AdminDashboard() {
 
   return (
     <div className={`${dark ? 'bg-slate-950' : 'bg-gray-50'}`}>
-      {/* Admin Header */}
-      <AdminHeader />
+      {/* Admin Premium Header */}
+      <AdminPremiumHeader 
+        title="Ayurshala Admin Console"
+        subtitle="Clinical Management System"
+      />
       
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
