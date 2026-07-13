@@ -195,14 +195,16 @@ export default function AdminAppointmentsPage() {
   return (
     <AdminGuard>
       <div className={`min-h-screen ${dark ? 'bg-gray-950' : 'bg-gray-50'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <AdminPremiumHeader
-            title="Appointments"
-            subtitle="Manage patient appointments and daily operations"
-            showBackButton
-            backTo="/admin"
-          />
+        {/* Header — full width, outside max-w-7xl */}
+        <AdminPremiumHeader
+          title="Appointments"
+          subtitle="Manage patient appointments and daily operations"
+          showBackButton
+          backTo="/admin"
+        />
 
+        {/* Content — max-width container */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <KPISummary dark={dark} stats={stats} />
 
           <SmartFilterBar
