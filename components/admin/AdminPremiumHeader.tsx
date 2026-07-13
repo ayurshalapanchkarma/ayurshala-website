@@ -75,18 +75,23 @@ export default function AdminPremiumHeader({
       transition={{ duration: 0.8, ease: 'easeOut' }}
       className="sticky top-0 z-40 px-2 sm:px-4 pt-2 sm:pt-3"
     >
-      {/* ── Glass pill — EXACT same style as InventoryNavbar / website Navbar ── */}
+      {/* ── Glass pill — same structure both themes, only colors differ ── */}
       <div
         className="w-full rounded-2xl sm:rounded-3xl transition-all duration-300"
-        style={{
-          background: theme === 'dark'
-            ? 'rgba(15,26,18,0.08)'
-            : 'rgba(255,255,255,0.08)',
+        style={theme === 'dark' ? {
+          /* Dark: deep translucent slate glass */
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(20px) saturate(180%) contrast(1.05) brightness(1.08)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%) contrast(1.05) brightness(1.08)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.20)',
+        } : {
+          /* Light: warm white glass with orange-tint border — unchanged */
+          background: 'rgba(255,255,255,0.08)',
           backdropFilter: 'blur(12px) saturate(180%) contrast(1.05) brightness(1.08)',
           WebkitBackdropFilter: 'blur(12px) saturate(180%) contrast(1.05) brightness(1.08)',
           border: '1px solid rgba(232,98,26,0.18)',
-          boxShadow:
-            '0 8px 32px rgba(232,98,26,0.06), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(255,255,255,0.1)',
+          boxShadow: '0 8px 32px rgba(232,98,26,0.06), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(255,255,255,0.1)',
         }}
       >
         <div className="px-3 sm:px-6 md:px-8 flex items-center justify-between h-14 sm:h-16 md:h-20">
@@ -97,7 +102,16 @@ export default function AdminPremiumHeader({
             {showBackButton && (
               <button
                 onClick={() => router.push(backTo)}
-                className="btn-glass p-2 flex-shrink-0"
+                className="rounded-full p-2 flex-shrink-0 transition-all duration-300 border"
+                style={theme === 'dark' ? {
+                  background: 'rgba(30, 41, 59, 0.70)',
+                  border: '1px solid rgba(255,255,255,0.10)',
+                  color: '#f8fafc',
+                } : {
+                  background: 'linear-gradient(135deg,rgba(255,255,255,0.6) 0%,rgba(255,255,255,0.25) 100%)',
+                  border: '1px solid rgba(232,98,26,0.45)',
+                  color: '#E8621A',
+                }}
                 title="Go back"
                 aria-label="Go back"
               >
@@ -119,10 +133,10 @@ export default function AdminPremiumHeader({
 
             {/* Title + Subtitle */}
             <div className="hidden sm:flex flex-col justify-center min-w-0">
-              <h1 className="text-base md:text-lg font-semibold tracking-wide text-stone-900 dark:text-stone-100 leading-tight whitespace-nowrap">
+              <h1 className="text-base md:text-lg font-semibold tracking-wide leading-tight whitespace-nowrap text-stone-900 dark:text-white">
                 {title}
               </h1>
-              <p className="text-xs md:text-sm text-stone-600 dark:text-stone-400 opacity-75 tracking-wider whitespace-nowrap">
+              <p className="text-xs md:text-sm opacity-75 tracking-wider whitespace-nowrap text-stone-600 dark:text-slate-300">
                 {subtitle}
               </p>
             </div>
@@ -133,19 +147,33 @@ export default function AdminPremiumHeader({
 
             <button
               onClick={toggleTheme}
-              className="btn-glass text-xs py-2 px-3 sm:px-4 flex items-center gap-2 flex-shrink-0"
+              className="rounded-full text-xs py-2 px-3 sm:px-4 flex items-center gap-2 flex-shrink-0 transition-all duration-300 border"
+              style={theme === 'dark' ? {
+                background: 'rgba(30, 41, 59, 0.70)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                color: '#f59e0b',
+              } : {
+                background: 'linear-gradient(135deg,rgba(255,255,255,0.6) 0%,rgba(255,255,255,0.25) 100%)',
+                border: '1px solid rgba(232,98,26,0.45)',
+                color: '#E8621A',
+              }}
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              {theme === 'dark' ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
-              )}
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
             <button
               onClick={handleLogout}
-              className="btn-glass text-xs py-2 px-3 sm:px-4 flex items-center gap-2 flex-shrink-0"
+              className="rounded-full text-xs py-2 px-3 sm:px-4 flex items-center gap-2 flex-shrink-0 transition-all duration-300 border"
+              style={theme === 'dark' ? {
+                background: 'rgba(30, 41, 59, 0.70)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                color: '#fca5a5',
+              } : {
+                background: 'linear-gradient(135deg,rgba(255,255,255,0.6) 0%,rgba(255,255,255,0.25) 100%)',
+                border: '1px solid rgba(232,98,26,0.45)',
+                color: '#E8621A',
+              }}
               title="Logout"
             >
               <LogOut className="w-4 h-4" />
