@@ -111,8 +111,17 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
     <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
       {/* Sidebar */}
       <div className={`${sidebarOpen ? 'w-60' : 'w-16'} transition-all duration-300 flex flex-col overflow-hidden fixed h-screen z-40 pt-24`}>
-        {/* Sidebar Glass Container */}
-        <div className="m-3 flex-1 rounded-2xl bg-white/70 dark:bg-slate-900/65 backdrop-blur-xl border border-gray-200/50 dark:border-slate-700/50 shadow-xl overflow-hidden flex flex-col">
+        {/* Sidebar Glass Container — matches header styling */}
+        <div
+          className="m-3 flex-1 rounded-2xl overflow-hidden flex flex-col"
+          style={{
+            background: 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+          }}
+        >
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-2">
             {navSections.map(section => (

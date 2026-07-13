@@ -5,7 +5,7 @@ import GlassBackground from '@/components/GlassBackground'
 import { AdminGuard } from '@/components/AdminGuard'
 import { useTheme } from 'next-themes'
 import { createClient } from '@supabase/supabase-js'
-import AppointmentPageHeader from '@/components/AppointmentPageHeader'
+import AdminPremiumHeader from '@/components/admin/AdminPremiumHeader'
 import KPISummary from '@/components/KPISummary'
 import SmartFilterBar from '@/components/SmartFilterBar'
 import TodaysQueue from '@/components/TodaysQueue'
@@ -196,14 +196,11 @@ export default function AdminAppointmentsPage() {
     <AdminGuard>
       <div className={`min-h-screen ${dark ? 'bg-gray-950' : 'bg-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <AppointmentPageHeader
-            dark={dark}
-            currentTime={currentTime}
-            onThemeToggle={() => setTheme(dark ? 'light' : 'dark')}
-            onLogout={async () => {
-              await supabase.auth.signOut()
-              router.push('/')
-            }}
+          <AdminPremiumHeader
+            title="Appointments"
+            subtitle="Manage patient appointments and daily operations"
+            showBackButton
+            backTo="/admin"
           />
 
           <KPISummary dark={dark} stats={stats} />

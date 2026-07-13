@@ -82,6 +82,19 @@ export default function InventoryOverview() {
   return (
     <InventoryPageWrapper title="Inventory Overview" subtitle="Track your inventory at a glance">
       <div>
+        {/* Back to Admin */}
+        <div className="mb-4">
+          <a
+            href="/admin"
+            className="inline-flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-medium transition"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Admin
+          </a>
+        </div>
+
         {/* KPI Cards */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Key Metrics</h2>
