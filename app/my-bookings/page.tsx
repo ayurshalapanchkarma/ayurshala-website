@@ -244,6 +244,33 @@ export default function MyBookingsPage() {
             const canCancel = (b.status === 'PENDING_CONFIRMATION' || b.status === 'CONFIRMED') && hours >= 24
             const canReschedule = (b.status === 'PENDING_CONFIRMATION' || (b.status === 'CONFIRMED' && !b.is_rescheduled)) && hours >= 24
             
+            // RUNTIME DEBUG LOGGING
+            if (b.booking_id === 'AYB-2026-000058') {
+              console.log('=== AYB-2026-000058 DEBUG ===')
+              console.log('b.status:', b.status)
+              console.log('b.payment_method:', b.payment_method)
+              console.log('b.is_rescheduled:', b.is_rescheduled)
+              console.log('b.payment_status:', b.payment_status)
+              console.log('hours:', hours)
+              console.log('canReschedule calculation:', {
+                statusIsPendingConfirm: b.status === 'PENDING_CONFIRMATION',
+                statusIsConfirmedNotRescheduled: b.status === 'CONFIRMED' && !b.is_rescheduled,
+                hoursGreaterThan24: hours >= 24,
+                result: canReschedule
+              })
+              console.log('canCancel calculation:', {
+                statusIsPendingOrConfirmed: (b.status === 'PENDING_CONFIRMATION' || b.status === 'CONFIRMED'),
+                hoursGreaterThan24: hours >= 24,
+                result: canCancel
+              })
+              console.log('payOnline condition:', {
+                statusIsPending: b.status === 'PENDING_CONFIRMATION',
+                paymentMethodIsCash: b.payment_method === 'CASH_ON_ARRIVAL',
+                result: b.status === 'PENDING_CONFIRMATION' && b.payment_method === 'CASH_ON_ARRIVAL'
+              })
+              console.log('=== END DEBUG ===')
+            }
+            
             // Badge logic
             let badgeLabel = '', badgeCls = ''
             if (b.status === 'CONFIRMED' && (b as any).rescheduled_at) {
