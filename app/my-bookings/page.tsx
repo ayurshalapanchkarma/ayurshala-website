@@ -137,7 +137,13 @@ export default function MyBookingsPage() {
       body: JSON.stringify({ action: 'pay-existing', booking_id: b.booking_id, patient_uuid: patient.id }),
     })
     const data = await res.json()
-    if (!res.ok) { alert(data.error); return }
+    console.log('[handlePayOnline] Response status:', res.status)
+    console.log('[handlePayOnline] Response data:', data)
+    if (!res.ok) { 
+      console.error('[handlePayOnline] Error response:', { status: res.status, ...data })
+      alert(`Payment Error: ${data.error}\n${data.errorMessage || ''}`); 
+      return 
+    }
     const script = document.createElement('script')
     script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js'
     script.async = true

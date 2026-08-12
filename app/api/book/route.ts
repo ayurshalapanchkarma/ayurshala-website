@@ -382,18 +382,20 @@ export async function POST(req: NextRequest) {
         hasPaymentSessionId: !!cashfreeOrder?.data?.payment_session_id,
       })
     } catch (cashfreeError) {
-      console.error('[pay-existing] Cashfree PGCreateOrder error:', cashfreeError)
-      console.error('[pay-existing] Error details:', {
-        errorType: cashfreeError instanceof Error ? 'Error' : typeof cashfreeError,
-        message: cashfreeError instanceof Error ? cashfreeError.message : String(cashfreeError),
-        stack: cashfreeError instanceof Error ? cashfreeError.stack : undefined,
-      })
+      const errorMsg = cashfreeError instanceof Error ? cashfreeError.message : String(cashfreeError)
+      const errorStack = cashfreeError instanceof Error ? cashfreeError.stack : undefined
+      console.error('[pay-existing] CASHFREE API ERROR')
+      console.error('[pay-existing] Error message:', errorMsg)
+      console.error('[pay-existing] Error stack:', errorStack)
+      console.error('[pay-existing] Full error object:', JSON.stringify(cashfreeError, null, 2))
+      
       return NextResponse.json(
         {
           success: false,
           error: 'Failed to create payment session',
-          message: cashfreeError instanceof Error ? cashfreeError.message : 'Unknown Cashfree error',
-          type: cashfreeError instanceof Error ? cashfreeError.constructor.name : typeof cashfreeError,
+          errorMessage: errorMsg,
+          errorType: cashfreeError instanceof Error ? cashfreeError.constructor.name : typeof cashfreeError,
+          errorStack: process.env.NODE_ENV === 'development' ? errorStack : undefined,
         },
         { status: 500 }
       )
