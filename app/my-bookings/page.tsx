@@ -21,22 +21,25 @@ type Booking = {
 }
 type Patient = { id: string; patient_id: string; full_name: string; email: string; phone: string }
 
-const statusConfig: Record<string, { label: string; cls: string }> = {
-  CONFIRMED:            { label: 'Confirmed',             cls: 'bg-green-100 text-green-700' },
-  PENDING_CONFIRMATION: { label: 'Awaiting Confirmation', cls: 'bg-amber-100 text-amber-700' },
-  PAYMENT_PENDING:      { label: 'Payment Pending',       cls: 'bg-amber-100 text-amber-700' },
-  RESCHEDULED:          { label: 'Rescheduled',           cls: 'bg-orange-100 text-orange-700' },
-  CANCELLED:            { label: 'Cancelled',             cls: 'bg-red-100 text-red-700' },
-  COMPLETED:            { label: 'Completed',             cls: 'bg-blue-100 text-blue-700' },
-  IN_PROGRESS:          { label: 'In Progress',           cls: 'bg-purple-100 text-purple-700' },
-  NO_SHOW:              { label: 'No Show',               cls: 'bg-stone-100 text-stone-600' },
+const statusConfig: Record<string, { label: string; lightCls: string; darkCls: string }> = {
+  CONFIRMED:            { label: 'Confirmed',             lightCls: 'bg-green-100 text-green-800', darkCls: 'dark:bg-green-900/40 dark:text-green-300' },
+  PENDING_CONFIRMATION: { label: 'Awaiting Confirmation', lightCls: 'bg-amber-100 text-amber-800', darkCls: 'dark:bg-amber-900/40 dark:text-amber-300' },
+  PAYMENT_PENDING:      { label: 'Payment Pending',       lightCls: 'bg-amber-100 text-amber-800', darkCls: 'dark:bg-amber-900/40 dark:text-amber-300' },
+  RESCHEDULED:          { label: 'Rescheduled',           lightCls: 'bg-blue-100 text-blue-800', darkCls: 'dark:bg-blue-900/40 dark:text-blue-300' },
+  CANCELLED:            { label: 'Cancelled',             lightCls: 'bg-red-100 text-red-800', darkCls: 'dark:bg-red-900/40 dark:text-red-300' },
+  COMPLETED:            { label: 'Completed',             lightCls: 'bg-emerald-100 text-emerald-800', darkCls: 'dark:bg-emerald-900/40 dark:text-emerald-300' },
+  IN_PROGRESS:          { label: 'In Progress',           lightCls: 'bg-purple-100 text-purple-800', darkCls: 'dark:bg-purple-900/40 dark:text-purple-300' },
+  NO_SHOW:              { label: 'No Show',               lightCls: 'bg-stone-100 text-stone-700', darkCls: 'dark:bg-stone-900/40 dark:text-stone-300' },
+  RESCHEDULE_REJECTED:  { label: 'Reschedule Rejected',   lightCls: 'bg-red-100 text-red-800', darkCls: 'dark:bg-red-900/40 dark:text-red-300' },
+  CHECKED_IN:           { label: 'Checked In',            lightCls: 'bg-indigo-100 text-indigo-800', darkCls: 'dark:bg-indigo-900/40 dark:text-indigo-300' },
+  CHECKED_OUT:          { label: 'Checked Out',           lightCls: 'bg-indigo-100 text-indigo-800', darkCls: 'dark:bg-indigo-900/40 dark:text-indigo-300' },
 }
 
-const paymentConfig: Record<string, { label: string; cls: string }> = {
-  SUCCESS:       { label: 'Paid Online',         cls: 'text-green-600' },
-  COD_PENDING:   { label: 'Cash on Arrival',     cls: 'text-amber-600' },
-  THERAPY_LATER: { label: 'After Consultation',  cls: 'text-stone-500' },
-  PENDING:       { label: 'Pending',             cls: 'text-amber-600' },
+const paymentConfig: Record<string, { label: string; lightCls: string; darkCls: string }> = {
+  SUCCESS:       { label: 'Paid Online',         lightCls: 'text-green-600', darkCls: 'dark:text-green-400' },
+  COD_PENDING:   { label: 'Cash on Arrival',     lightCls: 'text-amber-600', darkCls: 'dark:text-amber-400' },
+  THERAPY_LATER: { label: 'After Consultation',  lightCls: 'text-stone-500', darkCls: 'dark:text-stone-400' },
+  PENDING:       { label: 'Pending',             lightCls: 'text-amber-600', darkCls: 'dark:text-amber-400' },
 }
 
 function hoursUntil(date: string, time: string) {
@@ -245,20 +248,23 @@ export default function MyBookingsPage() {
             const canReschedule = (b.status === 'PENDING_CONFIRMATION' || (b.status === 'CONFIRMED' && !b.is_rescheduled)) && hours >= 24
             
             // Badge logic
-            let badgeLabel = '', badgeCls = ''
+            let badgeLabel = '', badgeLightCls = '', badgeDarkCls = ''
             if (b.status === 'CONFIRMED' && (b as any).rescheduled_at) {
               badgeLabel = 'Reschedule Confirmed'
-              badgeCls = 'bg-emerald-100 text-emerald-700'
+              badgeLightCls = 'bg-emerald-100 text-emerald-800'
+              badgeDarkCls = 'dark:bg-emerald-900/40 dark:text-emerald-300'
             } else if (b.status === 'RESCHEDULED') {
               badgeLabel = 'Awaiting Reschedule Approval'
-              badgeCls = 'bg-orange-100 text-orange-700'
+              badgeLightCls = 'bg-blue-100 text-blue-800'
+              badgeDarkCls = 'dark:bg-blue-900/40 dark:text-blue-300'
             } else {
-              const cfg = statusConfig[b.status] || { label: b.status, cls: 'bg-stone-100 text-stone-600' }
+              const cfg = statusConfig[b.status] || { label: b.status, lightCls: 'bg-stone-100 text-stone-700', darkCls: 'dark:bg-stone-900/40 dark:text-stone-300' }
               badgeLabel = cfg.label
-              badgeCls = cfg.cls
+              badgeLightCls = cfg.lightCls
+              badgeDarkCls = cfg.darkCls
             }
             
-            const pCfg = paymentConfig[b.payment_status] || { label: b.payment_status, cls: 'text-stone-400' }
+            const pCfg = paymentConfig[b.payment_status] || { label: b.payment_status, lightCls: 'text-stone-400', darkCls: 'dark:text-stone-500' }
             const wasPaid = b.payment_status === 'SUCCESS'
 
             return (
@@ -270,16 +276,16 @@ export default function MyBookingsPage() {
                       {(b.booking_treatments_v2 as any)?.map((t: any) => t.treatment_name).join(', ') || '—'}
                     </p>
                   </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-sans shrink-0 ${badgeCls}`}>{badgeLabel}</span>
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-sans shrink-0 ${badgeLightCls} ${badgeDarkCls}`}>{badgeLabel}</span>
                 </div>
 
-                {b.status === 'RESCHEDULED' && <p className="font-sans text-xs text-orange-600 mb-2">Your reschedule request is awaiting clinic approval.</p>}
-                {b.status === 'CONFIRMED' && b.is_rescheduled && <p className="font-sans text-xs text-emerald-600 mb-2">Your rescheduled appointment has been approved by the clinic.</p>}
+                {b.status === 'RESCHEDULED' && <p className="font-sans text-xs text-blue-600 dark:text-blue-400 mb-2">Your reschedule request is awaiting clinic approval.</p>}
+                {b.status === 'CONFIRMED' && b.is_rescheduled && <p className="font-sans text-xs text-emerald-600 dark:text-emerald-400 mb-2">Your rescheduled appointment has been approved by the clinic.</p>}
 
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-sans text-stone-400 mb-3">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-sans text-stone-400 dark:text-stone-500 mb-3">
                   {b.preferred_date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(b.preferred_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
                   {b.preferred_time && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {b.preferred_time}</span>}
-                  <span className={`flex items-center gap-1 ${pCfg.cls}`}>
+                  <span className={`flex items-center gap-1 ${pCfg.lightCls} ${pCfg.darkCls}`}>
                     {b.payment_status === 'SUCCESS' && <CheckCircle2 className="w-3 h-3" />}
                     {(b.payment_status === 'PENDING' || b.payment_status === 'COD_PENDING') && <AlertCircle className="w-3 h-3" />}
                     {pCfg.label}
@@ -296,7 +302,7 @@ export default function MyBookingsPage() {
                     )}
                     {canCancel && (
                       <button onClick={() => setCancelId(b.booking_id)}
-                        className="text-xs py-1.5 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors flex items-center gap-1"><Trash2 className="w-3 h-3" /> Cancel</button>
+                        className="text-xs py-1.5 px-3 rounded-xl border border-red-200 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors flex items-center gap-1"><Trash2 className="w-3 h-3" /> Cancel</button>
                     )}
                   </div>
                 )}
@@ -304,7 +310,7 @@ export default function MyBookingsPage() {
                   <div className="flex gap-2 flex-wrap mt-2">
                     <button onClick={() => handlePayOnline(b)}
                       className="text-xs py-1.5 px-3 rounded-xl border font-sans transition-colors flex items-center gap-1"
-                      style={{ borderColor: '#E8621A', color: '#E8621A' }}>
+                      style={{ borderColor: '#E8621A', color: dark ? '#f97316' : '#E8621A' }}>
                       <CheckCircle2 className="w-3 h-3" /> Pay Online to Confirm
                     </button>
                   </div>
@@ -362,45 +368,45 @@ export default function MyBookingsPage() {
             <motion.div initial={{ y: 60, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 60, opacity: 0, scale: 0.95 }}
               onClick={e => e.stopPropagation()}
               className="w-full max-w-sm rounded-3xl p-8"
-              style={{ background: 'linear-gradient(135deg, rgba(240,253,250,0.98) 0%, rgba(204,251,241,0.95) 100%)', backdropFilter: 'blur(50px)', border: '1px solid rgba(16,185,129,0.3)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 20px 60px rgba(16,185,129,0.15), 0 8px 30px rgba(0,0,0,0.08)' }}>
-              <p className="font-serif text-2xl mb-2" style={{ color: '#10b981' }}>Reschedule</p>
-              <p className="font-sans text-xs text-emerald-600 mb-6">{rescheduleBooking.booking_id}</p>
+              style={{ background: dark ? 'linear-gradient(135deg,rgba(30,41,59,0.95),rgba(15,23,42,0.95))' : 'linear-gradient(135deg, rgba(240,253,250,0.98) 0%, rgba(204,251,241,0.95) 100%)', backdropFilter: 'blur(50px)', border: dark ? '1px solid rgba(15,185,129,0.2)' : '1px solid rgba(16,185,129,0.3)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 20px 60px rgba(16,185,129,0.15), 0 8px 30px rgba(0,0,0,0.08)' }}>
+              <p className="font-serif text-2xl mb-2" style={{ color: dark ? '#4ade80' : '#10b981' }}>Reschedule</p>
+              <p className={`font-sans text-xs ${dark ? 'text-emerald-400' : 'text-emerald-600'} mb-6`}>{rescheduleBooking.booking_id}</p>
 
               <div className="space-y-3 mb-6">
                 <div>
-                  <label className="font-sans text-xs text-emerald-700 uppercase tracking-wider block mb-1 flex items-center gap-1"><Calendar className="w-3 h-3" /> New Date</label>
+                  <label className={`font-sans text-xs uppercase tracking-wider block mb-1 flex items-center gap-1 ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}><Calendar className="w-3 h-3" /> New Date</label>
                   <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                     min={today} max={maxDateStr} onKeyDown={e => e.preventDefault()}
-                    className="w-full rounded-xl px-4 py-2.5 text-sm border border-emerald-200 bg-white/60 focus:outline-none focus:border-emerald-400 focus:bg-white/80" />
+                    className={`w-full rounded-xl px-4 py-2.5 text-sm border ${dark ? 'border-emerald-900/30 bg-emerald-900/20 text-white focus:border-emerald-600 focus:bg-emerald-900/30' : 'border-emerald-200 bg-white/60 text-stone-900 focus:border-emerald-400 focus:bg-white/80'} focus:outline-none`} />
                   {newDate && new Date(newDate).getUTCDay() === 5 && (
-                    <p className="font-sans text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Closed on Fridays. Please choose another day.</p>
+                    <p className={`font-sans text-xs mt-1 flex items-center gap-1 ${dark ? 'text-red-400' : 'text-red-500'}`}><AlertCircle className="w-3 h-3" /> Closed on Fridays. Please choose another day.</p>
                   )}
                 </div>
                 <div>
-                  <label className="font-sans text-xs text-emerald-700 uppercase tracking-wider block mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> New Time</label>
+                  <label className={`font-sans text-xs uppercase tracking-wider block mb-1 flex items-center gap-1 ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}><Clock className="w-3 h-3" /> New Time</label>
                   <select value={newTime} onChange={e => setNewTime(e.target.value)}
-                    className="w-full rounded-xl px-4 py-2.5 text-sm border border-emerald-200 bg-white/60 focus:outline-none focus:border-emerald-400 focus:bg-white/80 cursor-pointer">
+                    className={`w-full rounded-xl px-4 py-2.5 text-sm border ${dark ? 'border-emerald-900/30 bg-emerald-900/20 text-white focus:border-emerald-600 focus:bg-emerald-900/30' : 'border-emerald-200 bg-white/60 text-stone-900 focus:border-emerald-400 focus:bg-white/80'} focus:outline-none cursor-pointer`}>
                     <option value="">Select time…</option>
                     {timeSlots.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="font-sans text-xs text-emerald-700 uppercase tracking-wider block mb-1">Reason for Rescheduling *</label>
+                  <label className={`font-sans text-xs uppercase tracking-wider block mb-1 ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>Reason for Rescheduling *</label>
                   <textarea value={rescheduleReason} onChange={e => setRescheduleReason(e.target.value.slice(0, 500))} rows={3}
                     placeholder="Please tell us why you would like to reschedule this appointment."
-                    className="w-full rounded-xl px-4 py-2.5 text-sm border border-emerald-200 bg-white/60 focus:outline-none focus:border-emerald-400 focus:bg-white/80 resize-none" />
-                  <p className={`font-sans text-xs mt-1 ${rescheduleReason.length < 10 ? 'text-amber-600' : 'text-emerald-600'}`}>{rescheduleReason.length}/500 (minimum 10)</p>
+                    className={`w-full rounded-xl px-4 py-2.5 text-sm border ${dark ? 'border-emerald-900/30 bg-emerald-900/20 text-white placeholder-emerald-600 focus:border-emerald-600 focus:bg-emerald-900/30' : 'border-emerald-200 bg-white/60 text-stone-900 placeholder-stone-400 focus:border-emerald-400 focus:bg-white/80'} focus:outline-none resize-none`} />
+                  <p className={`font-sans text-xs mt-1 ${rescheduleReason.length < 10 ? (dark ? 'text-amber-400' : 'text-amber-600') : (dark ? 'text-emerald-400' : 'text-emerald-600')}`}>{rescheduleReason.length}/500 (minimum 10)</p>
                 </div>
               </div>
 
-              {rescheduleError && <p className="font-sans text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2 mb-3">{rescheduleError}</p>}
+              {rescheduleError && <p className={`font-sans text-xs rounded-lg p-2 mb-3 border ${dark ? 'text-red-300 bg-red-900/20 border-red-900/40' : 'text-red-600 bg-red-50 border-red-200'}`}>{rescheduleError}</p>}
 
               <div className="flex flex-col gap-3">
                 <div className="flex gap-3">
                   <button onClick={() => setRescheduleBooking(null)} className="btn-glass flex-1 py-2.5 text-sm">Cancel</button>
                   <button onClick={handleReschedule} disabled={rescheduling || !newDate || !newTime || rescheduleReason.length < 10 || new Date(newDate).getUTCDay() === 5}
                     className="flex-1 py-2.5 text-sm rounded-xl font-sans text-white disabled:opacity-50 hover:brightness-110 transition-all"
-                    style={{ background: '#10b981' }}>
+                    style={{ background: dark ? '#10b981' : '#10b981' }}>
                     {rescheduling ? 'Saving…' : 'Confirm'}
                   </button>
                 </div>
