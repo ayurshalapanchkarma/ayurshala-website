@@ -296,36 +296,70 @@ export async function POST(req: NextRequest) {
     const { booking_id, patient_uuid } = body
     console.log('[pay-existing] Request received:', { booking_id, patient_uuid })
 
+    // Check environment variables
+    const hasAppId = !!process.env.CASHFREE_APP_ID
+    const hasSecretKey = !!process.env.CASHFREE_SECRET_KEY
+    console.log('[pay-existing] Environment check:', {
+      CASHFREE_APP_ID: hasAppId ? 'SET' : 'MISSING',
+      CASHFREE_SECRET_KEY: hasSecretKey ? 'SET' : 'MISSING',
+    })
+
+    if (!hasAppId || !hasSecretKey) {
+      console.error('[pay-existing] Missing Cashfree credentials!')
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Payment service not configured',
+          details: {
+            CASHFREE_APP_ID: hasAppId ? 'set' : 'MISSING',
+            CASHFREE_SECRET_KEY: hasSecretKey ? 'set' : 'MISSING',
+          }
+        },
+        { status: 500 }
+      )
+    }
+
     const { data: booking } = await supabase.from('bookings_new').select('*')
       .eq('booking_id', booking_id).eq('patient_uuid', patient_uuid).single()
     if (!booking) {
       console.log('[pay-existing] Booking not found:', { booking_id, patient_uuid })
-      return NextResponse.json({ error: 'Booking not found.' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'Booking not found.' }, { status: 404 })
     }
     console.log('[pay-existing] Booking found:', { booking_id, status: booking.status })
 
     const { data: patient } = await supabase.from('patients').select('*').eq('id', patient_uuid).single()
     if (!patient) {
       console.log('[pay-existing] Patient not found:', { patient_uuid })
-      return NextResponse.json({ error: 'Patient not found.' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'Patient not found.' }, { status: 404 })
     }
     console.log('[pay-existing] Patient found:', { patient_id: patient.patient_id })
 
     const amount = booking.booking_type === 'consultation' ? 500 : 1000
     console.log('[pay-existing] Calculated amount:', { booking_type: booking.booking_type, amount })
 
-    console.log('[pay-existing] Initializing Cashfree with:', {
-      appId: process.env.CASHFREE_APP_ID ? 'set' : 'MISSING',
-      secretKey: process.env.CASHFREE_SECRET_KEY ? 'set' : 'MISSING',
-    })
-
-    const cashfree = new Cashfree(CFEnvironment.PRODUCTION, process.env.CASHFREE_APP_ID, process.env.CASHFREE_SECRET_KEY)
+    console.log('[pay-existing] Initializing Cashfree...')
+    let cashfree
+    try {
+      cashfree = new Cashfree(CFEnvironment.PRODUCTION, process.env.CASHFREE_APP_ID, process.env.CASHFREE_SECRET_KEY)
+      console.log('[pay-existing] Cashfree initialized successfully')
+    } catch (initError) {
+      console.error('[pay-existing] Cashfree initialization error:', initError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to initialize payment service',
+          message: initError instanceof Error ? initError.message : 'Unknown error'
+        },
+        { status: 500 }
+      )
+    }
     
     console.log('[pay-existing] Creating Cashfree order with:', {
       orderId: `${booking_id}-PAY`,
       amount,
       customerId: patient.patient_id,
       customerEmail: patient.email,
+      baseUrl: getBaseUrl(),
     })
 
     let cashfreeOrder
@@ -343,19 +377,41 @@ export async function POST(req: NextRequest) {
         order_meta: { return_url: `${getBaseUrl()}/api/book/verify?order_id={order_id}&original_booking_id=${booking_id}` },
         order_note: `Payment for ${booking_id}`,
       })
-      console.log('[pay-existing] Cashfree order created successfully:', { orderId: cashfreeOrder.data?.order_id })
+      console.log('[pay-existing] Cashfree order created:', {
+        orderId: cashfreeOrder?.data?.order_id,
+        hasPaymentSessionId: !!cashfreeOrder?.data?.payment_session_id,
+      })
     } catch (cashfreeError) {
-      console.error('[pay-existing] Cashfree error:', cashfreeError)
+      console.error('[pay-existing] Cashfree PGCreateOrder error:', cashfreeError)
+      console.error('[pay-existing] Error details:', {
+        errorType: cashfreeError instanceof Error ? 'Error' : typeof cashfreeError,
+        message: cashfreeError instanceof Error ? cashfreeError.message : String(cashfreeError),
+        stack: cashfreeError instanceof Error ? cashfreeError.stack : undefined,
+      })
       return NextResponse.json(
         {
+          success: false,
           error: 'Failed to create payment session',
           message: cashfreeError instanceof Error ? cashfreeError.message : 'Unknown Cashfree error',
+          type: cashfreeError instanceof Error ? cashfreeError.constructor.name : typeof cashfreeError,
         },
         { status: 500 }
       )
     }
 
-    console.log('[pay-existing] Returning payment session:', { paymentSessionId: cashfreeOrder.data?.payment_session_id ? 'set' : 'MISSING' })
+    if (!cashfreeOrder?.data?.payment_session_id) {
+      console.error('[pay-existing] Payment session ID missing in response:', { cashfreeOrder })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid payment session response from Cashfree',
+          received: { orderId: cashfreeOrder?.data?.order_id },
+        },
+        { status: 500 }
+      )
+    }
+
+    console.log('[pay-existing] Returning success with payment session')
     return NextResponse.json({ paymentSessionId: cashfreeOrder.data.payment_session_id })
   }
 
