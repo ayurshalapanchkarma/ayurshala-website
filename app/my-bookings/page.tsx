@@ -22,17 +22,17 @@ type Booking = {
 type Patient = { id: string; patient_id: string; full_name: string; email: string; phone: string }
 
 const statusConfig: Record<string, { label: string; lightCls: string; darkCls: string }> = {
-  CONFIRMED:            { label: 'Confirmed',             lightCls: 'bg-green-100 text-green-800', darkCls: 'dark:bg-green-900/40 dark:text-green-300' },
-  PENDING_CONFIRMATION: { label: 'Awaiting Confirmation', lightCls: 'bg-amber-100 text-amber-800', darkCls: 'dark:bg-amber-900/40 dark:text-amber-300' },
-  PAYMENT_PENDING:      { label: 'Payment Pending',       lightCls: 'bg-amber-100 text-amber-800', darkCls: 'dark:bg-amber-900/40 dark:text-amber-300' },
-  RESCHEDULED:          { label: 'Rescheduled',           lightCls: 'bg-blue-100 text-blue-800', darkCls: 'dark:bg-blue-900/40 dark:text-blue-300' },
-  CANCELLED:            { label: 'Cancelled',             lightCls: 'bg-red-100 text-red-800', darkCls: 'dark:bg-red-900/40 dark:text-red-300' },
-  COMPLETED:            { label: 'Completed',             lightCls: 'bg-emerald-100 text-emerald-800', darkCls: 'dark:bg-emerald-900/40 dark:text-emerald-300' },
-  IN_PROGRESS:          { label: 'In Progress',           lightCls: 'bg-purple-100 text-purple-800', darkCls: 'dark:bg-purple-900/40 dark:text-purple-300' },
-  NO_SHOW:              { label: 'No Show',               lightCls: 'bg-stone-100 text-stone-700', darkCls: 'dark:bg-stone-900/40 dark:text-stone-300' },
-  RESCHEDULE_REJECTED:  { label: 'Reschedule Rejected',   lightCls: 'bg-red-100 text-red-800', darkCls: 'dark:bg-red-900/40 dark:text-red-300' },
-  CHECKED_IN:           { label: 'Checked In',            lightCls: 'bg-indigo-100 text-indigo-800', darkCls: 'dark:bg-indigo-900/40 dark:text-indigo-300' },
-  CHECKED_OUT:          { label: 'Checked Out',           lightCls: 'bg-indigo-100 text-indigo-800', darkCls: 'dark:bg-indigo-900/40 dark:text-indigo-300' },
+  CONFIRMED:            { label: 'Confirmed',             lightCls: 'bg-green-100 text-green-900', darkCls: 'dark:bg-green-900/40 dark:text-green-300' },
+  PENDING_CONFIRMATION: { label: 'Awaiting Confirmation', lightCls: 'bg-amber-100 text-amber-900', darkCls: 'dark:bg-amber-900/40 dark:text-amber-300' },
+  PAYMENT_PENDING:      { label: 'Payment Pending',       lightCls: 'bg-amber-100 text-amber-900', darkCls: 'dark:bg-amber-900/40 dark:text-amber-300' },
+  RESCHEDULED:          { label: 'Rescheduled',           lightCls: 'bg-blue-100 text-blue-900', darkCls: 'dark:bg-blue-900/40 dark:text-blue-300' },
+  CANCELLED:            { label: 'Cancelled',             lightCls: 'bg-red-100 text-red-900', darkCls: 'dark:bg-red-900/40 dark:text-red-300' },
+  COMPLETED:            { label: 'Completed',             lightCls: 'bg-emerald-100 text-emerald-900', darkCls: 'dark:bg-emerald-900/40 dark:text-emerald-300' },
+  IN_PROGRESS:          { label: 'In Progress',           lightCls: 'bg-purple-100 text-purple-900', darkCls: 'dark:bg-purple-900/40 dark:text-purple-300' },
+  NO_SHOW:              { label: 'No Show',               lightCls: 'bg-stone-100 text-stone-900', darkCls: 'dark:bg-stone-900/40 dark:text-stone-300' },
+  RESCHEDULE_REJECTED:  { label: 'Reschedule Rejected',   lightCls: 'bg-red-100 text-red-900', darkCls: 'dark:bg-red-900/40 dark:text-red-300' },
+  CHECKED_IN:           { label: 'Checked In',            lightCls: 'bg-indigo-100 text-indigo-900', darkCls: 'dark:bg-indigo-900/40 dark:text-indigo-300' },
+  CHECKED_OUT:          { label: 'Checked Out',           lightCls: 'bg-indigo-100 text-indigo-900', darkCls: 'dark:bg-indigo-900/40 dark:text-indigo-300' },
 }
 
 const paymentConfig: Record<string, { label: string; lightCls: string; darkCls: string }> = {
@@ -251,14 +251,14 @@ export default function MyBookingsPage() {
             let badgeLabel = '', badgeLightCls = '', badgeDarkCls = ''
             if (b.status === 'CONFIRMED' && (b as any).rescheduled_at) {
               badgeLabel = 'Reschedule Confirmed'
-              badgeLightCls = 'bg-emerald-100 text-emerald-800'
+              badgeLightCls = 'bg-emerald-100 text-emerald-900'
               badgeDarkCls = 'dark:bg-emerald-900/40 dark:text-emerald-300'
             } else if (b.status === 'RESCHEDULED') {
               badgeLabel = 'Awaiting Reschedule Approval'
-              badgeLightCls = 'bg-blue-100 text-blue-800'
+              badgeLightCls = 'bg-blue-100 text-blue-900'
               badgeDarkCls = 'dark:bg-blue-900/40 dark:text-blue-300'
             } else {
-              const cfg = statusConfig[b.status] || { label: b.status, lightCls: 'bg-stone-100 text-stone-700', darkCls: 'dark:bg-stone-900/40 dark:text-stone-300' }
+              const cfg = statusConfig[b.status] || { label: b.status, lightCls: 'bg-stone-100 text-stone-900', darkCls: 'dark:bg-stone-900/40 dark:text-stone-300' }
               badgeLabel = cfg.label
               badgeLightCls = cfg.lightCls
               badgeDarkCls = cfg.darkCls
