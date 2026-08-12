@@ -276,7 +276,7 @@ export default function MyBookingsPage() {
                       {(b.booking_treatments_v2 as any)?.map((t: any) => t.treatment_name).join(', ') || '—'}
                     </p>
                   </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-sans shrink-0 ${badgeLightCls} ${badgeDarkCls}`}>{badgeLabel}</span>
+                  <span className={`text-xs px-3 py-1.5 rounded-full font-sans font-semibold shrink-0 ${badgeLightCls} ${badgeDarkCls}`}>{badgeLabel}</span>
                 </div>
 
                 {b.status === 'RESCHEDULED' && <p className="font-sans text-xs text-blue-600 dark:text-blue-400 mb-2">Your reschedule request is awaiting clinic approval.</p>}
@@ -368,49 +368,49 @@ export default function MyBookingsPage() {
             <motion.div initial={{ y: 60, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 60, opacity: 0, scale: 0.95 }}
               onClick={e => e.stopPropagation()}
               className="w-full max-w-sm rounded-3xl p-8"
-              style={{ background: dark ? 'linear-gradient(135deg,rgba(30,41,59,0.95),rgba(15,23,42,0.95))' : 'linear-gradient(135deg, rgba(240,253,250,0.98) 0%, rgba(204,251,241,0.95) 100%)', backdropFilter: 'blur(50px)', border: dark ? '1px solid rgba(15,185,129,0.2)' : '1px solid rgba(16,185,129,0.3)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 20px 60px rgba(16,185,129,0.15), 0 8px 30px rgba(0,0,0,0.08)' }}>
-              <p className="font-serif text-2xl mb-2" style={{ color: dark ? '#4ade80' : '#10b981' }}>Reschedule</p>
-              <p className={`font-sans text-xs ${dark ? 'text-emerald-400' : 'text-emerald-600'} mb-6`}>{rescheduleBooking.booking_id}</p>
+              style={{ background: dark ? 'linear-gradient(135deg,rgba(4,47,34,0.98),rgba(6,78,59,0.95))' : 'linear-gradient(135deg, rgba(240,253,250,0.98) 0%, rgba(204,251,241,0.95) 100%)', backdropFilter: 'blur(50px)', border: dark ? '1px solid rgba(52,211,153,0.3)' : '1px solid rgba(16,185,129,0.3)', boxShadow: dark ? 'inset 0 1px 0 rgba(34,197,94,0.2), 0 20px 60px rgba(16,185,129,0.2), 0 8px 30px rgba(0,0,0,0.2)' : 'inset 0 1px 0 rgba(255,255,255,0.9), 0 20px 60px rgba(16,185,129,0.15), 0 8px 30px rgba(0,0,0,0.08)' }}>
+              <p className="font-serif text-2xl mb-2" style={{ color: dark ? '#86efac' : '#059669' }}>Reschedule</p>
+              <p className={`font-sans text-xs ${dark ? 'text-emerald-300' : 'text-emerald-600'} mb-6`}>{rescheduleBooking.booking_id}</p>
 
               <div className="space-y-3 mb-6">
                 <div>
-                  <label className={`font-sans text-xs uppercase tracking-wider block mb-1 flex items-center gap-1 ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}><Calendar className="w-3 h-3" /> New Date</label>
+                  <label className={`font-sans text-xs font-semibold uppercase tracking-wider block mb-2 flex items-center gap-1 ${dark ? 'text-emerald-300' : 'text-emerald-700'}`}><Calendar className="w-3 h-3" /> New Date</label>
                   <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                     min={today} max={maxDateStr} onKeyDown={e => e.preventDefault()}
-                    className={`w-full rounded-xl px-4 py-2.5 text-sm border ${dark ? 'border-emerald-900/30 bg-emerald-900/20 text-white focus:border-emerald-600 focus:bg-emerald-900/30' : 'border-emerald-200 bg-white/60 text-stone-900 focus:border-emerald-400 focus:bg-white/80'} focus:outline-none`} />
+                    className={`w-full rounded-xl px-4 py-2.5 text-sm border font-sans ${dark ? 'border-emerald-700/50 bg-emerald-950/40 text-emerald-50 placeholder-emerald-500 focus:border-emerald-500 focus:bg-emerald-950/60' : 'border-emerald-200 bg-white/60 text-stone-900 placeholder-stone-400 focus:border-emerald-400 focus:bg-white/80'} focus:outline-none focus:ring-2 focus:ring-emerald-400/20` } />
                   {newDate && new Date(newDate).getUTCDay() === 5 && (
-                    <p className={`font-sans text-xs mt-1 flex items-center gap-1 ${dark ? 'text-red-400' : 'text-red-500'}`}><AlertCircle className="w-3 h-3" /> Closed on Fridays. Please choose another day.</p>
+                    <p className={`font-sans text-xs mt-1 flex items-center gap-1 ${dark ? 'text-red-300' : 'text-red-500'}`}><AlertCircle className="w-3 h-3" /> Closed on Fridays. Please choose another day.</p>
                   )}
                 </div>
                 <div>
-                  <label className={`font-sans text-xs uppercase tracking-wider block mb-1 flex items-center gap-1 ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}><Clock className="w-3 h-3" /> New Time</label>
+                  <label className={`font-sans text-xs font-semibold uppercase tracking-wider block mb-2 flex items-center gap-1 ${dark ? 'text-emerald-300' : 'text-emerald-700'}`}><Clock className="w-3 h-3" /> New Time</label>
                   <select value={newTime} onChange={e => setNewTime(e.target.value)}
-                    className={`w-full rounded-xl px-4 py-2.5 text-sm border ${dark ? 'border-emerald-900/30 bg-emerald-900/20 text-white focus:border-emerald-600 focus:bg-emerald-900/30' : 'border-emerald-200 bg-white/60 text-stone-900 focus:border-emerald-400 focus:bg-white/80'} focus:outline-none cursor-pointer`}>
+                    className={`w-full rounded-xl px-4 py-2.5 text-sm border font-sans ${dark ? 'border-emerald-700/50 bg-emerald-950/40 text-emerald-50 focus:border-emerald-500 focus:bg-emerald-950/60' : 'border-emerald-200 bg-white/60 text-stone-900 focus:border-emerald-400 focus:bg-white/80'} focus:outline-none focus:ring-2 focus:ring-emerald-400/20 cursor-pointer appearance-none`}>
                     <option value="">Select time…</option>
                     {timeSlots.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={`font-sans text-xs uppercase tracking-wider block mb-1 ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>Reason for Rescheduling *</label>
+                  <label className={`font-sans text-xs font-semibold uppercase tracking-wider block mb-2 ${dark ? 'text-emerald-300' : 'text-emerald-700'}`}>Reason for Rescheduling *</label>
                   <textarea value={rescheduleReason} onChange={e => setRescheduleReason(e.target.value.slice(0, 500))} rows={3}
                     placeholder="Please tell us why you would like to reschedule this appointment."
-                    className={`w-full rounded-xl px-4 py-2.5 text-sm border ${dark ? 'border-emerald-900/30 bg-emerald-900/20 text-white placeholder-emerald-600 focus:border-emerald-600 focus:bg-emerald-900/30' : 'border-emerald-200 bg-white/60 text-stone-900 placeholder-stone-400 focus:border-emerald-400 focus:bg-white/80'} focus:outline-none resize-none`} />
-                  <p className={`font-sans text-xs mt-1 ${rescheduleReason.length < 10 ? (dark ? 'text-amber-400' : 'text-amber-600') : (dark ? 'text-emerald-400' : 'text-emerald-600')}`}>{rescheduleReason.length}/500 (minimum 10)</p>
+                    className={`w-full rounded-xl px-4 py-2.5 text-sm border font-sans ${dark ? 'border-emerald-700/50 bg-emerald-950/40 text-emerald-50 placeholder-emerald-500 focus:border-emerald-500 focus:bg-emerald-950/60' : 'border-emerald-200 bg-white/60 text-stone-900 placeholder-stone-400 focus:border-emerald-400 focus:bg-white/80'} focus:outline-none focus:ring-2 focus:ring-emerald-400/20 resize-none`} />
+                  <p className={`font-sans text-xs mt-1 font-medium ${rescheduleReason.length < 10 ? (dark ? 'text-amber-300' : 'text-amber-600') : (dark ? 'text-emerald-300' : 'text-emerald-600')}`}>{rescheduleReason.length}/500 (minimum 10)</p>
                 </div>
               </div>
 
-              {rescheduleError && <p className={`font-sans text-xs rounded-lg p-2 mb-3 border ${dark ? 'text-red-300 bg-red-900/20 border-red-900/40' : 'text-red-600 bg-red-50 border-red-200'}`}>{rescheduleError}</p>}
+              {rescheduleError && <p className={`font-sans text-xs rounded-lg p-3 mb-3 border font-medium ${dark ? 'text-red-200 bg-red-950/40 border-red-700/50' : 'text-red-700 bg-red-50 border-red-200'}`}>{rescheduleError}</p>}
 
               <div className="flex flex-col gap-3">
                 <div className="flex gap-3">
-                  <button onClick={() => setRescheduleBooking(null)} className="btn-glass flex-1 py-2.5 text-sm">Cancel</button>
+                  <button onClick={() => setRescheduleBooking(null)} className="btn-glass flex-1 py-2.5 text-sm font-semibold">Cancel</button>
                   <button onClick={handleReschedule} disabled={rescheduling || !newDate || !newTime || rescheduleReason.length < 10 || new Date(newDate).getUTCDay() === 5}
-                    className="flex-1 py-2.5 text-sm rounded-xl font-sans text-white disabled:opacity-50 hover:brightness-110 transition-all"
-                    style={{ background: dark ? '#10b981' : '#10b981' }}>
+                    className="flex-1 py-2.5 text-sm rounded-xl font-sans font-semibold text-white disabled:opacity-40 enabled:hover:brightness-110 transition-all"
+                    style={{ background: '#10b981' }}>
                     {rescheduling ? 'Saving…' : 'Confirm'}
                   </button>
                 </div>
-                <Link href="/my-bookings" className="btn-glass w-full py-2.5 text-sm text-center">Go to My Bookings</Link>
+                <Link href="/my-bookings" className="btn-glass w-full py-2.5 text-sm text-center font-semibold">Go to My Bookings</Link>
               </div>
             </motion.div>
           </motion.div>
