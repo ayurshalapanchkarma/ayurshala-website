@@ -12,7 +12,6 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 export async function GET(req: NextRequest) {
   const booking_id = req.nextUrl.searchParams.get('booking_id')
   const secret = req.nextUrl.searchParams.get('secret')
-  const isAdmin = req.nextUrl.searchParams.get('admin') === 'true'
 
   if (!booking_id || secret !== (process.env.ADMIN_CONFIRM_SECRET ?? 'ayurshala-confirm'))
     return NextResponse.redirect(new URL('/status/cancel?type=unauthorized', req.url))
@@ -35,16 +34,7 @@ export async function GET(req: NextRequest) {
       resend.emails.send({ from, to: patient.email, subject: `Booking Cancelled — ${booking_id}`, html }).catch(() => {})
     }
 
-    // Redirect to appropriate confirmation page
-    const formattedDate = new Date(booking.preferred_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
-    const params = new URLSearchParams({
-      booking_id,
-      patient_name: patient?.full_name || 'Patient',
-      appointment_date: formattedDate,
-    })
-
-    // For admin users (those who clicked the cancel link from admin email), redirect to admin confirmation page
-    return NextResponse.redirect(new URL(`/status/admin-cancelled?${params.toString()}`, req.url))
+    return NextResponse.redirect(new URL(`/status/cancel?type=success&booking_id=${booking_id}`, req.url))
   } catch (error) {
     console.error('Cancel error:', error)
     return NextResponse.redirect(new URL('/status/cancel?type=error', req.url))
