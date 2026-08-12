@@ -264,7 +264,10 @@ export default function MyBookingsPage() {
               badgeDarkCls = cfg.darkCls
             }
             
-            const pCfg = paymentConfig[b.payment_status] || { label: b.payment_status, lightCls: 'text-stone-400', darkCls: 'dark:text-stone-500' }
+            // Debug: Log payment method values to help diagnose missing buttons
+            if (typeof window !== 'undefined' && b.status === 'PENDING_CONFIRMATION') {
+              console.log(`[DEBUG] Booking ${b.booking_id}: payment_method="${b.payment_method}", can show Pay Online: ${b.payment_method === 'CASH_ON_ARRIVAL' || b.payment_method === 'CASH'}`)
+            }
             const wasPaid = b.payment_status === 'SUCCESS'
 
             return (
@@ -306,7 +309,7 @@ export default function MyBookingsPage() {
                     )}
                   </div>
                 )}
-                {b.status === 'PENDING_CONFIRMATION' && b.payment_method === 'CASH_ON_ARRIVAL' && (
+                {b.status === 'PENDING_CONFIRMATION' && (b.payment_method === 'CASH_ON_ARRIVAL' || b.payment_method === 'CASH') && (
                   <div className="flex gap-2 flex-wrap mt-2">
                     <button onClick={() => handlePayOnline(b)}
                       className="text-xs py-1.5 px-3 rounded-xl border font-sans transition-colors flex items-center gap-1"
